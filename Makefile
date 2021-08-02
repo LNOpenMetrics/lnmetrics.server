@@ -5,8 +5,8 @@ BASE_DIR=/script
 OS=linux
 ARCH=386
 
-default: fmt gen
-	$(CC) build -o $(NAME) cmd/ln-metrics-server/server.go
+default: fmt
+	$(CC) build -o $(NAME) cmd/ln-metrics-server/main.go
 
 fmt:
 	$(CC) fmt ./...
@@ -18,4 +18,4 @@ gen:
 	$(CC) run github.com/99designs/gqlgen generate
 
 build:
-	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/ln-metrics-server/server.go
+	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/ln-metrics-server/main.go
