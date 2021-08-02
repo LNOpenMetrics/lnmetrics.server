@@ -2,19 +2,31 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type MetricOne struct {
+	Name     string    `json:"name"`
+	NodeID   string    `json:"nodeID"`
+	Color    string    `json:"color"`
+	OsInfo   *OSInfo   `json:"osInfo"`
+	Timezone int       `json:"timezone"`
+	UpTime   []*Status `json:"upTime"`
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type NodeInfo struct {
+	NodeID    string     `json:"nodeID"`
+	MetricOne *MetricOne `json:"metricOne"`
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type NodeMetrics struct {
+	NodeID           string `json:"nodeID"`
+	PayloadMetricOne string `json:"payloadMetricOne"`
+}
+
+type OSInfo struct {
+	Os           string `json:"os"`
+	Version      string `json:"version"`
+	Architecture string `json:"architecture"`
+}
+
+type Status struct {
+	Event string `json:"event"`
 }

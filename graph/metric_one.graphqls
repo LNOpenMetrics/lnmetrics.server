@@ -1,0 +1,36 @@
+type MetricOne {
+     name: String!
+     nodeID: String!
+     color: String!
+     osInfo: OSInfo!
+     timezone: Int!
+     upTime: [Status!]!
+}
+
+type NodeInfo {
+     nodeID: String!
+     metricOne: MetricOne!
+}
+
+type OSInfo {
+     os: String!
+     version: String!
+     architecture: String!
+}
+
+type Status {
+     event: String!     
+}
+
+input NodeMetrics {
+     nodeID: String!
+     payloadMetricOne: String!
+}
+
+type Query {
+  nodes: [NodeInfo!]!
+}
+
+type Mutation {
+  addNodeMetrics(input: NodeMetrics!): MetricOne!
+}
