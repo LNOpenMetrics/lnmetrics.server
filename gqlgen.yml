@@ -42,6 +42,7 @@ autobind:
 # The first line in each type will be used as defaults for resolver arguments and
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
+
 models:
   ID:
     model:
@@ -54,3 +55,6 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  StatusChannelMap:
+    model:
+      - github.com/OpenLNMetrics/ln-metrics-server/graph/model.StatusChannelMap

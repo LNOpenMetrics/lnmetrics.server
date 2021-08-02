@@ -2,23 +2,42 @@
 
 package model
 
+type ChannelStatus struct {
+	Timestamp int    `json:"timestamp"`
+	Status    string `json:"status"`
+}
+
+type ChannelSummary struct {
+	NodeID    string `json:"node_id"`
+	Alias     string `json:"alias"`
+	Color     string `json:"color"`
+	ChannelID string `json:"channel_id"`
+	State     string `json:"state"`
+}
+
+type ChannelsSummary struct {
+	TotChannels int               `json:"tot_channels"`
+	Summary     []*ChannelSummary `json:"summary"`
+}
+
 type MetricOne struct {
-	Name     string    `json:"name"`
-	NodeID   string    `json:"nodeID"`
-	Color    string    `json:"color"`
-	OsInfo   *OSInfo   `json:"osInfo"`
-	Timezone int       `json:"timezone"`
-	UpTime   []*Status `json:"upTime"`
+	Name         string           `json:"name"`
+	NodeID       string           `json:"node_id"`
+	Color        string           `json:"color"`
+	OSInfo       *OSInfo          `json:"os_info"`
+	Timezone     int              `json:"timezone"`
+	UpTime       []*Status        `json:"up_time"`
+	ChannelsInfo StatusChannelMap `json:"channels_info"`
 }
 
 type NodeInfo struct {
-	NodeID    string     `json:"nodeID"`
-	MetricOne *MetricOne `json:"metricOne"`
+	NodeID    string     `json:"node_id"`
+	MetricOne *MetricOne `json:"metric_one"`
 }
 
 type NodeMetrics struct {
-	NodeID           string `json:"nodeID"`
-	PayloadMetricOne string `json:"payloadMetricOne"`
+	Node             string `json:"node_id"`
+	PayloadMetricOne string `json:"payload_metric_one"`
 }
 
 type OSInfo struct {
@@ -27,6 +46,34 @@ type OSInfo struct {
 	Architecture string `json:"architecture"`
 }
 
+type PaymentInfo struct {
+	Direction     string  `json:"direction"`
+	Status        string  `json:"status"`
+	FailureReason *string `json:"failure_reason"`
+	FailureCode   *int    `json:"failure_code"`
+}
+
+type PaymentsSummary struct {
+	Completed int `json:"completed"`
+	Failed    int `json:"failed"`
+}
+
 type Status struct {
-	Event string `json:"event"`
+	Event     string           `json:"event"`
+	Channels  *ChannelsSummary `json:"channels"`
+	Forwards  *PaymentsSummary `json:"forwards"`
+	Timestamp int              `json:"timestamp"`
+}
+
+type StatusChannel struct {
+	NodeID     string           `json:"node_id"`
+	NodeAlias  string           `json:"node_alias"`
+	Color      string           `json:"color"`
+	Capacity   int              `json:"capacity"`
+	Forwards   []*PaymentInfo   `json:"forwards"`
+	UpTimes    []*ChannelStatus `json:"up_times"`
+	Online     bool             `json:"online"`
+	LastUpdate int              `json:"last_update"`
+	Public     bool             `json:"public"`
+	Direction  string           `json:"direction"`
 }
