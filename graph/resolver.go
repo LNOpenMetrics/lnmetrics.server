@@ -9,5 +9,5 @@ import (
 )
 
 type Resolver struct {
-	nodes []*model.NodeInfo
+	Nodes []*model.NodeInfo
 }
