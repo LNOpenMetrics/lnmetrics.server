@@ -7,19 +7,35 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+
 	"github.com/OpenLNMetrics/ln-metrics-server/graph"
 	"github.com/OpenLNMetrics/ln-metrics-server/graph/generated"
+	"github.com/OpenLNMetrics/ln-metrics-server/internal/db"
 )
 
-const defaultPort = "8080"
+const DEFAULT_PORT = "8080"
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = DEFAULT_PORT
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	options := make(map[string]interface{})
+
+	if path := os.Getenv("DB_PATH"); path != "" {
+		options["path"] = path
+	}
+
+	dbVal, err := db.NewNoSQLDB(options)
+	if err != nil {
+		panic(err)
+	}
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(
+		generated.Config{Resolvers: &graph.Resolver{
+			Dbms: dbVal,
+		}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

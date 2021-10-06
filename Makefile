@@ -5,7 +5,9 @@ BASE_DIR=/script
 OS=linux
 ARCH=386
 
-default: fmt
+default: fmt lint build
+
+build:
 	$(CC) build -o $(NAME) cmd/ln-metrics-server/main.go
 
 fmt:
@@ -14,8 +16,11 @@ fmt:
 check:
 	echo "Nothings yet"
 
+lint:
+	golangci-lint run
+
 gen:
 	$(CC) run github.com/99designs/gqlgen generate
 
-build:
+release:
 	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/ln-metrics-server/main.go

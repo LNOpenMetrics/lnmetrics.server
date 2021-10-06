@@ -5,9 +5,9 @@ package graph
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 import (
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/ln-metrics-server/internal/db"
 )
 
 type Resolver struct {
-	Nodes []*model.NodeInfo
+	Dbms db.MetricsDatabase
 }
