@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/generated"
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 )
 
 // mutation {

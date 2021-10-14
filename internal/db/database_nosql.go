@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
-	"github.com/OpenLNMetrics/ln-metrics-server/pkg/db"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/pkg/db"
 )
 
 type NoSQLDatabase struct {

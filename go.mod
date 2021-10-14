@@ -1,4 +1,4 @@
-module github.com/OpenLNMetrics/ln-metrics-server
+module github.com/OpenLNMetrics/lnmetrics.server
 
 go 1.15
 
@@ -9,5 +9,5 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/vektah/gqlparser/v2 v2.1.0
-	xorm.io/xorm v1.1.2
+	xorm.io/xorm v1.1.2 // indirect
 )

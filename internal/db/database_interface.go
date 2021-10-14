@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 )
 
 // Interface to abstract from an db implementation the

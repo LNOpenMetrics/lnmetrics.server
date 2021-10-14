@@ -3,9 +3,9 @@ package main
 import (
 	"testing"
 
-	"github.com/OpenLNMetrics/ln-metrics-server/graph"
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/generated"
-	//"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
+	//"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"

@@ -1,7 +1,7 @@
 package mock
 
 import (
-	//	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	//	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 	"github.com/stretchr/testify/mock"
 )
 

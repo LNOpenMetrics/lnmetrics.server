@@ -5,7 +5,7 @@ package graph
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 import (
-	"github.com/OpenLNMetrics/ln-metrics-server/internal/db"
+	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"
 )
 
 type Resolver struct {

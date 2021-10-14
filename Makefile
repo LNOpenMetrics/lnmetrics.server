@@ -8,7 +8,7 @@ ARCH=386
 default: fmt lint build
 
 build:
-	$(CC) build -o $(NAME) cmd/ln-metrics-server/main.go
+	$(CC) build -o $(NAME) cmd/lnmetrics.server/main.go
 
 fmt:
 	$(CC) fmt ./...
@@ -23,4 +23,4 @@ gen:
 	$(CC) run github.com/99designs/gqlgen generate
 
 release:
-	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/ln-metrics-server/main.go
+	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/lnmetrics.server/main.go
