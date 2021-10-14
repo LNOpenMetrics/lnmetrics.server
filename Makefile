@@ -14,7 +14,7 @@ fmt:
 	$(CC) fmt ./...
 
 check:
-	echo "Nothings yet"
+	$(CC) test -v ./...
 
 lint:
 	golangci-lint run

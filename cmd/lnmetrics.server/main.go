@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 
@@ -15,12 +17,20 @@ import (
 
 const DEFAULT_PORT = "8080"
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = DEFAULT_PORT
+	port := DEFAULT_PORT
+	if envPort := os.Getenv("SERVER_PORT"); envPort != "" {
+		port = envPort
 	}
 
+	// Server option that can pass throw the interface
+	// to configure all the type of interface that we need
 	options := make(map[string]interface{})
 
 	if path := os.Getenv("DB_PATH"); path != "" {

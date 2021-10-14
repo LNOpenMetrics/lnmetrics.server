@@ -1,0 +1,25 @@
+=============== Oct 14, 2021 (CEST) ===============
+09:10:05.752120 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+09:10:05.765148 db@open opening
+09:10:05.775032 version@stat F·[] S·0B[] Sc·[]
+09:10:05.777932 db@janitor F·2 G·0
+09:10:05.778058 db@open done T·12.824032ms
+=============== Oct 14, 2021 (CEST) ===============
+10:16:32.313712 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+10:16:32.316207 version@stat F·[] S·0B[] Sc·[]
+10:16:32.316226 db@open opening
+10:16:32.316293 journal@recovery F·1
+10:16:32.316864 journal@recovery recovering @1
+10:16:32.319891 memdb@flush created L0@2 N·4 S·255B "_me..one,v3":"pip..one,v4"
+10:16:32.320321 version@stat F·[1] S·255B[255B] Sc·[0.25]
+10:16:32.324370 db@janitor F·3 G·0
+10:16:32.324401 db@open done T·8.156708ms
+=============== Oct 14, 2021 (CEST) ===============
+10:18:20.391768 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+10:18:20.392071 version@stat F·[1] S·255B[255B] Sc·[0.25]
+10:18:20.392083 db@open opening
+10:18:20.392192 journal@recovery F·1
+10:18:20.394885 journal@recovery recovering @3
+10:18:20.395317 version@stat F·[1] S·255B[255B] Sc·[0.25]
+10:18:20.400785 db@janitor F·3 G·0
+10:18:20.400844 db@open done T·8.740898ms

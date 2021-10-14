@@ -22,6 +22,9 @@ github.com/gorilla/websocket
 # github.com/hashicorp/golang-lru v0.5.0
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
+# github.com/joho/godotenv v1.4.0
+## explicit
+github.com/joho/godotenv
 # github.com/mitchellh/mapstructure v0.0.0-20180203102830-a4e142e9c047
 github.com/mitchellh/mapstructure
 # github.com/mrdulin/gqlgen-cnode v0.0.0-20200904054759-5c9d85b9cd6e
@@ -37,6 +40,7 @@ github.com/stretchr/objx
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
+github.com/stretchr/testify/require
 # github.com/syndtr/goleveldb v1.0.0
 ## explicit
 github.com/syndtr/goleveldb/leveldb
