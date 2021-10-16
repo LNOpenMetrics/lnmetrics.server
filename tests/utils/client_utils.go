@@ -5,7 +5,7 @@ import (
 )
 
 type AddMetricOneResp struct {
-	NodeId string
+	NodeID string `json:"node_id"`
 }
 
 func ComposeAddMetricOneQuery(nodeId string, payload string) string {

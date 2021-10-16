@@ -42,10 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(
-		generated.Config{Resolvers: &graph.Resolver{
-			Dbms: dbVal,
-		}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(dbVal)}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

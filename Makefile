@@ -20,7 +20,7 @@ lint:
 	golangci-lint run
 
 gen:
-	$(CC) run github.com/99designs/gqlgen generate
+	$(CC) generate ./...
 
 release:
 	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/lnmetrics.server/main.go

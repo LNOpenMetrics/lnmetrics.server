@@ -1,6 +1,6 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - graph/*.graphqls
+  - graph/*.graphql
 
 # Where should the generated server code go?
 exec:
@@ -22,6 +22,7 @@ resolver:
   layout: follow-schema
   dir: graph
   package: graph
+  filename_template: "{name}.resolvers.go"
 
 # Optional: turn on use `gqlgen:"fieldName"` tags in your models
 # struct_tag: json
@@ -30,12 +31,12 @@ resolver:
 # omit_slice_element_pointers: false
 
 # Optional: set to speed up generation time by not performing a final validation pass.
-# skip_validation: true
+skip_validation: true
 
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
-autobind:
-  - "github.com/OpenLNMetrics/lnmetrics.server/graph/model"
+#autobind:
+#  - "github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -55,6 +56,3 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  StatusChannelMap:
-    model:
-      - github.com/OpenLNMetrics/lnmetrics.server/graph/model.StatusChannelMap

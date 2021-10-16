@@ -5,42 +5,14 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 )
 
-// mutation {
-//    addNodeMetrics(input: {node_id: "abc", payload_metric_one: "bcd"}) {
-//       node_id
-//	 name
-//    }
-// }
-func (instance *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	// This method need to include the following feature
-	// 1. Verify the source of these data, we can't put without any check this data in the db.
-	// 2. Deflate the result of the payload, for the moment we send compressed string payload.
-	// this is stupid because we can simple append metrics, but for the moment this is the
-	// architecture of the demo.
-	// 3. Store this data in the db with the node as key.
-	// 4. Return a result
-
-	// Implementing point 3
-	//
-	// Inflate the JSON into a MetricOne Object
-	var model model.MetricOne
-
-	if err := json.Unmarshal([]byte(input.PayloadMetricOne), &model); err != nil {
-		return nil, fmt.Errorf("Error during reading JSON %s. It is a valid JSON?", err)
-	}
-
-	if err := instance.Dbms.InsertMetricOne(&model); err != nil {
-		return nil, err
-	}
-
-	return &model, nil
+func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
+	return r.MetricsService.AddMetricOne(input.NodeID, input.PayloadMetricOne)
 }
 
 func (r *queryResolver) Nodes(ctx context.Context) ([]*model.NodeInfo, error) {

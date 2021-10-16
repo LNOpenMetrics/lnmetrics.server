@@ -72,7 +72,7 @@ type PaymentsSummary {
 }
 
 input NodeMetrics {
-     node_id: String! @goField(name: "Node")
+     node_id: String! @goField(name: "NodeID")
      payload_metric_one: String! @goField(name: "PayloadMetricOne")
 }
 
