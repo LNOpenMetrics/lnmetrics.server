@@ -1,0 +1,85 @@
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+type StatusChannel {
+     node_id: String! @goField(name: "NodeId")
+     node_alias: String! @goField(name: "NodeAlias")
+     color: String! @goField(name: "Color")
+     capacity: Int! @goField(name: "Capacity")
+     forwards: [PaymentInfo!]! @goField(name: "Forwards")
+     up_times: [ChannelStatus!]! @goField(name: "UpTimes")
+     online: Boolean! @goField(name: "Online")
+     last_update: Int! @goField(name: "LastUpdate")
+     public: Boolean! @goField(name: "Public")
+     direction: String! @goField(name: "Direction")
+}
+
+type PaymentInfo {
+     direction: String! @goField(name: "Direction")
+     status: String! @goField(name: "Status")
+     failure_reason: String @goField(name: "FailureReason")
+     failure_code: Int @goField(name: "FailureCode")
+}
+
+type ChannelStatus {
+     timestamp: Int! @goField(name: "Timestamp")
+     status: String! @goField(name: "Status")
+}
+
+type MetricOne {
+     name: String! @goField(name: "Name")
+     node_id: String! @goField(name: "NodeID")
+     color: String! @goField(name: "Color")
+     os_info: OSInfo! @goField(name: "OSInfo")
+     timezone: Int! @goField(name: "Timezone")
+     up_time: [Status!]! @goField(name: "UpTime")
+     channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+}
+
+type NodeInfo {
+     node_id: String! @goField(name: "NodeId")
+     metric_one: MetricOne! @goField(name: "MetricOne")
+}
+
+type OSInfo {
+     os: String! @goField(name: "Os")
+     version: String! @goField(name: "Version")
+     architecture: String! @goField(name: "Architecture")
+}
+
+type Status {
+     event: String! @goField(name: "Event")
+     channels: ChannelsSummary! @goField(name: "Channels")
+     forwards: PaymentsSummary! @goField(name: "Forwards")
+     timestamp: Int! @goField(name: "Timestamp")
+}
+
+type ChannelsSummary {
+     tot_channels: Int! @goField(name: "TotChannels")
+     summary: [ChannelSummary!]! @goField(name: "Summary")
+}
+
+type ChannelSummary {
+     node_id: String! @goField(name: "NodeId")
+     alias: String! @goField(name: "alias")
+     color: String! @goField(name: "color")
+     channel_id: String! @goField(name: "channelId")
+     state: String! @goField(name: "state")
+}
+
+type PaymentsSummary {
+     completed: Int! @goField(name: "Completed")
+     failed: Int!  @goField(name: "Failed")
+}
+
+input NodeMetrics {
+     node_id: String! @goField(name: "NodeID")
+     payload_metric_one: String! @goField(name: "PayloadMetricOne")
+}
+
+type Query {
+  nodes: [NodeInfo!]! @goField(name: "Nodes")
+}
+
+type Mutation {
+  addNodeMetrics(input: NodeMetrics!): MetricOne!
+}

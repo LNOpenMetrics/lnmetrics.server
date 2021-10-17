@@ -12,7 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -515,7 +515,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/metric_one.graphqls", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+	{Name: "graph/metric_one.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 type StatusChannel {
      node_id: String! @goField(name: "NodeId")
@@ -542,8 +542,6 @@ type ChannelStatus {
      status: String! @goField(name: "Status")
 }
 
-scalar StatusChannelMap
-
 type MetricOne {
      name: String! @goField(name: "Name")
      node_id: String! @goField(name: "NodeID")
@@ -551,7 +549,7 @@ type MetricOne {
      os_info: OSInfo! @goField(name: "OSInfo")
      timezone: Int! @goField(name: "Timezone")
      up_time: [Status!]! @goField(name: "UpTime")
-     channels_info: StatusChannelMap! @goField(name: "ChannelsInfo")
+     channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
 }
 
 type NodeInfo {
@@ -591,7 +589,7 @@ type PaymentsSummary {
 }
 
 input NodeMetrics {
-     node_id: String! @goField(name: "Node")
+     node_id: String! @goField(name: "NodeID")
      payload_metric_one: String! @goField(name: "PayloadMetricOne")
 }
 
@@ -601,7 +599,8 @@ type Query {
 
 type Mutation {
   addNodeMetrics(input: NodeMetrics!): MetricOne!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -615,7 +614,7 @@ func (ec *executionContext) field_Mutation_addNodeMetrics_args(ctx context.Conte
 	var arg0 model.NodeMetrics
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNodeMetrics2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeMetrics(ctx, tmp)
+		arg0, err = ec.unmarshalNNodeMetrics2githubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -989,7 +988,7 @@ func (ec *executionContext) _ChannelsSummary_summary(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.ChannelSummary)
 	fc.Result = res
-	return ec.marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx, field.Selections, res)
+	return ec.marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -1129,7 +1128,7 @@ func (ec *executionContext) _MetricOne_os_info(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.OSInfo)
 	fc.Result = res
-	return ec.marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐOSInfo(ctx, field.Selections, res)
+	return ec.marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐOSInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_timezone(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -1199,7 +1198,7 @@ func (ec *executionContext) _MetricOne_up_time(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Status)
 	fc.Result = res
-	return ec.marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_channels_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -1227,14 +1226,11 @@ func (ec *executionContext) _MetricOne_channels_info(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(model.StatusChannelMap)
+	res := resTmp.([]*model.StatusChannel)
 	fc.Result = res
-	return ec.marshalNStatusChannelMap2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatusChannelMap(ctx, field.Selections, res)
+	return ec.marshalOStatusChannel2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1276,7 +1272,7 @@ func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field 
 	}
 	res := resTmp.(*model.MetricOne)
 	fc.Result = res
-	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
+	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NodeInfo_node_id(ctx context.Context, field graphql.CollectedField, obj *model.NodeInfo) (ret graphql.Marshaler) {
@@ -1346,7 +1342,7 @@ func (ec *executionContext) _NodeInfo_metric_one(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.MetricOne)
 	fc.Result = res
-	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
+	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OSInfo_os(ctx context.Context, field graphql.CollectedField, obj *model.OSInfo) (ret graphql.Marshaler) {
@@ -1690,7 +1686,7 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*model.NodeInfo)
 	fc.Result = res
-	return ec.marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeInfoᚄ(ctx, field.Selections, res)
+	return ec.marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfoᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1831,7 +1827,7 @@ func (ec *executionContext) _Status_channels(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.ChannelsSummary)
 	fc.Result = res
-	return ec.marshalNChannelsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelsSummary(ctx, field.Selections, res)
+	return ec.marshalNChannelsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelsSummary(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Status_forwards(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
@@ -1866,7 +1862,7 @@ func (ec *executionContext) _Status_forwards(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.PaymentsSummary)
 	fc.Result = res
-	return ec.marshalNPaymentsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentsSummary(ctx, field.Selections, res)
+	return ec.marshalNPaymentsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentsSummary(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Status_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
@@ -2076,7 +2072,7 @@ func (ec *executionContext) _StatusChannel_forwards(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.PaymentInfo)
 	fc.Result = res
-	return ec.marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx, field.Selections, res)
+	return ec.marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _StatusChannel_up_times(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
@@ -2111,7 +2107,7 @@ func (ec *executionContext) _StatusChannel_up_times(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.ChannelStatus)
 	fc.Result = res
-	return ec.marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _StatusChannel_online(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
@@ -3351,7 +3347,7 @@ func (ec *executionContext) unmarshalInputNodeMetrics(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
-			it.Node, err = ec.unmarshalNString2string(ctx, v)
+			it.NodeID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3531,9 +3527,6 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			}
 		case "channels_info":
 			out.Values[i] = ec._MetricOne_channels_info(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4131,7 +4124,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelStatus) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4155,7 +4148,7 @@ func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMet
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChannelStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNChannelStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4168,7 +4161,7 @@ func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋOpenLNMet
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelStatus(ctx context.Context, sel ast.SelectionSet, v *model.ChannelStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatus(ctx context.Context, sel ast.SelectionSet, v *model.ChannelStatus) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4178,7 +4171,7 @@ func (ec *executionContext) marshalNChannelStatus2ᚖgithubᚗcomᚋOpenLNMetric
 	return ec._ChannelStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelSummary) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4202,7 +4195,7 @@ func (ec *executionContext) marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMe
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChannelSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelSummary(ctx, sel, v[i])
+			ret[i] = ec.marshalNChannelSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummary(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4215,7 +4208,7 @@ func (ec *executionContext) marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMe
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelSummary(ctx context.Context, sel ast.SelectionSet, v *model.ChannelSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummary(ctx context.Context, sel ast.SelectionSet, v *model.ChannelSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4225,7 +4218,7 @@ func (ec *executionContext) marshalNChannelSummary2ᚖgithubᚗcomᚋOpenLNMetri
 	return ec._ChannelSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNChannelsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐChannelsSummary(ctx context.Context, sel ast.SelectionSet, v *model.ChannelsSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelsSummary(ctx context.Context, sel ast.SelectionSet, v *model.ChannelsSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4250,11 +4243,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNMetricOne2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐMetricOne(ctx context.Context, sel ast.SelectionSet, v model.MetricOne) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricOne2githubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx context.Context, sel ast.SelectionSet, v model.MetricOne) graphql.Marshaler {
 	return ec._MetricOne(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐMetricOne(ctx context.Context, sel ast.SelectionSet, v *model.MetricOne) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx context.Context, sel ast.SelectionSet, v *model.MetricOne) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4264,7 +4257,7 @@ func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋ
 	return ec._MetricOne(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeInfo) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4288,7 +4281,7 @@ func (ec *executionContext) marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetrics�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNNodeInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeInfo(ctx, sel, v[i])
+			ret[i] = ec.marshalNNodeInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfo(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4301,7 +4294,7 @@ func (ec *executionContext) marshalNNodeInfo2ᚕᚖgithubᚗcomᚋOpenLNMetrics�
 	return ret
 }
 
-func (ec *executionContext) marshalNNodeInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNNodeInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4311,12 +4304,12 @@ func (ec *executionContext) marshalNNodeInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋl
 	return ec._NodeInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNodeMetrics2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐNodeMetrics(ctx context.Context, v interface{}) (model.NodeMetrics, error) {
+func (ec *executionContext) unmarshalNNodeMetrics2githubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx context.Context, v interface{}) (model.NodeMetrics, error) {
 	res, err := ec.unmarshalInputNodeMetrics(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐOSInfo(ctx context.Context, sel ast.SelectionSet, v *model.OSInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐOSInfo(ctx context.Context, sel ast.SelectionSet, v *model.OSInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4326,7 +4319,7 @@ func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋln�
 	return ec._OSInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PaymentInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PaymentInfo) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4350,7 +4343,7 @@ func (ec *executionContext) marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetri
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPaymentInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentInfo(ctx, sel, v[i])
+			ret[i] = ec.marshalNPaymentInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfo(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4363,7 +4356,7 @@ func (ec *executionContext) marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋOpenLNMetri
 	return ret
 }
 
-func (ec *executionContext) marshalNPaymentInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentInfo(ctx context.Context, sel ast.SelectionSet, v *model.PaymentInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPaymentInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfo(ctx context.Context, sel ast.SelectionSet, v *model.PaymentInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4373,7 +4366,7 @@ func (ec *executionContext) marshalNPaymentInfo2ᚖgithubᚗcomᚋOpenLNMetrics�
 	return ec._PaymentInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPaymentsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐPaymentsSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentsSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNPaymentsSummary2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentsSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentsSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4383,7 +4376,7 @@ func (ec *executionContext) marshalNPaymentsSummary2ᚖgithubᚗcomᚋOpenLNMetr
 	return ec._PaymentsSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Status) graphql.Marshaler {
+func (ec *executionContext) marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Status) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4407,7 +4400,7 @@ func (ec *executionContext) marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4420,7 +4413,7 @@ func (ec *executionContext) marshalNStatus2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v *model.Status) graphql.Marshaler {
+func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v *model.Status) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4428,27 +4421,6 @@ func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋOpenLNMetricsᚋln�
 		return graphql.Null
 	}
 	return ec._Status(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNStatusChannelMap2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatusChannelMap(ctx context.Context, v interface{}) (model.StatusChannelMap, error) {
-	res, err := model.UnmarshalStatusChannelMap(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNStatusChannelMap2githubᚗcomᚋOpenLNMetricsᚋlnᚑmetricsᚑserverᚋgraphᚋmodelᚐStatusChannelMap(ctx context.Context, sel ast.SelectionSet, v model.StatusChannelMap) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := model.MarshalStatusChannelMap(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4732,6 +4704,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return graphql.MarshalInt(*v)
+}
+
+func (ec *executionContext) marshalOStatusChannel2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx context.Context, sel ast.SelectionSet, v []*model.StatusChannel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOStatusChannel2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOStatusChannel2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx context.Context, sel ast.SelectionSet, v *model.StatusChannel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._StatusChannel(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

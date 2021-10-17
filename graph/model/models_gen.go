@@ -27,7 +27,7 @@ type MetricOne struct {
 	OSInfo       *OSInfo          `json:"os_info"`
 	Timezone     int              `json:"timezone"`
 	UpTime       []*Status        `json:"up_time"`
-	ChannelsInfo StatusChannelMap `json:"channels_info"`
+	ChannelsInfo []*StatusChannel `json:"channels_info"`
 }
 
 type NodeInfo struct {
@@ -36,7 +36,7 @@ type NodeInfo struct {
 }
 
 type NodeMetrics struct {
-	Node             string `json:"node_id"`
+	NodeID           string `json:"node_id"`
 	PayloadMetricOne string `json:"payload_metric_one"`
 }
 

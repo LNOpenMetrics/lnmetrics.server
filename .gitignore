@@ -1,0 +1,4 @@
+**/db
+**/vendor
+server.go
+lnmetricsd

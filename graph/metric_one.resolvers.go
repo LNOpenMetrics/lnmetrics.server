@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/generated"
-	"github.com/OpenLNMetrics/ln-metrics-server/graph/model"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 )
 
 func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.MetricsService.AddMetricOne(input.NodeID, input.PayloadMetricOne)
 }
 
 func (r *queryResolver) Nodes(ctx context.Context) ([]*model.NodeInfo, error) {
