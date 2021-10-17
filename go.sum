@@ -4,6 +4,8 @@ github.com/99designs/gqlgen v0.13.0 h1:haLTcUp3Vwp80xMVEg5KRNwzfUrgFdRmtBY8fuB8s
 github.com/99designs/gqlgen v0.13.0/go.mod h1:NV130r6f4tpRWuAI+zsrSdooO/eWUv+Gyyoi3rEfXIk=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OpenLNMetrics/lnmetrics.server v0.0.0-20210813220305-cff307b4d73e h1:HQ3s7SY9INkvE39IxrGz1gu/VBs/11MAGeNIogQyVVg=
+github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211017053303-35330cc6e215 h1:UwyUKz+spsj1goUMysvcgQG/FZSeHC7dcRHzVNc8DAk=
+github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211017053303-35330cc6e215/go.mod h1:dUqUwzGkn6rIgv+U+E1mBl6cOBgLI1iQS70GP1CfcVA=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/agnivade/levenshtein v1.0.3 h1:M5ZnqLOoZR8ygVq0FfkXsNOKzMCk0xRiow0R5+5VkQ0=
 github.com/agnivade/levenshtein v1.0.3/go.mod h1:4SFRZbbXWLF4MU1T9Qg0pGgH3Pjs+t6ie5efyrwRJXs=

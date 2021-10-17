@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
-	"github.com/OpenLNMetrics/lnmetrics.server/pkg/db"
+	"github.com/OpenLNMetrics/lnmetrics.utils/db/leveldb"
 )
 
 type NoSQLDatabase struct {

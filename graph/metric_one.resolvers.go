@@ -15,7 +15,7 @@ func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeM
 	return r.MetricsService.AddMetricOne(input.NodeID, input.PayloadMetricOne)
 }
 
-func (r *queryResolver) Nodes(ctx context.Context) ([]*model.NodeInfo, error) {
+func (r *queryResolver) Nodes(ctx context.Context) ([]string, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
