@@ -5,6 +5,7 @@ import (
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph"
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
+	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"
 
 	"github.com/99designs/gqlgen/client"
@@ -17,7 +18,7 @@ import (
 var TEST_DB *db.NoSQLDatabase
 
 func init() {
-	db, err := db.NewNoSQLDB(map[string]interface{}{"path": "test"})
+	db, err := db.NewNoSQLDB(map[string]interface{}{"path": "dbtest"})
 	if err != nil {
 		panic(err)
 	}
@@ -35,9 +36,10 @@ func TestPushMetricWithNodeId(t *testing.T) {
 			panic(cli)
 		}
 
-		query := utils.ComposeAddMetricOneQuery("1234..", `{ node_id: \"1234..\" }`)
+		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
+		query := utils.ComposeAddMetricOneQuery(modelObj.NodeID, `{name:\"mock\",node_id:\"fake_id\",color:\"0000\"}`)
 
-		mockMetricsService.On("AddMetricOne", "1234..", `{ node_id: "1234.." }`)
+		mockMetricsService.On("AddMetricOne", modelObj.NodeID, `{name:"mock",node_id:"fake_id",color:"0000"}`).Return(&modelObj)
 
 		var resp struct {
 			AddNodeMetrics utils.AddMetricOneResp
@@ -45,6 +47,6 @@ func TestPushMetricWithNodeId(t *testing.T) {
 		cli.MustPost(query, &resp)
 
 		mockMetricsService.AssertExpectations(t)
-		require.Equal(t, "1234...", resp.AddNodeMetrics.NodeID)
+		require.Equal(t, modelObj.NodeID, resp.AddNodeMetrics.NodeID)
 	})
 }
