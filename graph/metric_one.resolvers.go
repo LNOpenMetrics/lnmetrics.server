@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
@@ -16,7 +15,17 @@ func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeM
 }
 
 func (r *queryResolver) Nodes(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented"))
+	nodes, err := r.MetricsService.GetNodes()
+	if err != nil {
+		return make([]string, 0), err
+	}
+	// TODO: Change in the generation code, the return type, from array of string
+	// to slice of string.
+	result := make([]string, 0)
+	for _, nodeId := range nodes {
+		result = append(result, *nodeId)
+	}
+	return result, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

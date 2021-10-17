@@ -10,6 +10,7 @@ import (
 
 type IMetricsService interface {
 	AddMetricOne(nodeID string, payload string) (*model.MetricOne, error)
+	GetNodes() ([]*string, error)
 }
 
 type MetricsService struct {
@@ -36,4 +37,11 @@ func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*mo
 	}
 
 	return &model, nil
+}
+
+// FIXME: This method is slow because get all the key in the database,
+// and this don't scale well, we need also to indexing in a thread safe way the
+// node that are putting information in the db.
+func (instance *MetricsService) GetNodes() ([]*string, error) {
+	return instance.Storage.GetNodesID()
 }

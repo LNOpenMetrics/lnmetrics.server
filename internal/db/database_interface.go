@@ -16,7 +16,7 @@ type MetricsDatabase interface {
 	InsertMetricOne(toInset *model.MetricOne) error
 
 	// Get all the node id stored in the database
-	GetIDs() ([]*string, error)
+	GetNodesID() ([]*string, error)
 
 	// Get all the node data by id
 	GetMetricOne(withId string) (*model.MetricOne, error)

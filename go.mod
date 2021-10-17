@@ -3,13 +3,16 @@ module github.com/OpenLNMetrics/lnmetrics.server
 go 1.15
 
 require (
-	github.com/99designs/gqlgen v0.13.0
-	github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211017053303-35330cc6e215
+	github.com/99designs/gqlgen v0.14.0
+	github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211017055749-a9b47009799d
+	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/joho/godotenv v1.4.0
-	github.com/mrdulin/gqlgen-cnode v0.0.0-20200904054759-5c9d85b9cd6e // indirect
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/vektah/gqlparser/v2 v2.1.0
-	xorm.io/xorm v1.1.2 // indirect
+	github.com/vektah/gqlparser/v2 v2.2.0
+	golang.org/x/sys v0.0.0-20211015200801-69063c4bb744 // indirect
 )

@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
 	"github.com/OpenLNMetrics/lnmetrics.utils/db/leveldb"
@@ -37,8 +36,10 @@ func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) e
 
 // Insert the metricModel in the db
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
-	key := strings.Join([]string{toInsert.NodeID, instance.metricsKey[1]}, "_")
-	jsonVal, err := json.Marshal(toInsert)
+	key := toInsert.NodeID
+	metricOne := make(map[string]interface{})
+	metricOne[instance.metricsKey[1]] = toInsert
+	jsonVal, err := json.Marshal(metricOne)
 	if err != nil {
 		return err
 	}
@@ -50,9 +51,8 @@ func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 }
 
 // Get all the node ids that have some metrics stored in the server
-func (instance NoSQLDatabase) GetIDs() ([]*string, error) {
-	// we need to implement another method inside the leveldb interface
-	return make([]*string, 0), nil
+func (instance NoSQLDatabase) GetNodesID() ([]*string, error) {
+	return db.GetInstance().ListOfKeys()
 }
 
 // Get all the metric of the node with a specified id
