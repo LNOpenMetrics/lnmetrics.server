@@ -31,7 +31,8 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Go test
-        run: make check
+        run: |
+          make check
 
       - name: Build
         run: make build OS=${{ matrix.OS }} ARCH=${{ matrix.ARCH }} ARM=${{ matrix.ARM }}
