@@ -4,11 +4,13 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.14.0
-	github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211017055749-a9b47009799d
+	github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211018052622-a9fb45a6236b
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/joho/godotenv v1.4.0
+	github.com/kyoh86/richgo v0.3.9 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1

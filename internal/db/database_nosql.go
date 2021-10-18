@@ -67,3 +67,18 @@ func (instance NoSQLDatabase) GetMetricOne(withId string) (*model.MetricOne, err
 	}
 	return &model, nil
 }
+
+// close the connection with database
+func (instance NoSQLDatabase) CloseDatabase() error {
+	return db.GetInstance().CloseDatabase()
+}
+
+// Erase database
+func (instance NoSQLDatabase) EraseDatabase() error {
+	return db.GetInstance().EraseDatabase()
+}
+
+// Close and aftert erase the connection with the database
+func (instance NoSQLDatabase) EraseAfterCloseDatabase() error {
+	return db.GetInstance().EraseAfterCloseDatabse()
+}

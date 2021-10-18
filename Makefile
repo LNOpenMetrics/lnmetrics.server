@@ -14,7 +14,7 @@ fmt:
 	$(CC) fmt ./...
 
 check:
-	$(CC) test -v ./...
+	richgo test ./tests -v
 
 lint:
 	golangci-lint run

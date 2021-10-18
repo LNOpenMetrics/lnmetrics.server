@@ -20,4 +20,13 @@ type MetricsDatabase interface {
 
 	// Get all the node data by id
 	GetMetricOne(withId string) (*model.MetricOne, error)
+
+	// Close the connection with the database
+	CloseDatabase() error
+
+	// Erase the content of the database
+	EraseDatabase() error
+
+	// Close the connection and erase the database
+	EraseAfterCloseDatabase() error
 }
