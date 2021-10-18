@@ -13,14 +13,21 @@ build:
 fmt:
 	$(CC) fmt ./...
 
+check-full:
+	richgo test ./tests -v
+
 check:
-	$(CC) test -v ./...
+	$(CC) test ./...
 
 lint:
 	golangci-lint run
 
 gen:
 	$(CC) generate ./...
+
+mod:
+	$(CC) get -u github.com/kyoh86/richgo
+	$(CC) mod vendor
 
 release:
 	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/lnmetrics.server/main.go

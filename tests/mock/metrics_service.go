@@ -14,3 +14,8 @@ func (instance *MockMetricsServices) AddMetricOne(nodeId string, payload string)
 	args := instance.Called(nodeId, payload)
 	return args.Get(0).(*model.MetricOne), nil
 }
+
+func (instance *MockMetricsServices) GetNodes() ([]*string, error) {
+	args := instance.Called()
+	return args.Get(0).([]*string), nil
+}

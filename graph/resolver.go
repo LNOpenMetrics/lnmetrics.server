@@ -4,7 +4,7 @@ package graph
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-//go:generate go run github.com/99designs/gqlgen generate
+//go:generate go run ../scripts/gqlgen.go
 
 import (
 	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"

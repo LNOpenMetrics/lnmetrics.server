@@ -18,3 +18,10 @@ func ComposeAddMetricOneQuery(nodeId string, payload string) string {
 	fmtString := fmt.Sprintf(query, nodeId, payload)
 	return fmtString
 }
+
+func ComposeGetNodesQuery() string {
+	query := `query {
+                    nodes
+                  }`
+	return query
+}

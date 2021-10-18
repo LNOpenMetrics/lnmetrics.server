@@ -76,8 +76,10 @@ input NodeMetrics {
      payload_metric_one: String! @goField(name: "PayloadMetricOne")
 }
 
+# Query definition
+
 type Query {
-  nodes: [NodeInfo!]! @goField(name: "Nodes")
+  nodes: [String!]! @goField(name: "Nodes")
 }
 
 type Mutation {
