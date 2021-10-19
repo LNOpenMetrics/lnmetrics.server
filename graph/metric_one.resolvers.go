@@ -28,6 +28,10 @@ func (r *queryResolver) Nodes(ctx context.Context) ([]string, error) {
 	return result, nil
 }
 
+func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string) (*model.MetricOne, error) {
+	return r.MetricsService.GetMetricOne(nodeID)
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

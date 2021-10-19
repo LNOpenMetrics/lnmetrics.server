@@ -60,3 +60,26 @@ func TestGetNodesId(t *testing.T) {
 		require.Equal(t, emptyList, resp.Nodes)
 	})
 }
+
+func TestGetMetricOneByNodeID(t *testing.T) {
+	t.Run("Get Metric one by id", func(t *testing.T) {
+		mockMetricsService := new(lnmock.MockMetricsServices)
+		resolvers := graph.Resolver{MetricsService: mockMetricsService}
+		cli := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})))
+		if cli == nil {
+			panic(cli)
+		}
+
+		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
+		mockMetricsService.On("GetMetricOne", modelObj.NodeID).Return(&modelObj)
+		query := utils.ComposeGetMetricOneQuery(modelObj.NodeID)
+
+		var resp struct {
+			GetMetricOne *model.MetricOne
+		}
+		cli.MustPost(query, &resp)
+
+		mockMetricsService.AssertExpectations(t)
+		require.Equal(t, &modelObj, resp.GetMetricOne)
+	})
+}
