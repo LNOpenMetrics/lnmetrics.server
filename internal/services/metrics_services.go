@@ -11,6 +11,7 @@ import (
 type IMetricsService interface {
 	AddMetricOne(nodeID string, payload string) (*model.MetricOne, error)
 	GetNodes() ([]*string, error)
+	GetMetricOne(nodeID string) (*model.MetricOne, error)
 }
 
 type MetricsService struct {
@@ -44,4 +45,13 @@ func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*mo
 // node that are putting information in the db.
 func (instance *MetricsService) GetNodes() ([]*string, error) {
 	return instance.Storage.GetNodesID()
+}
+
+// Get the the metric one information by node id
+func (instance *MetricsService) GetMetricOne(nodeID string) (*model.MetricOne, error) {
+	metricNodeInfo, err := instance.Storage.GetMetricOne(nodeID)
+	if err != nil {
+		return nil, err
+	}
+	return metricNodeInfo, nil
 }

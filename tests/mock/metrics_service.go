@@ -19,3 +19,8 @@ func (instance *MockMetricsServices) GetNodes() ([]*string, error) {
 	args := instance.Called()
 	return args.Get(0).([]*string), nil
 }
+
+func (instance *MockMetricsServices) GetMetricOne(nodeID string) (*model.MetricOne, error) {
+	args := instance.Called(nodeID)
+	return args.Get(0).(*model.MetricOne), nil
+}

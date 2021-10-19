@@ -25,3 +25,14 @@ func ComposeGetNodesQuery() string {
                   }`
 	return query
 }
+
+func ComposeGetMetricOneQuery(nodeID string) string {
+	query := `query{
+                     getMetricOne(node_id: "%s") {
+                        node_id,
+                        name,
+                        color
+                     }
+                  }`
+	return fmt.Sprintf(query, nodeID)
+}

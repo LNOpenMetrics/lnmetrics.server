@@ -57,12 +57,26 @@ func (instance NoSQLDatabase) GetNodesID() ([]*string, error) {
 
 // Get all the metric of the node with a specified id
 func (instance NoSQLDatabase) GetMetricOne(withId string) (*model.MetricOne, error) {
-	metricOne, err := db.GetInstance().GetValue(withId)
+	// FIXME: In this case the node info can grow when it contains different
+	// metric type, a solution could be adding a indirection level.
+	nodeInfo, err := db.GetInstance().GetValue(withId)
+	if err != nil {
+		return nil, fmt.Errorf("Research by node id %s return the following error: %s", withId, err)
+	}
+	var modelMap map[string]interface{}
+	if err := json.Unmarshal([]byte(nodeInfo), &modelMap); err != nil {
+		return nil, err
+	}
+	metricOneMap, found := modelMap[instance.metricsKey[1]]
+	if !found {
+		return nil, fmt.Errorf("Node %s doesn't contains metric one info", withId)
+	}
+	metricOneJson, err := json.Marshal(metricOneMap)
 	if err != nil {
 		return nil, err
 	}
 	var model model.MetricOne
-	if err := json.Unmarshal([]byte(metricOne), &model); err != nil {
+	if err := json.Unmarshal(metricOneJson, &model); err != nil {
 		return nil, err
 	}
 	return &model, nil

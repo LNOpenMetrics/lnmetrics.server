@@ -80,6 +80,7 @@ input NodeMetrics {
 
 type Query {
   nodes: [String!]! @goField(name: "Nodes")
+  getMetricOne(node_id: String!): MetricOne!
 }
 
 type Mutation {
