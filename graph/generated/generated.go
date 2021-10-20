@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 		ChannelsInfo func(childComplexity int) int
 		Color        func(childComplexity int) int
 		Name         func(childComplexity int) int
+		NodeAlias    func(childComplexity int) int
 		NodeID       func(childComplexity int) int
 		OSInfo       func(childComplexity int) int
 		Timezone     func(childComplexity int) int
@@ -224,12 +225,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOne.Color(childComplexity), true
 
-	case "MetricOne.name":
+	case "MetricOne.metric_name":
 		if e.complexity.MetricOne.Name == nil {
 			break
 		}
 
 		return e.complexity.MetricOne.Name(childComplexity), true
+
+	case "MetricOne.node_alias":
+		if e.complexity.MetricOne.NodeAlias == nil {
+			break
+		}
+
+		return e.complexity.MetricOne.NodeAlias(childComplexity), true
 
 	case "MetricOne.node_id":
 		if e.complexity.MetricOne.NodeID == nil {
@@ -557,11 +565,12 @@ type ChannelStatus {
 }
 
 type MetricOne {
-     name: String! @goField(name: "Name")
+     metric_name: String! @goField(name: "Name")
      node_id: String! @goField(name: "NodeID")
      color: String! @goField(name: "Color")
+     node_alias: String! @goField(name: "NodeAlias")
      os_info: OSInfo! @goField(name: "OSInfo")
-     timezone: Int! @goField(name: "Timezone")
+     timezone: String! @goField(name: "Timezone")
      up_time: [Status!]! @goField(name: "UpTime")
      channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
 }
@@ -608,7 +617,6 @@ input NodeMetrics {
 }
 
 # Query definition
-
 type Query {
   nodes: [String!]! @goField(name: "Nodes")
   getMetricOne(node_id: String!): MetricOne!
@@ -1023,7 +1031,7 @@ func (ec *executionContext) _ChannelsSummary_summary(ctx context.Context, field 
 	return ec.marshalNChannelSummary2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOne_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOne_metric_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1128,6 +1136,41 @@ func (ec *executionContext) _MetricOne_color(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MetricOne_node_alias(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOne",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeAlias, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _MetricOne_os_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1193,9 +1236,9 @@ func (ec *executionContext) _MetricOne_timezone(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -3607,8 +3650,8 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MetricOne")
-		case "name":
-			out.Values[i] = ec._MetricOne_name(ctx, field, obj)
+		case "metric_name":
+			out.Values[i] = ec._MetricOne_metric_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3619,6 +3662,11 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			}
 		case "color":
 			out.Values[i] = ec._MetricOne_color(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_alias":
+			out.Values[i] = ec._MetricOne_node_alias(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
