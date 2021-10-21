@@ -31,3 +31,7 @@ mod:
 
 release:
 	env GOOS=$(OS) GOARCH=$(ARCH) $(CC) build -o $(NAME)-$(OS)-$(ARCH) cmd/lnmetrics.server/main.go
+
+prod:
+	$(CC) build -ldflags '-s -w' -o $(NAME) cmd/lnmetrics.server/main.go
+
