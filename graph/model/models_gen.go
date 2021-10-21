@@ -21,11 +21,12 @@ type ChannelsSummary struct {
 }
 
 type MetricOne struct {
-	Name         string           `json:"name"`
+	Name         string           `json:"metric_name"`
 	NodeID       string           `json:"node_id"`
 	Color        string           `json:"color"`
+	NodeAlias    string           `json:"node_alias"`
 	OSInfo       *OSInfo          `json:"os_info"`
-	Timezone     int              `json:"timezone"`
+	Timezone     string           `json:"timezone"`
 	UpTime       []*Status        `json:"up_time"`
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
 }

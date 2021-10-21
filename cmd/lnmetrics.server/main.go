@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -9,6 +9,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/OpenLNMetrics/lnmetrics.utils/log"
 
 	"github.com/OpenLNMetrics/lnmetrics.server/graph"
 	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
@@ -19,7 +20,7 @@ const DEFAULT_PORT = "8080"
 
 func init() {
 	if err := godotenv.Load(); err != nil {
-		panic(err)
+		log.GetInstance().Info(fmt.Sprintf("%s", err))
 	}
 }
 
@@ -47,6 +48,6 @@ func main() {
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.GetInstance().Info(fmt.Sprintf("connect to http://localhost:%s/ for GraphQL playground", port))
+	log.GetInstance().Info(http.ListenAndServe(":"+port, nil))
 }

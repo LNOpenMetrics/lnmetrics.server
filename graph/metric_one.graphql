@@ -26,11 +26,12 @@ type ChannelStatus {
 }
 
 type MetricOne {
-     name: String! @goField(name: "Name")
+     metric_name: String! @goField(name: "Name")
      node_id: String! @goField(name: "NodeID")
      color: String! @goField(name: "Color")
+     node_alias: String! @goField(name: "NodeAlias")
      os_info: OSInfo! @goField(name: "OSInfo")
-     timezone: Int! @goField(name: "Timezone")
+     timezone: String! @goField(name: "Timezone")
      up_time: [Status!]! @goField(name: "UpTime")
      channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
 }
@@ -77,7 +78,6 @@ input NodeMetrics {
 }
 
 # Query definition
-
 type Query {
   nodes: [String!]! @goField(name: "Nodes")
   getMetricOne(node_id: String!): MetricOne!

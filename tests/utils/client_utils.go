@@ -30,7 +30,7 @@ func ComposeGetMetricOneQuery(nodeID string) string {
 	query := `query{
                      getMetricOne(node_id: "%s") {
                         node_id,
-                        name,
+                        metric_name,
                         color
                      }
                   }`

@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  lightningd:
+    build: .
+    volumes:
+      - ./data:/lnmetrics/.lnmetrics
+    ports:
+      - "8081:8080"
+    environment:
+      - SERVER_PORT=8080
+      - DB_PATH=/lnmetrics/.lnmetrics
