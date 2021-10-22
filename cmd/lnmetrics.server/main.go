@@ -9,6 +9,8 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/OpenLNMetrics/lnmetrics.utils/log"
 
@@ -44,11 +46,17 @@ func main() {
 		panic(err)
 	}
 
+	var mb int64 = 1 << 20
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(dbVal)}))
-
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.MultipartForm{
+		MaxMemory:     100 * mb,
+		MaxUploadSize: 100 * mb,
+	})
+	srv.SetQueryCache(lru.New(1))
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	log.GetInstance().Info(fmt.Sprintf("connect to http://localhost:%s/ for GraphQL playground", port))
-	log.GetInstance().Info(http.ListenAndServe(":"+port, nil))
+	fmt.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	fmt.Printf("%s", http.ListenAndServe(":"+port, nil))
 }
