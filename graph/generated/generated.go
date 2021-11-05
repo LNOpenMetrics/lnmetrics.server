@@ -65,15 +65,23 @@ type ComplexityRoot struct {
 		ChannelsInfo func(childComplexity int) int
 		Color        func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Network      func(childComplexity int) int
 		NodeAlias    func(childComplexity int) int
 		NodeID       func(childComplexity int) int
+		NodeInfo     func(childComplexity int) int
 		OSInfo       func(childComplexity int) int
 		Timezone     func(childComplexity int) int
 		UpTime       func(childComplexity int) int
+		Version      func(childComplexity int) int
 	}
 
 	Mutation struct {
 		AddNodeMetrics func(childComplexity int, input model.NodeMetrics) int
+	}
+
+	NodeImpInfo struct {
+		Implementation func(childComplexity int) int
+		Version        func(childComplexity int) int
 	}
 
 	NodeInfo struct {
@@ -232,6 +240,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOne.Name(childComplexity), true
 
+	case "MetricOne.network":
+		if e.complexity.MetricOne.Network == nil {
+			break
+		}
+
+		return e.complexity.MetricOne.Network(childComplexity), true
+
 	case "MetricOne.node_alias":
 		if e.complexity.MetricOne.NodeAlias == nil {
 			break
@@ -245,6 +260,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOne.NodeID(childComplexity), true
+
+	case "MetricOne.node_info":
+		if e.complexity.MetricOne.NodeInfo == nil {
+			break
+		}
+
+		return e.complexity.MetricOne.NodeInfo(childComplexity), true
 
 	case "MetricOne.os_info":
 		if e.complexity.MetricOne.OSInfo == nil {
@@ -267,6 +289,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOne.UpTime(childComplexity), true
 
+	case "MetricOne.version":
+		if e.complexity.MetricOne.Version == nil {
+			break
+		}
+
+		return e.complexity.MetricOne.Version(childComplexity), true
+
 	case "Mutation.addNodeMetrics":
 		if e.complexity.Mutation.AddNodeMetrics == nil {
 			break
@@ -278,6 +307,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddNodeMetrics(childComplexity, args["input"].(model.NodeMetrics)), true
+
+	case "NodeImpInfo.implementation":
+		if e.complexity.NodeImpInfo.Implementation == nil {
+			break
+		}
+
+		return e.complexity.NodeImpInfo.Implementation(childComplexity), true
+
+	case "NodeImpInfo.version":
+		if e.complexity.NodeImpInfo.Version == nil {
+			break
+		}
+
+		return e.complexity.NodeImpInfo.Version(childComplexity), true
 
 	case "NodeInfo.metric_one":
 		if e.complexity.NodeInfo.MetricOne == nil {
@@ -564,15 +607,28 @@ type ChannelStatus {
      status: String! @goField(name: "Status")
 }
 
+# Information about the node implementation
+type NodeImpInfo {
+  implementation: String! @goField(name: "Implementation")
+  version: String! @goField(name: "Version")
+}
+
 type MetricOne {
      metric_name: String! @goField(name: "Name")
      node_id: String! @goField(name: "NodeID")
      color: String! @goField(name: "Color")
-     node_alias: String! @goField(name: "NodeAlias")
-     os_info: OSInfo! @goField(name: "OSInfo")
+  node_alias: String! @goField(name: "NodeAlias")
+  #Network must be not null but in the server we miss
+  # some migration policy, so for the momenet we accept null value
+     network: String @goField(name: "Network")
+  os_info: OSInfo! @goField(name: "OSInfo")
+  # Null for the same reason of Network
+  node_info: NodeImpInfo @goField(name: "NodeInfo")
      timezone: String! @goField(name: "Timezone")
      up_time: [Status!]! @goField(name: "UpTime")
-     channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  # Same reason of the Network.
+  version: Int @goField(name: "Version")
 }
 
 type NodeInfo {
@@ -1171,6 +1227,38 @@ func (ec *executionContext) _MetricOne_node_alias(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MetricOne_network(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOne",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Network, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _MetricOne_os_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1204,6 +1292,38 @@ func (ec *executionContext) _MetricOne_os_info(ctx context.Context, field graphq
 	res := resTmp.(*model.OSInfo)
 	fc.Result = res
 	return ec.marshalNOSInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐOSInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOne_node_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOne",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.NodeImpInfo)
+	fc.Result = res
+	return ec.marshalONodeImpInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeImpInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_timezone(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -1308,6 +1428,38 @@ func (ec *executionContext) _MetricOne_channels_info(ctx context.Context, field 
 	return ec.marshalOStatusChannel2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOne",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1348,6 +1500,76 @@ func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field 
 	res := resTmp.(*model.MetricOne)
 	fc.Result = res
 	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeImpInfo_implementation(ctx context.Context, field graphql.CollectedField, obj *model.NodeImpInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeImpInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Implementation, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeImpInfo_version(ctx context.Context, field graphql.CollectedField, obj *model.NodeImpInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeImpInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NodeInfo_node_id(ctx context.Context, field graphql.CollectedField, obj *model.NodeInfo) (ret graphql.Marshaler) {
@@ -3670,11 +3892,15 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "network":
+			out.Values[i] = ec._MetricOne_network(ctx, field, obj)
 		case "os_info":
 			out.Values[i] = ec._MetricOne_os_info(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "node_info":
+			out.Values[i] = ec._MetricOne_node_info(ctx, field, obj)
 		case "timezone":
 			out.Values[i] = ec._MetricOne_timezone(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3687,6 +3913,8 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			}
 		case "channels_info":
 			out.Values[i] = ec._MetricOne_channels_info(ctx, field, obj)
+		case "version":
+			out.Values[i] = ec._MetricOne_version(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3715,6 +3943,38 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "addNodeMetrics":
 			out.Values[i] = ec._Mutation_addNodeMetrics(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var nodeImpInfoImplementors = []string{"NodeImpInfo"}
+
+func (ec *executionContext) _NodeImpInfo(ctx context.Context, sel ast.SelectionSet, obj *model.NodeImpInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nodeImpInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NodeImpInfo")
+		case "implementation":
+			out.Values[i] = ec._NodeImpInfo_implementation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "version":
+			out.Values[i] = ec._NodeImpInfo_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4928,6 +5188,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return graphql.MarshalInt(*v)
+}
+
+func (ec *executionContext) marshalONodeImpInfo2ᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeImpInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeImpInfo) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._NodeImpInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOStatusChannel2ᚕᚖgithubᚗcomᚋOpenLNMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx context.Context, sel ast.SelectionSet, v []*model.StatusChannel) graphql.Marshaler {
