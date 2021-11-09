@@ -12,11 +12,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/OpenLNMetrics/lnmetrics.utils/log"
+	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 
-	"github.com/OpenLNMetrics/lnmetrics.server/graph"
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
-	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 )
 
 const DEFAULT_PORT = "8080"

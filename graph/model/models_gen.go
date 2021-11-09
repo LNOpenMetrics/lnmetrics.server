@@ -25,10 +25,18 @@ type MetricOne struct {
 	NodeID       string           `json:"node_id"`
 	Color        string           `json:"color"`
 	NodeAlias    string           `json:"node_alias"`
+	Network      *string          `json:"network"`
 	OSInfo       *OSInfo          `json:"os_info"`
+	NodeInfo     *NodeImpInfo     `json:"node_info"`
 	Timezone     string           `json:"timezone"`
 	UpTime       []*Status        `json:"up_time"`
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
+	Version      *int             `json:"version"`
+}
+
+type NodeImpInfo struct {
+	Implementation string `json:"implementation"`
+	Version        string `json:"version"`
 }
 
 type NodeInfo struct {

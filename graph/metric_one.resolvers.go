@@ -6,8 +6,8 @@ package graph
 import (
 	"context"
 
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
 func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {

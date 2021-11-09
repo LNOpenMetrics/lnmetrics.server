@@ -1,10 +1,10 @@
-module github.com/OpenLNMetrics/lnmetrics.server
+module github.com/LNOpenMetrics/lnmetrics.server
 
 go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.14.0
-	github.com/OpenLNMetrics/lnmetrics.utils v0.0.0-20211018052622-a9fb45a6236b
+	github.com/LNOpenMetrics/lnmetrics.utils v0.0.0-20211109065240-8b2308c6c67a
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect

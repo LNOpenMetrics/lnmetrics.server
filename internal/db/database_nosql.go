@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
-	"github.com/OpenLNMetrics/lnmetrics.utils/db/leveldb"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
 )
 
 type NoSQLDatabase struct {

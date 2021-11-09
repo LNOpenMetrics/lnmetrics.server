@@ -25,15 +25,28 @@ type ChannelStatus {
      status: String! @goField(name: "Status")
 }
 
+# Information about the node implementation
+type NodeImpInfo {
+  implementation: String! @goField(name: "Implementation")
+  version: String! @goField(name: "Version")
+}
+
 type MetricOne {
      metric_name: String! @goField(name: "Name")
      node_id: String! @goField(name: "NodeID")
      color: String! @goField(name: "Color")
-     node_alias: String! @goField(name: "NodeAlias")
-     os_info: OSInfo! @goField(name: "OSInfo")
+  node_alias: String! @goField(name: "NodeAlias")
+  #Network must be not null but in the server we miss
+  # some migration policy, so for the momenet we accept null value
+     network: String @goField(name: "Network")
+  os_info: OSInfo! @goField(name: "OSInfo")
+  # Null for the same reason of Network
+  node_info: NodeImpInfo @goField(name: "NodeInfo")
      timezone: String! @goField(name: "Timezone")
      up_time: [Status!]! @goField(name: "UpTime")
-     channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  # Same reason of the Network.
+  version: Int @goField(name: "Version")
 }
 
 type NodeInfo {

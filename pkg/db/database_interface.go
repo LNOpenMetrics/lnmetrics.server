@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/syndtr/goleveldb/leveldb"
 
-	log "github.com/OpenLNMetrics/lnmetrics.server/pkg/log"
+	log "github.com/LNOpenMetrics/lnmetrics.server/pkg/log"
 )
 
 type database struct {

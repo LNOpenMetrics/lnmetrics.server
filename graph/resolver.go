@@ -7,8 +7,8 @@ package graph
 //go:generate go run ../scripts/gqlgen.go
 
 import (
-	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"
-	"github.com/OpenLNMetrics/lnmetrics.server/internal/services"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/services"
 )
 
 type Resolver struct {
