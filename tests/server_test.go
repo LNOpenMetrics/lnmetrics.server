@@ -3,14 +3,14 @@ package main
 import (
 	"testing"
 
-	"github.com/OpenLNMetrics/lnmetrics.server/graph"
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/generated"
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	lnmock "github.com/OpenLNMetrics/lnmetrics.server/tests/mock"
-	"github.com/OpenLNMetrics/lnmetrics.server/tests/utils"
+	lnmock "github.com/LNOpenMetrics/lnmetrics.server/tests/mock"
+	"github.com/LNOpenMetrics/lnmetrics.server/tests/utils"
 	"github.com/stretchr/testify/require"
 )
 

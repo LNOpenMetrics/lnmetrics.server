@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/OpenLNMetrics/lnmetrics.server/graph/model"
-	"github.com/OpenLNMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 )
 
 type IMetricsService interface {
