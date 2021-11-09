@@ -7,6 +7,7 @@ package graph
 //go:generate go run ../scripts/gqlgen.go
 
 import (
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/services"
 )
@@ -15,8 +16,8 @@ type Resolver struct {
 	MetricsService services.IMetricsService
 }
 
-func NewResolver(db db.MetricsDatabase) *Resolver {
+func NewResolver(db db.MetricsDatabase, lnBackend backend.Backend) *Resolver {
 	return &Resolver{
-		MetricsService: services.NewMetricsService(db),
+		MetricsService: services.NewMetricsService(db, lnBackend),
 	}
 }

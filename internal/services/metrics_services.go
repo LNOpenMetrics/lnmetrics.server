@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 )
 
@@ -16,11 +17,12 @@ type IMetricsService interface {
 
 type MetricsService struct {
 	Storage db.MetricsDatabase
+	Backend backend.Backend
 }
 
 // Constructor method.
-func NewMetricsService(db db.MetricsDatabase) *MetricsService {
-	return &MetricsService{Storage: db}
+func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
+	return &MetricsService{Storage: db, Backend: lnBackend}
 }
 
 // Verify and Store metrics one in the internal storage.
