@@ -10,9 +10,17 @@ import (
 )
 
 type IMetricsService interface {
-	AddMetricOne(nodeID string, payload string) (*model.MetricOne, error)
-	GetNodes() ([]*string, error)
-	GetMetricOne(nodeID string) (*model.MetricOne, error)
+	// Init method it is called only the first time from the node
+	// when it is not init in the server, but it has some metrics collected
+	InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error)
+	//  Append other metrics collected in a range of period by the node
+	UpdateMetricOne(nodeID string, payload string, signature string) error
+	// Return the list of nodes available on the server
+	GetNodes() ([]*model.NodeMetadata, error)
+	// Return the node metadata available on the server (utils for the init method)
+	GetNode(nodeID string) (*model.NodeMetadata, error)
+	// Return the node metrics with a nodeID, and option range, from start to an end period
+	GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error)
 }
 
 type MetricsService struct {
@@ -47,15 +55,25 @@ func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*mo
 	return &model, nil
 }
 
-// FIXME: This method is slow because get all the key in the database,
-// and this don't scale well, we need also to indexing in a thread safe way the
-// node that are putting information in the db.
-func (instance *MetricsService) GetNodes() ([]*string, error) {
-	return instance.Storage.GetNodesID()
+func (instance *MetricsService) InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error) {
+	return nil, fmt.Errorf("Not implemented yet")
 }
 
-// Get the the metric one information by node id
-func (instance *MetricsService) GetMetricOne(nodeID string) (*model.MetricOne, error) {
+func (instance *MetricsService) UpdateMetricOne(nodeID string, payload string, signature string) error {
+	return fmt.Errorf("Not implemented yet")
+}
+
+// Return all the node information that are pushing the data.
+func (instance *MetricsService) GetNodes() ([]*model.NodeMetadata, error) {
+	return nil, fmt.Errorf("Not implemented yet")
+}
+
+func (instance *MetricsService) GetNode(nodeID string) (*model.NodeMetadata, error) {
+	return nil, fmt.Errorf("Not implemented yet")
+}
+
+// Get the metric one of one node and add a filtering option by period
+func (instance *MetricsService) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
 	metricNodeInfo, err := instance.Storage.GetMetricOne(nodeID)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"fmt"
+
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 
 	"github.com/stretchr/testify/mock"
@@ -10,17 +12,24 @@ type MockMetricsServices struct {
 	mock.Mock
 }
 
-func (instance *MockMetricsServices) AddMetricOne(nodeId string, payload string) (*model.MetricOne, error) {
-	args := instance.Called(nodeId, payload)
-	return args.Get(0).(*model.MetricOne), nil
+func (instance *MockMetricsServices) InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error) {
+	return nil, fmt.Errorf("Not implemented yet")
 }
 
-func (instance *MockMetricsServices) GetNodes() ([]*string, error) {
-	args := instance.Called()
-	return args.Get(0).([]*string), nil
+func (instance *MockMetricsServices) UpdateMetricOne(nodeID string, payload string, signature string) error {
+	return fmt.Errorf("Not implemented yet")
 }
 
-func (instance *MockMetricsServices) GetMetricOne(nodeID string) (*model.MetricOne, error) {
-	args := instance.Called(nodeID)
-	return args.Get(0).(*model.MetricOne), nil
+// Return all the node information that are pushing the data.
+func (instance *MockMetricsServices) GetNodes() ([]*model.NodeMetadata, error) {
+	return nil, fmt.Errorf("Not implemented yet")
+}
+
+func (instance *MockMetricsServices) GetNode(nodeID string) (*model.NodeMetadata, error) {
+	return nil, fmt.Errorf("Not implemented yet")
+}
+
+// Get the metric one of one node and add a filtering option by period
+func (instance *MockMetricsServices) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
+	return nil, fmt.Errorf("Not implemented yet")
 }

@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetMetricOne func(childComplexity int, nodeID string, startPeriod int, endPeriod int) int
+		GetNode      func(childComplexity int, nodeID string) int
 		GetNodes     func(childComplexity int) int
 	}
 
@@ -158,6 +159,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	GetNodes(ctx context.Context) ([]*model.NodeMetadata, error)
+	GetNode(ctx context.Context, nodeID string) (*model.NodeMetadata, error)
 	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 }
 
@@ -525,6 +527,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetMetricOne(childComplexity, args["node_id"].(string), args["start_period"].(int), args["end_period"].(int)), true
 
+	case "Query.getNode":
+		if e.complexity.Query.GetNode == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getNode_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetNode(childComplexity, args["node_id"].(string)), true
+
 	case "Query.getNodes":
 		if e.complexity.Query.GetNodes == nil {
 			break
@@ -808,6 +822,8 @@ input NodeMetrics {
 type Query {
   # Get the list of nodes that are contributing in metric collection
   getNodes: [NodeMetadata!]!
+  # Get the node metadata if exist on the server
+  getNode(node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
@@ -958,6 +974,21 @@ func (ec *executionContext) field_Query_getMetricOne_args(ctx context.Context, r
 		}
 	}
 	args["end_period"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getNode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["node_id"] = arg0
 	return args, nil
 }
 
@@ -2645,6 +2676,48 @@ func (ec *executionContext) _Query_getNodes(ctx context.Context, field graphql.C
 	res := resTmp.([]*model.NodeMetadata)
 	fc.Result = res
 	return ec.marshalNNodeMetadata2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadataᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getNode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getNode_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetNode(rctx, args["node_id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.NodeMetadata)
+	fc.Result = res
+	return ec.marshalNNodeMetadata2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getMetricOne(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4920,6 +4993,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "getNode":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getNode(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "getMetricOne":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5537,6 +5624,10 @@ func (ec *executionContext) marshalNNodeInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋl
 		return graphql.Null
 	}
 	return ec._NodeInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNodeMetadata2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadata(ctx context.Context, sel ast.SelectionSet, v model.NodeMetadata) graphql.Marshaler {
+	return ec._NodeMetadata(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNNodeMetadata2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadataᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeMetadata) graphql.Marshaler {
