@@ -222,7 +222,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 //nolint:golint,unused
 func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
 	nodesIndex := make([]*string, 0)
-	//TODO: use cache
+	// TODO: use cache
 	// TODO: during the megrationg create the index too.
 	dbIndex, err := db.GetInstance().GetValue("node_index")
 	if err != nil {
@@ -270,12 +270,29 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		if err := instance.indexingInDB(*nodeId); err != nil {
 			return err
 		}
+
 		metricOneBlob, err := db.GetInstance().GetValue(*nodeId)
 		if err != nil {
 			return err
 		}
+
+		var modelMap map[string]interface{}
+		if err := json.Unmarshal([]byte(metricOneBlob), &modelMap); err != nil {
+			return err
+		}
+
+		metricOneInMap, found := modelMap[instance.metricsKey[1]]
+		if !found {
+			return fmt.Errorf("Node %s doesn't contains metric one info", *nodeId)
+		}
+
+		metricOneCore, err := json.Marshal(metricOneInMap)
+		if err != nil {
+			return err
+		}
+
 		var metricOne model.MetricOne
-		if err := json.Unmarshal([]byte(metricOneBlob), &metricOne); err != nil {
+		if err := json.Unmarshal(metricOneCore, &metricOne); err != nil {
 			return err
 		}
 		newNodeID, err := instance.ItemID(&metricOne)
