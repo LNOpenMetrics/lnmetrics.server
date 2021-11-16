@@ -111,9 +111,9 @@ input NodeMetrics {
 # Query definition
 type Query {
   # Get the list of nodes that are contributing in metric collection
-  getNodes: [NodeMetadata!]!
+  getNodes(network: String!): [NodeMetadata!]!
   # Get the node metadata if exist on the server
-  getNode(node_id: String!): NodeMetadata!
+  getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!

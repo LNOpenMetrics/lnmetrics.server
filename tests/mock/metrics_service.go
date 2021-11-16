@@ -21,11 +21,11 @@ func (instance *MockMetricsServices) UpdateMetricOne(nodeID string, payload stri
 }
 
 // Return all the node information that are pushing the data.
-func (instance *MockMetricsServices) GetNodes() ([]*model.NodeMetadata, error) {
+func (instance *MockMetricsServices) GetNodes(network string) ([]*model.NodeMetadata, error) {
 	return nil, fmt.Errorf("Not implemented yet")
 }
 
-func (instance *MockMetricsServices) GetNode(nodeID string) (*model.NodeMetadata, error) {
+func (instance *MockMetricsServices) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
 	return nil, fmt.Errorf("Not implemented yet")
 }
 

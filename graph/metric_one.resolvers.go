@@ -23,11 +23,11 @@ func (r *mutationResolver) UpdateMetricOne(ctx context.Context, nodeID string, p
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) GetNodes(ctx context.Context) ([]*model.NodeMetadata, error) {
+func (r *queryResolver) GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) GetNode(ctx context.Context, nodeID string) (*model.NodeMetadata, error) {
+func (r *queryResolver) GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

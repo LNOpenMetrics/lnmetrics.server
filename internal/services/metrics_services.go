@@ -16,9 +16,9 @@ type IMetricsService interface {
 	//  Append other metrics collected in a range of period by the node
 	UpdateMetricOne(nodeID string, payload string, signature string) error
 	// Return the list of nodes available on the server
-	GetNodes() ([]*model.NodeMetadata, error)
+	GetNodes(network string) ([]*model.NodeMetadata, error)
 	// Return the node metadata available on the server (utils for the init method)
-	GetNode(nodeID string) (*model.NodeMetadata, error)
+	GetNode(network string, nodeID string) (*model.NodeMetadata, error)
 	// Return the node metrics with a nodeID, and option range, from start to an end period
 	GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error)
 }
@@ -64,11 +64,11 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload string, s
 }
 
 // Return all the node information that are pushing the data.
-func (instance *MetricsService) GetNodes() ([]*model.NodeMetadata, error) {
+func (instance *MetricsService) GetNodes(network string) ([]*model.NodeMetadata, error) {
 	return nil, fmt.Errorf("Not implemented yet")
 }
 
-func (instance *MetricsService) GetNode(nodeID string) (*model.NodeMetadata, error) {
+func (instance *MetricsService) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
 	return nil, fmt.Errorf("Not implemented yet")
 }
 

@@ -127,8 +127,8 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetMetricOne func(childComplexity int, nodeID string, startPeriod int, endPeriod int) int
-		GetNode      func(childComplexity int, nodeID string) int
-		GetNodes     func(childComplexity int) int
+		GetNode      func(childComplexity int, network string, nodeID string) int
+		GetNodes     func(childComplexity int, network string) int
 	}
 
 	Status struct {
@@ -158,8 +158,8 @@ type MutationResolver interface {
 	UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error)
 }
 type QueryResolver interface {
-	GetNodes(ctx context.Context) ([]*model.NodeMetadata, error)
-	GetNode(ctx context.Context, nodeID string) (*model.NodeMetadata, error)
+	GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error)
+	GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error)
 	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 }
 
@@ -537,14 +537,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetNode(childComplexity, args["node_id"].(string)), true
+		return e.complexity.Query.GetNode(childComplexity, args["network"].(string), args["node_id"].(string)), true
 
 	case "Query.getNodes":
 		if e.complexity.Query.GetNodes == nil {
 			break
 		}
 
-		return e.complexity.Query.GetNodes(childComplexity), true
+		args, err := ec.field_Query_getNodes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetNodes(childComplexity, args["network"].(string)), true
 
 	case "Status.channels":
 		if e.complexity.Status.Channels == nil {
@@ -821,9 +826,9 @@ input NodeMetrics {
 # Query definition
 type Query {
   # Get the list of nodes that are contributing in metric collection
-  getNodes: [NodeMetadata!]!
+  getNodes(network: String!): [NodeMetadata!]!
   # Get the node metadata if exist on the server
-  getNode(node_id: String!): NodeMetadata!
+  getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
@@ -981,14 +986,38 @@ func (ec *executionContext) field_Query_getNode_args(ctx context.Context, rawArg
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["node_id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+	if tmp, ok := rawArgs["network"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["node_id"] = arg0
+	args["network"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["node_id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getNodes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["network"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["network"] = arg0
 	return args, nil
 }
 
@@ -2659,9 +2688,16 @@ func (ec *executionContext) _Query_getNodes(ctx context.Context, field graphql.C
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getNodes_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetNodes(rctx)
+		return ec.resolvers.Query().GetNodes(rctx, args["network"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2703,7 +2739,7 @@ func (ec *executionContext) _Query_getNode(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetNode(rctx, args["node_id"].(string))
+		return ec.resolvers.Query().GetNode(rctx, args["network"].(string), args["node_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
