@@ -19,7 +19,7 @@ type MetricsDatabase interface {
 	GetNodes(network string) ([]*model.NodeMetadata, error)
 
 	// Get metric metadata of a specific node
-	GetNode(network string, nodeID string) (*model.NodeMetadata, error)
+	GetNode(network string, nodeID string, metriName string) (*model.NodeMetadata, error)
 
 	// Get all the node data by id
 	GetMetricOne(withId string, startPeriod uint, endPeriod uint) (*model.MetricOne, error)

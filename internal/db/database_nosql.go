@@ -68,16 +68,39 @@ func (instance NoSQLDatabase) UpdateMetricOne(toInser *model.MetricOne) error {
 
 // get the metrics metadata
 func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, error) {
-	//TODO: Ingoring the network for now, different network stay
+	//TODO: Ignoring the network for now, different network stay
 	// in different db
-	return nil, nil
+	nodesID, err := instance.getIndexDB()
+	if err != nil {
+		return nil, err
+	}
+
+	nodesMetadata := make([]*model.NodeMetadata, 0)
+	for _, nodeID := range nodesID {
+		nodeMetadata, err := instance.GetNode(network, *nodeID, "metric_one")
+		if err != nil {
+			return nil, err
+		}
+		nodesMetadata = append(nodesMetadata, nodeMetadata)
+	}
+
+	return nodesMetadata, nil
 
 }
 
-func (instance *NoSQLDatabase) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
+func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metric_name string) (*model.NodeMetadata, error) {
 	// FIXME(vincenzopalazzo) Need to remove the network from the API?
 	// in this case different network need to stay in different db
-	return nil, nil
+	metadataIndex := strings.Join([]string{nodeID, metric_name, "medatata"}, "/")
+	jsonNodeMeta, err := db.GetInstance().GetValue(metadataIndex)
+	if err != nil {
+		return nil, err
+	}
+	var modelMetadata model.NodeMetadata
+	if err := json.Unmarshal([]byte(jsonNodeMeta), &modelMetadata); err != nil {
+		return nil, err
+	}
+	return &modelMetadata, nil
 }
 
 // Get all the metric of the node with a specified id

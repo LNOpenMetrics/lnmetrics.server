@@ -115,7 +115,7 @@ func (instance *MetricsService) GetNode(network string, nodeID string) (*model.N
 	if network != "bitcoin" {
 		return nil, fmt.Errorf("network %s unsupported", network)
 	}
-	return instance.Storage.GetNode(network, nodeID)
+	return instance.Storage.GetNode(network, nodeID, "metric_one")
 }
 
 // Get the metric one of one node and add a filtering option by period
