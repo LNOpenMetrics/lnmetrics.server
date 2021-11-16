@@ -37,5 +37,5 @@ type MetricsDatabase interface {
 	Migrate() error
 
 	// From the metrics payload return the id of the node
-	ItemId(toInsert *model.MetricOne) (string, error)
+	ItemID(toInsert *model.MetricOne) (string, error)
 }
