@@ -8,20 +8,20 @@ type AddMetricOneResp struct {
 	NodeID string `json:"node_id"`
 }
 
-func ComposeAddMetricOneQuery(nodeId string, payload string) string {
+func ComposeInitMetricOneQuery(nodeId string, payload string) string {
 
 	query := `mutation {
-                    addNodeMetrics(input: {node_id: "%s", payload_metric_one: "%s"}) {
+                    initMetricOne(node_id: "%s", payload: "%s", signature: "%s") {
                          node_id
                     }
                   }`
-	fmtString := fmt.Sprintf(query, nodeId, payload)
+	fmtString := fmt.Sprintf(query, nodeId, payload, "123455")
 	return fmtString
 }
 
 func ComposeGetNodesQuery() string {
 	query := `query {
-                    nodes
+                    nodes(network: "testnet")
                   }`
 	return query
 }

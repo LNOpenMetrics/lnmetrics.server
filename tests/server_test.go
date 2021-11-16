@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPushMetricWithNodeId(t *testing.T) {
+func TestInitMetricWithNodeId(t *testing.T) {
 	t.Run("handle the push operation of the new metrics", func(t *testing.T) {
 		mockMetricsService := new(lnmock.MockMetricsServices)
 		resolvers := graph.Resolver{MetricsService: mockMetricsService}
@@ -24,9 +24,9 @@ func TestPushMetricWithNodeId(t *testing.T) {
 		}
 
 		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
-		query := utils.ComposeAddMetricOneQuery(modelObj.NodeID, `{name:\"mock\",node_id:\"fake_id\",color:\"0000\"}`)
+		query := utils.ComposeInitMetricOneQuery(modelObj.NodeID, `{name:\"mock\",node_id:\"fake_id\",color:\"0000\"}`)
 
-		mockMetricsService.On("AddMetricOne", modelObj.NodeID, `{name:"mock",node_id:"fake_id",color:"0000"}`).Return(&modelObj)
+		mockMetricsService.On("InitMetricOne", modelObj.NodeID, `{name:"mock",node_id:"fake_id",color:"0000"}`).Return(&modelObj)
 
 		var resp struct {
 			AddNodeMetrics utils.AddMetricOneResp

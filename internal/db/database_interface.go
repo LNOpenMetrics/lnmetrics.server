@@ -29,4 +29,13 @@ type MetricsDatabase interface {
 
 	// Close the connection and erase the database
 	EraseAfterCloseDatabase() error
+
+	// Return the version of the data in the database
+	GetVersionData() (uint, error)
+
+	// Migrate procedure to convert a more from aversion to another
+	Migrate() error
+
+	// From the metrics payload return the id of the node
+	ItemId(toInsert *model.MetricOne) (string, error)
 }

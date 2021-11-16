@@ -96,3 +96,18 @@ func (instance NoSQLDatabase) EraseDatabase() error {
 func (instance NoSQLDatabase) EraseAfterCloseDatabase() error {
 	return db.GetInstance().EraseAfterCloseDatabse()
 }
+
+// Migrate procedure
+func (instance *NoSQLDatabase) Migrate() error {
+	return nil
+}
+
+// Get the version of data stored in the db
+func (instance *NoSQLDatabase) GetVersionData() (uint, error) {
+	return 0, nil
+}
+
+// Generate the id of an item from a Metrics Model
+func (instance *NoSQLDatabase) ItemId(toInser *model.MetricOne) (string, error) {
+	return "", nil
+}
