@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 		Address      func(childComplexity int) int
 		ChannelsInfo func(childComplexity int) int
 		Color        func(childComplexity int) int
+		LastUpdate   func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Network      func(childComplexity int) int
 		NodeAlias    func(childComplexity int) int
@@ -104,7 +105,13 @@ type ComplexityRoot struct {
 		Color    func(childComplexity int) int
 		NodeID   func(childComplexity int) int
 		NodeInfo func(childComplexity int) int
-		OsInfo   func(childComplexity int) int
+		OSInfo   func(childComplexity int) int
+	}
+
+	NodeMetric struct {
+		ChannelsInfo func(childComplexity int) int
+		Timestamp    func(childComplexity int) int
+		UpTime       func(childComplexity int) int
 	}
 
 	OSInfo struct {
@@ -261,6 +268,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOne.Color(childComplexity), true
+
+	case "MetricOne.last_update":
+		if e.complexity.MetricOne.LastUpdate == nil {
+			break
+		}
+
+		return e.complexity.MetricOne.LastUpdate(childComplexity), true
 
 	case "MetricOne.metric_name":
 		if e.complexity.MetricOne.Name == nil {
@@ -446,11 +460,32 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.NodeMetadata.NodeInfo(childComplexity), true
 
 	case "NodeMetadata.os_info":
-		if e.complexity.NodeMetadata.OsInfo == nil {
+		if e.complexity.NodeMetadata.OSInfo == nil {
 			break
 		}
 
-		return e.complexity.NodeMetadata.OsInfo(childComplexity), true
+		return e.complexity.NodeMetadata.OSInfo(childComplexity), true
+
+	case "NodeMetric.channels_info":
+		if e.complexity.NodeMetric.ChannelsInfo == nil {
+			break
+		}
+
+		return e.complexity.NodeMetric.ChannelsInfo(childComplexity), true
+
+	case "NodeMetric.timestamp":
+		if e.complexity.NodeMetric.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.NodeMetric.Timestamp(childComplexity), true
+
+	case "NodeMetric.up_time":
+		if e.complexity.NodeMetric.UpTime == nil {
+			break
+		}
+
+		return e.complexity.NodeMetric.UpTime(childComplexity), true
 
 	case "OSInfo.architecture":
 		if e.complexity.OSInfo.Architecture == nil {
@@ -759,6 +794,7 @@ type MetricOne {
   node_info: NodeImpInfo @goField(name: "NodeInfo")
   address: [NodeAddress!]! @goField(name: "Address")
   timezone: String! @goField(name: "Timezone")
+  last_update: Int! @goField(name: "LastUpdate")
   up_time: [Status!]! @goField(name: "UpTime")
   channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
   # Same reason of the Network.
@@ -807,8 +843,14 @@ type NodeMetadata {
   alias: String! @goField(name: "Alias")
   color: String! @goField(name: "Color")
   address: [NodeAddress!]! @goField(name: "Address")
-  os_info: OSInfo! @goField(name: "OsInfo")
-  node_info: NodeInfo! @goField(name: "NodeInfo")
+  os_info: OSInfo! @goField(name: "OSInfo")
+  node_info: NodeImpInfo! @goField(name: "NodeInfo")
+}
+
+type NodeMetric {
+  timestamp: Int! @goField(name: "Timestamp")
+  up_time: [Status!]! @goField(name: "UpTime")
+  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
 }
 
 # Node address to be reach
@@ -1683,6 +1725,41 @@ func (ec *executionContext) _MetricOne_timezone(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MetricOne_last_update(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOne",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _MetricOne_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2311,7 +2388,7 @@ func (ec *executionContext) _NodeMetadata_os_info(ctx context.Context, field gra
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OsInfo, nil
+		return obj.OSInfo, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2358,9 +2435,111 @@ func (ec *executionContext) _NodeMetadata_node_info(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.NodeInfo)
+	res := resTmp.(*model.NodeImpInfo)
 	fc.Result = res
-	return ec.marshalNNodeInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfo(ctx, field.Selections, res)
+	return ec.marshalNNodeImpInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeImpInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeMetric_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetric) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetric",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeMetric_up_time(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetric) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetric",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Status)
+	fc.Result = res
+	return ec.marshalNStatus2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeMetric_channels_info(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetric) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetric",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelsInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.StatusChannel)
+	fc.Result = res
+	return ec.marshalOStatusChannel2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OSInfo_os(ctx context.Context, field graphql.CollectedField, obj *model.OSInfo) (ret graphql.Marshaler) {
@@ -4681,6 +4860,11 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "last_update":
+			out.Values[i] = ec._MetricOne_last_update(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "up_time":
 			out.Values[i] = ec._MetricOne_up_time(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4884,6 +5068,40 @@ func (ec *executionContext) _NodeMetadata(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var nodeMetricImplementors = []string{"NodeMetric"}
+
+func (ec *executionContext) _NodeMetric(ctx context.Context, sel ast.SelectionSet, obj *model.NodeMetric) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nodeMetricImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NodeMetric")
+		case "timestamp":
+			out.Values[i] = ec._NodeMetric_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "up_time":
+			out.Values[i] = ec._NodeMetric_up_time(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "channels_info":
+			out.Values[i] = ec._NodeMetric_channels_info(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5652,14 +5870,14 @@ func (ec *executionContext) marshalNNodeAddress2ᚖgithubᚗcomᚋLNOpenMetrics�
 	return ec._NodeAddress(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNNodeInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNNodeImpInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeImpInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeImpInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._NodeInfo(ctx, sel, v)
+	return ec._NodeImpInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNodeMetadata2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadata(ctx context.Context, sel ast.SelectionSet, v model.NodeMetadata) graphql.Marshaler {
