@@ -13,6 +13,10 @@ import (
 
 type NoSQLDatabase struct {
 	metricsKey map[uint]string
+	// the db in memory cache it is valid?
+	validCache bool
+	// the last version of the index cache
+	indexCache map[string][]uint
 }
 
 // Create a new instance of the NOSql database
@@ -28,6 +32,8 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 
 	return &NoSQLDatabase{
 		map[uint]string{1: "metric_one"},
+		false,
+		make(map[string][]uint),
 	}, nil
 }
 
@@ -129,6 +135,69 @@ func (instance *NoSQLDatabase) ItemID(toInsert *model.MetricOne) (string, error)
 	return nodeIdentifier, nil
 }
 
+// Adding the nodeid to the node_index.
+// TODO: We need to lock this method to avoid concurrency
+func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
+	//TODO: use cache
+	// TODO: during the megrationg create the index too.
+	// we can check this with a bool filter to speed up this code
+	dbIndex, err := db.GetInstance().GetValue("node_index")
+	if err != nil {
+		return err
+	}
+	// FIXME(vincenzopalazzo): We can use the indexCache
+	var dbIndexModel map[string][]uint
+
+	if err := json.Unmarshal([]byte(dbIndex), &dbIndexModel); err != nil {
+		return err
+	}
+
+	_, found := dbIndexModel[nodeID]
+	if !found {
+		// for now there is only the metric one
+		dbIndexModel[nodeID] = []uint{1}
+		jsonNewIndex, err := json.Marshal(dbIndexModel)
+		if err != nil {
+			return err
+		}
+		if err := db.GetInstance().PutValue("node_index", string(jsonNewIndex)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Return the list of node that are stored in the index
+// the leveldb index is stored with the key node_index
+func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
+	nodesIndex := make([]*string, 0)
+	//TODO: use cache
+	// TODO: during the megrationg create the index too.
+	dbIndex, err := db.GetInstance().GetValue("node_index")
+	if err != nil {
+		return nil, err
+	}
+
+	var dbIndexModel map[string][]uint
+
+	if err := json.Unmarshal([]byte(dbIndex), &dbIndexModel); err != nil {
+		return nil, err
+	}
+
+	for key := range dbIndexModel {
+		nodesIndex = append(nodesIndex, &key)
+	}
+	return nodesIndex, nil
+}
+
+// called each time that we need a fresh cache
+func (instance *NoSQLDatabase) invalidateInMemIndex() error {
+	instance.validCache = false
+	instance.indexCache = make(map[string][]uint)
+	return nil
+}
+
 // Private function to migrate the nosql data model from a view to another view
 func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 	listNodes, err := db.GetInstance().ListOfKeys()
@@ -136,8 +205,20 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		return err
 	}
 
+	// Create an empty index
+	jsonFakeIndex, err := json.Marshal(instance.indexCache)
+	if err != nil {
+		return err
+	}
+	if err := db.GetInstance().PutValue("node_index", string(jsonFakeIndex)); err != nil {
+		return err
+	}
+
 	for _, nodeId := range listNodes {
 		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
+		if err := instance.indexingInDB(*nodeId); err != nil {
+			return err
+		}
 		metricOneBlob, err := db.GetInstance().GetValue(*nodeId)
 		if err != nil {
 			return err
@@ -200,6 +281,7 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 	sizeUpdates := len(metricOne.UpTime)
 	listUpTime := make([]*model.Status, 0)
 	listChannelsInfo := make([]*model.StatusChannel, 0)
+	listTimestamp := make([]int, 0)
 	timestamp := -1
 	for i := 0; i < sizeUpdates; i++ {
 		uptime := metricOne.UpTime[i]
@@ -208,6 +290,7 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 		listChannelsInfo = append(listChannelsInfo, channelsInfo)
 		if timestamp == -1 {
 			timestamp = uptime.Timestamp
+			listTimestamp = append(listTimestamp, timestamp)
 		}
 		if uptime.Event == "on_update" {
 			metricKey := strings.Join([]string{
@@ -237,5 +320,16 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 			continue
 		}
 	}
-	return nil
+
+	timestampIndex := strings.Join([]string{
+		metricOne.NodeID,
+		"timestamp",
+	}, "/")
+
+	jsonIndex, err := json.Marshal(listTimestamp)
+	if err != nil {
+		return err
+	}
+
+	return db.GetInstance().PutValue(timestampIndex, string(jsonIndex))
 }
