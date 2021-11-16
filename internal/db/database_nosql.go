@@ -130,7 +130,7 @@ func (instance *NoSQLDatabase) GetVersionData() (uint, error) {
 func (instance *NoSQLDatabase) ItemID(toInsert *model.MetricOne) (string, error) {
 	nodeIdentifier := strings.Join([]string{
 		toInsert.NodeID,
-		fmt.Sprint(toInsert.LastUpdate),
+		toInsert.Name,
 	}, "/")
 	return nodeIdentifier, nil
 }
@@ -232,7 +232,7 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 			return err
 		}
 
-		if err := instance.extractMetadata(&metricOne); err != nil {
+		if err := instance.extractMetadata(newNodeID, &metricOne); err != nil {
 			return err
 		}
 
@@ -247,7 +247,7 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 
 // Private function that a metric on store only the meta information of the node
 // the key to store this information it is nodeID/metadata
-func (instance *NoSQLDatabase) extractMetadata(metricOne *model.MetricOne) error {
+func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.MetricOne) error {
 	nodeInfo := model.NodeImpInfo{
 		Implementation: "unknown",
 		Version:        "unknown",
@@ -267,7 +267,7 @@ func (instance *NoSQLDatabase) extractMetadata(metricOne *model.MetricOne) error
 		return err
 	}
 
-	metadataID := strings.Join([]string{metadata.NodeID, "metadata"}, "/")
+	metadataID := strings.Join([]string{itemID, "metadata"}, "/")
 
 	if err := db.GetInstance().PutValue(metadataID, string(metaJson)); err != nil {
 		return err
@@ -295,7 +295,9 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 		if uptime.Event == "on_update" {
 			metricKey := strings.Join([]string{
 				itemID,
-				fmt.Sprint(timestamp)}, "/")
+				fmt.Sprint(timestamp),
+				"metric",
+			}, "/")
 			nodeMetric := model.NodeMetric{
 				Timestamp:    timestamp,
 				UpTime:       listUpTime,
@@ -322,8 +324,8 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 	}
 
 	timestampIndex := strings.Join([]string{
-		metricOne.NodeID,
-		"timestamp",
+		itemID,
+		"index",
 	}, "/")
 
 	jsonIndex, err := json.Marshal(listTimestamp)
