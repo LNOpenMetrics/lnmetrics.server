@@ -7,6 +7,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
 type IMetricsService interface {
@@ -56,25 +57,70 @@ func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*mo
 }
 
 func (instance *MetricsService) InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error) {
-	return nil, fmt.Errorf("Not implemented yet")
+	ok, err := instance.Backend.VerifyMessage(&payload, &signature, &nodeID)
+	if !ok || err != nil {
+		if !ok {
+			return nil, fmt.Errorf("The server can not verify the payload")
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
+
+	if instance.Storage.ContainsIndex(nodeID, "metric_one") {
+		return nil, fmt.Errorf("Metrics Already initialized")
+	}
+
+	var metricModel model.MetricOne
+	if err := json.Unmarshal([]byte(payload), &metricModel); err != nil {
+		return nil, err
+	}
+
+	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
+		return nil, err
+	}
+
+	return &metricModel, nil
 }
 
 func (instance *MetricsService) UpdateMetricOne(nodeID string, payload string, signature string) error {
-	return fmt.Errorf("Not implemented yet")
+	ok, err := instance.Backend.VerifyMessage(&payload, &signature, &nodeID)
+	if !ok || err != nil {
+		if !ok {
+			return fmt.Errorf("The server can not verify the payload")
+		}
+		if err != nil {
+			return err
+		}
+	}
+	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
+
+	var metricModel model.MetricOne
+	if err := json.Unmarshal([]byte(payload), &metricModel); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Return all the node information that are pushing the data.
 func (instance *MetricsService) GetNodes(network string) ([]*model.NodeMetadata, error) {
-	return nil, fmt.Errorf("Not implemented yet")
+	if network != "bitcoin" {
+		return nil, fmt.Errorf("network %s unsupported", network)
+	}
+	return instance.Storage.GetNodes(network)
 }
 
 func (instance *MetricsService) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
-	return nil, fmt.Errorf("Not implemented yet")
+	if network != "bitcoin" {
+		return nil, fmt.Errorf("network %s unsupported", network)
+	}
+	return instance.Storage.GetNode(network, nodeID)
 }
 
 // Get the metric one of one node and add a filtering option by period
 func (instance *MetricsService) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
-	metricNodeInfo, err := instance.Storage.GetMetricOne(nodeID)
+	metricNodeInfo, err := instance.Storage.GetMetricOne(nodeID, startPeriod, endPeriod)
 	if err != nil {
 		return nil, err
 	}

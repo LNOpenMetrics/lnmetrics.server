@@ -43,7 +43,8 @@ func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) e
 	return nil
 }
 
-// Insert the metricModel in the db
+// Init the metric in the database.
+// TODO: Migrate to the new data model.
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 	key := toInsert.NodeID
 	metricOne := make(map[string]interface{})
@@ -59,13 +60,28 @@ func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 	return nil
 }
 
-// Get all the node ids that have some metrics stored in the server
-func (instance NoSQLDatabase) GetNodesID() ([]*string, error) {
-	return db.GetInstance().ListOfKeys()
+// Adding new metric  for the node,
+//TODO: Support this operation
+func (instance NoSQLDatabase) UpdateMetricOne(toInser *model.MetricOne) error {
+	return nil
+}
+
+// get the metrics metadata
+func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, error) {
+	//TODO: Ingoring the network for now, different network stay
+	// in different db
+	return nil, nil
+
+}
+
+func (instance *NoSQLDatabase) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
+	// FIXME(vincenzopalazzo) Need to remove the network from the API?
+	// in this case different network need to stay in different db
+	return nil, nil
 }
 
 // Get all the metric of the node with a specified id
-func (instance NoSQLDatabase) GetMetricOne(withId string) (*model.MetricOne, error) {
+func (instance NoSQLDatabase) GetMetricOne(withId string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
 	// FIXME: In this case the node info can grow when it contains different
 	// metric type, a solution could be adding a indirection level.
 	nodeInfo, err := db.GetInstance().GetValue(withId)
@@ -135,6 +151,16 @@ func (instance *NoSQLDatabase) ItemID(toInsert *model.MetricOne) (string, error)
 	return nodeIdentifier, nil
 }
 
+func (instance *NoSQLDatabase) ContainsIndex(nodeID string, metricName string) bool {
+	indexID := strings.Join([]string{nodeID, metricName, "index"}, "/")
+	_, err := db.GetInstance().GetValue(indexID)
+	if err != nil {
+		log.GetInstance().Debug(fmt.Sprintf("Ignoring db error: %s", err))
+		return false
+	}
+	return true
+}
+
 // Adding the nodeid to the node_index.
 // TODO: We need to lock this method to avoid concurrency
 func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
@@ -170,6 +196,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 
 // Return the list of node that are stored in the index
 // the leveldb index is stored with the key node_index
+//nolint:golint,unused
 func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
 	nodesIndex := make([]*string, 0)
 	//TODO: use cache
@@ -192,6 +219,7 @@ func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
 }
 
 // called each time that we need a fresh cache
+//nolint:golint,unused
 func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 	instance.validCache = false
 	instance.indexCache = make(map[string][]uint)
