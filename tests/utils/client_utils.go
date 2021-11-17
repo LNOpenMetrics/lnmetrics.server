@@ -8,31 +8,33 @@ type AddMetricOneResp struct {
 	NodeID string `json:"node_id"`
 }
 
-func ComposeInitMetricOneQuery(nodeId string, payload string) string {
+func ComposeInitMetricOneQuery(nodeId string, payload string, signature string) string {
 
 	query := `mutation {
                     initMetricOne(node_id: "%s", payload: "%s", signature: "%s") {
                          node_id
                     }
                   }`
-	fmtString := fmt.Sprintf(query, nodeId, payload, "123455")
+	fmtString := fmt.Sprintf(query, nodeId, payload, signature)
 	return fmtString
 }
 
 func ComposeGetNodesQuery() string {
 	query := `query {
-                    nodes(network: "testnet")
+                    getNodes(network: "bitcoin") {
+                         node_id
+                    }
                   }`
 	return query
 }
 
-func ComposeGetMetricOneQuery(nodeID string) string {
+func ComposeGetMetricOneQuery(nodeID string, startPeriod uint, endPeriod uint) string {
 	query := `query{
-                     getMetricOne(node_id: "%s") {
+                     getMetricOne(node_id: "%s", start_period: %d, end_period: %d) {
                         node_id,
                         metric_name,
                         color
                      }
                   }`
-	return fmt.Sprintf(query, nodeID)
+	return fmt.Sprintf(query, nodeID, startPeriod, endPeriod)
 }
