@@ -89,6 +89,7 @@ type PaymentsSummary {
 
 # Type that are used inside the query side
 type NodeMetadata {
+  version: Int! @goField(name: "Version")
   node_id: String! @goField(name: "NodeId")
   alias: String! @goField(name: "Alias")
   color: String! @goField(name: "Color")
@@ -96,6 +97,7 @@ type NodeMetadata {
   network: String! @goField(name: "Network")
   os_info: OSInfo! @goField(name: "OSInfo")
   node_info: NodeImpInfo! @goField(name: "NodeInfo")
+  timezone: String! @goField(name: "Timezone")
 }
 
 type NodeMetric {

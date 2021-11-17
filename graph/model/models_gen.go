@@ -53,12 +53,15 @@ type NodeInfo struct {
 }
 
 type NodeMetadata struct {
+	Version  int            `json:"version"`
 	NodeID   string         `json:"node_id"`
 	Alias    string         `json:"alias"`
 	Color    string         `json:"color"`
 	Address  []*NodeAddress `json:"address"`
+	Network  string         `json:"network"`
 	OSInfo   *OSInfo        `json:"os_info"`
 	NodeInfo *NodeImpInfo   `json:"node_info"`
+	Timezone string         `json:"timezone"`
 }
 
 type NodeMetric struct {

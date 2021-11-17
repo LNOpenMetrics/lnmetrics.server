@@ -118,30 +118,44 @@ func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metric_nam
 }
 
 // Get all the metric of the node with a specified id
-func (instance NoSQLDatabase) GetMetricOne(withId string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
-	// FIXME: In this case the node info can grow when it contains different
-	// metric type, a solution could be adding a indirection level.
-	nodeInfo, err := db.GetInstance().GetValue(withId)
-	if err != nil {
-		return nil, fmt.Errorf("Research by node id %s return the following error: %s", withId, err)
-	}
-	var modelMap map[string]interface{}
-	if err := json.Unmarshal([]byte(nodeInfo), &modelMap); err != nil {
-		return nil, err
-	}
-	metricOneMap, found := modelMap[instance.metricsKey[1]]
-	if !found {
-		return nil, fmt.Errorf("Node %s doesn't contains metric one info", withId)
-	}
-	metricOneJson, err := json.Marshal(metricOneMap)
+func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
+
+	// 1. Take the medatata
+	// 2. take the node index of timestamp, and filter by period
+	// 3. fill the metric model
+	baseKey := strings.Join([]string{nodeID, "metric_one"}, "/")
+
+	metadataNode, err := instance.retreivalMetadata(baseKey)
 	if err != nil {
 		return nil, err
 	}
-	var model model.MetricOne
-	if err := json.Unmarshal(metricOneJson, &model); err != nil {
+
+	modelMetricOne := &model.MetricOne{
+		Version:      &metadataNode.Version,
+		Name:         "metric_one",
+		NodeID:       metadataNode.NodeID,
+		Color:        metadataNode.Color,
+		NodeAlias:    metadataNode.Alias,
+		Network:      &metadataNode.Network,
+		OSInfo:       metadataNode.OSInfo,
+		NodeInfo:     metadataNode.NodeInfo,
+		Address:      metadataNode.Address,
+		Timezone:     metadataNode.Timezone,
+		LastUpdate:   0,
+		UpTime:       make([]*model.Status, 0),
+		ChannelsInfo: make([]*model.StatusChannel, 0),
+	}
+
+	nodeMetric, err := instance.retreivalNodesMetric(baseKey, "metric_one", startPeriod, endPeriod)
+	if err != nil {
 		return nil, err
 	}
-	return &model, nil
+
+	modelMetricOne.LastUpdate = nodeMetric.Timestamp
+	modelMetricOne.UpTime = nodeMetric.UpTime
+	modelMetricOne.ChannelsInfo = nodeMetric.ChannelsInfo
+
+	return modelMetricOne, nil
 }
 
 // close the connection with database
@@ -364,6 +378,20 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 	return nil
 }
 
+func (instance *NoSQLDatabase) retreivalMetadata(itemID string) (*model.NodeMetadata, error) {
+	metadataKey := strings.Join([]string{itemID, "metadata"}, "/")
+	nodeMetadataJson, err := db.GetInstance().GetValue(metadataKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var metaModel model.NodeMetadata
+	if err := json.Unmarshal([]byte(nodeMetadataJson), &metaModel); err != nil {
+		return nil, err
+	}
+	return &metaModel, nil
+}
+
 func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model.MetricOne) error {
 	// TODO iterate over timestamp and channels
 	sizeUpdates := len(metricOne.UpTime)
@@ -422,4 +450,59 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 	}
 
 	return db.GetInstance().PutValue(timestampIndex, string(jsonIndex))
+}
+
+// Private function to get a single metric given a specific timestamp
+func (instance *NoSQLDatabase) retreivalNodeMetric(nodeKey string, timestamp uint, metricName string) (*model.NodeMetric, error) {
+	metricKey := strings.Join([]string{nodeKey, fmt.Sprint(timestamp), metricName}, "/")
+	metricJson, err := db.GetInstance().GetValue(metricKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var modelMetric model.NodeMetric
+	if err := json.Unmarshal([]byte(metricJson), &modelMetric); err != nil {
+		return nil, err
+	}
+	return &modelMetric, nil
+
+}
+
+// Private function that it is able to get the collection of metric in a period
+// expressed in unix time.
+func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName string, startPeriod uint, endPeriod uint) (*model.NodeMetric, error) {
+	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
+	timestampJson, err := db.GetInstance().GetValue(timestampsKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var modelTimestamp []uint
+	if err := json.Unmarshal([]byte(timestampJson), &modelTimestamp); err != nil {
+		return nil, err
+	}
+
+	modelMetric := &model.NodeMetric{
+		Timestamp:    0,
+		UpTime:       make([]*model.Status, 0),
+		ChannelsInfo: make([]*model.StatusChannel, 0),
+	}
+
+	for _, timestamp := range modelTimestamp {
+		if timestamp >= startPeriod && timestamp <= endPeriod {
+			tmpModelMetric, err := instance.retreivalNodeMetric(nodeKey,
+				timestamp, metricName)
+			if err != nil {
+				return nil, err
+			}
+			if modelMetric.Timestamp < int(timestamp) {
+				modelMetric.Timestamp = int(timestamp)
+			}
+			modelMetric.UpTime = append(modelMetric.UpTime,
+				tmpModelMetric.UpTime...)
+
+		}
+	}
+
+	return modelMetric, nil
 }

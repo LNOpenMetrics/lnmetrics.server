@@ -103,9 +103,12 @@ type ComplexityRoot struct {
 		Address  func(childComplexity int) int
 		Alias    func(childComplexity int) int
 		Color    func(childComplexity int) int
+		Network  func(childComplexity int) int
 		NodeID   func(childComplexity int) int
 		NodeInfo func(childComplexity int) int
 		OSInfo   func(childComplexity int) int
+		Timezone func(childComplexity int) int
+		Version  func(childComplexity int) int
 	}
 
 	NodeMetric struct {
@@ -445,6 +448,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NodeMetadata.Color(childComplexity), true
 
+	case "NodeMetadata.network":
+		if e.complexity.NodeMetadata.Network == nil {
+			break
+		}
+
+		return e.complexity.NodeMetadata.Network(childComplexity), true
+
 	case "NodeMetadata.node_id":
 		if e.complexity.NodeMetadata.NodeID == nil {
 			break
@@ -465,6 +475,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NodeMetadata.OSInfo(childComplexity), true
+
+	case "NodeMetadata.timezone":
+		if e.complexity.NodeMetadata.Timezone == nil {
+			break
+		}
+
+		return e.complexity.NodeMetadata.Timezone(childComplexity), true
+
+	case "NodeMetadata.version":
+		if e.complexity.NodeMetadata.Version == nil {
+			break
+		}
+
+		return e.complexity.NodeMetadata.Version(childComplexity), true
 
 	case "NodeMetric.channels_info":
 		if e.complexity.NodeMetric.ChannelsInfo == nil {
@@ -839,12 +863,15 @@ type PaymentsSummary {
 
 # Type that are used inside the query side
 type NodeMetadata {
+  version: Int! @goField(name: "Version")
   node_id: String! @goField(name: "NodeId")
   alias: String! @goField(name: "Alias")
   color: String! @goField(name: "Color")
   address: [NodeAddress!]! @goField(name: "Address")
+  network: String! @goField(name: "Network")
   os_info: OSInfo! @goField(name: "OSInfo")
   node_info: NodeImpInfo! @goField(name: "NodeInfo")
+  timezone: String! @goField(name: "Timezone")
 }
 
 type NodeMetric {
@@ -2230,6 +2257,41 @@ func (ec *executionContext) _NodeInfo_metric_one(ctx context.Context, field grap
 	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _NodeMetadata_version(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _NodeMetadata_node_id(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2370,6 +2432,41 @@ func (ec *executionContext) _NodeMetadata_address(ctx context.Context, field gra
 	return ec.marshalNNodeAddress2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeAddressᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _NodeMetadata_network(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Network, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _NodeMetadata_os_info(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2438,6 +2535,41 @@ func (ec *executionContext) _NodeMetadata_node_info(ctx context.Context, field g
 	res := resTmp.(*model.NodeImpInfo)
 	fc.Result = res
 	return ec.marshalNNodeImpInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeImpInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeMetadata_timezone(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timezone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NodeMetric_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetric) (ret graphql.Marshaler) {
@@ -5038,6 +5170,11 @@ func (ec *executionContext) _NodeMetadata(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("NodeMetadata")
+		case "version":
+			out.Values[i] = ec._NodeMetadata_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "node_id":
 			out.Values[i] = ec._NodeMetadata_node_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5058,6 +5195,11 @@ func (ec *executionContext) _NodeMetadata(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "network":
+			out.Values[i] = ec._NodeMetadata_network(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "os_info":
 			out.Values[i] = ec._NodeMetadata_os_info(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5065,6 +5207,11 @@ func (ec *executionContext) _NodeMetadata(ctx context.Context, sel ast.Selection
 			}
 		case "node_info":
 			out.Values[i] = ec._NodeMetadata_node_info(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timezone":
+			out.Values[i] = ec._NodeMetadata_timezone(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
