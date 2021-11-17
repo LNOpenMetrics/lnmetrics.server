@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
@@ -17,6 +18,7 @@ type NoSQLDatabase struct {
 	validCache bool
 	// the last version of the index cache
 	indexCache map[string][]uint
+	lock       *sync.Mutex
 }
 
 // Create a new instance of the NOSql database
@@ -34,6 +36,7 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		map[uint]string{1: "metric_one"},
 		false,
 		make(map[string][]uint),
+		new(sync.Mutex),
 	}, nil
 }
 
@@ -46,23 +49,34 @@ func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) e
 // Init the metric in the database.
 // TODO: Migrate to the new data model.
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
-	key := toInsert.NodeID
-	metricOne := make(map[string]interface{})
-	metricOne[instance.metricsKey[1]] = toInsert
-	jsonVal, err := json.Marshal(metricOne)
-	if err != nil {
-		return err
-	}
 
-	if err := db.GetInstance().PutValue(key, string(jsonVal)); err != nil {
+	// we need to index the node in the nodes_index
+	if err := instance.indexingInDB(toInsert.NodeID); err != nil {
 		return err
 	}
-	return nil
+	return instance.UpdateMetricOne(toInsert)
 }
 
 // Adding new metric  for the node,
 //TODO: Support this operation
-func (instance NoSQLDatabase) UpdateMetricOne(toInser *model.MetricOne) error {
+func (instance NoSQLDatabase) UpdateMetricOne(toInsert *model.MetricOne) error {
+	//FIXME: I can run this operation in parallel
+	baseKey, err := instance.ItemID(toInsert)
+	if err != nil {
+		return err
+	}
+	// It insert information with key {baseKey}/metadata
+	if err := instance.extractMetadata(baseKey, toInsert); err != nil {
+		return err
+	}
+
+	// Store information with key {baseKey}/{timestamp}/{metric_name}
+	// and also index the timestamp in the following space
+	// {baseKey}/index
+	if err := instance.extractNodeMetric(baseKey, toInsert); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -187,9 +201,10 @@ func (instance *NoSQLDatabase) ContainsIndex(nodeID string, metricName string) b
 // Adding the nodeid to the node_index.
 // TODO: We need to lock this method to avoid concurrency
 func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
-	//TODO: use cache
+	// TODO: use cache
 	// TODO: during the megrationg create the index too.
 	// we can check this with a bool filter to speed up this code
+	instance.lock.Lock()
 	dbIndex, err := db.GetInstance().GetValue("node_index")
 	if err != nil {
 		return err
@@ -213,6 +228,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 			return err
 		}
 	}
+	instance.lock.Unlock()
 
 	return nil
 }
@@ -266,11 +282,14 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 	}
 
 	for _, nodeId := range listNodes {
+
 		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
 		if err := instance.indexingInDB(*nodeId); err != nil {
 			return err
 		}
 
+		// The old version of level db has a very frustating
+		// NODEID: {metric_name: full_payload}
 		metricOneBlob, err := db.GetInstance().GetValue(*nodeId)
 		if err != nil {
 			return err
@@ -295,6 +314,7 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		if err := json.Unmarshal(metricOneCore, &metricOne); err != nil {
 			return err
 		}
+
 		newNodeID, err := instance.ItemID(&metricOne)
 		if err != nil {
 			return err

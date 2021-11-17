@@ -38,10 +38,6 @@ func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *Metric
 // Deprecated: Used to test the first version of the server, not deprecated in favor or UpdateMetricOne, InitMetricOne, AppendMetricOne.
 func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*model.MetricOne, error) {
 	// TODO: make a function that check if the value are correct value.
-	// TODO: Verify the payload as raw content, with the following steps:
-	// 1: Make the sha256 of the payload in bytes
-	// 2: verify the signature with the backend
-
 	var model model.MetricOne
 	if err := json.Unmarshal([]byte(payload), &model); err != nil {
 		return nil, fmt.Errorf("Error during reading JSON %s. It is a valid JSON?", err)
@@ -69,7 +65,9 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload string, sig
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
 	if instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		return nil, fmt.Errorf("Metrics Already initialized")
+		//FIXME: The node can put a modify version of the payload, maybe the plugin and the server
+		// need to share some secret.
+		return nil, fmt.Errorf("Metrics Already initialized, please call get metric one API to get your last update here")
 	}
 
 	var metricModel model.MetricOne
@@ -100,6 +98,11 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload string, s
 	if err := json.Unmarshal([]byte(payload), &metricModel); err != nil {
 		return err
 	}
+
+	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {
+		return err
+	}
+
 	return nil
 }
 
