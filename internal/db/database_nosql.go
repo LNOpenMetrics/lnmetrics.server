@@ -356,12 +356,14 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 	}
 
 	metadata := model.NodeMetadata{
+		Version:  *metricOne.Version,
 		NodeID:   metricOne.NodeID,
 		Alias:    metricOne.NodeAlias,
 		Color:    metricOne.Color,
 		OSInfo:   metricOne.OSInfo,
 		NodeInfo: &nodeInfo,
 		Address:  make([]*model.NodeAddress, 0),
+		Timezone: metricOne.Timezone,
 	}
 
 	metaJson, err := json.Marshal(metadata)
