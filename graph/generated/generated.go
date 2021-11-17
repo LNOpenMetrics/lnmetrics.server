@@ -78,7 +78,6 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddNodeMetrics  func(childComplexity int, input model.NodeMetrics) int
 		InitMetricOne   func(childComplexity int, nodeID string, payload string, signature string) int
 		UpdateMetricOne func(childComplexity int, nodeID string, payload string, signature string) int
 	}
@@ -163,7 +162,6 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error)
 	InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error)
 	UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error)
 }
@@ -341,18 +339,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOne.Version(childComplexity), true
-
-	case "Mutation.addNodeMetrics":
-		if e.complexity.Mutation.AddNodeMetrics == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_addNodeMetrics_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.AddNodeMetrics(childComplexity, args["input"].(model.NodeMetrics)), true
 
 	case "Mutation.initMetricOne":
 		if e.complexity.Mutation.InitMetricOne == nil {
@@ -904,7 +890,6 @@ type Query {
 }
 
 type Mutation {
-  addNodeMetrics(input: NodeMetrics!): MetricOne!
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we
@@ -921,21 +906,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) field_Mutation_addNodeMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.NodeMetrics
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNodeMetrics2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Mutation_initMetricOne_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1884,48 +1854,6 @@ func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphq
 	res := resTmp.(*int)
 	fc.Result = res
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_addNodeMetrics_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddNodeMetrics(rctx, args["input"].(model.NodeMetrics))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.MetricOne)
-	fc.Result = res
-	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_initMetricOne(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5032,11 +4960,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "addNodeMetrics":
-			out.Values[i] = ec._Mutation_addNodeMetrics(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "initMetricOne":
 			out.Values[i] = ec._Mutation_initMetricOne(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -6083,11 +6006,6 @@ func (ec *executionContext) marshalNNodeMetadata2ᚖgithubᚗcomᚋLNOpenMetrics
 		return graphql.Null
 	}
 	return ec._NodeMetadata(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNNodeMetrics2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx context.Context, v interface{}) (model.NodeMetrics, error) {
-	res, err := ec.unmarshalInputNodeMetrics(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐOSInfo(ctx context.Context, sel ast.SelectionSet, v *model.OSInfo) graphql.Marshaler {

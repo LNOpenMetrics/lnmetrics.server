@@ -130,7 +130,6 @@ type Query {
 }
 
 type Mutation {
-  addNodeMetrics(input: NodeMetrics!): MetricOne!
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we

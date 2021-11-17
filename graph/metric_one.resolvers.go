@@ -5,30 +5,28 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
-func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *mutationResolver) InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.MetricsService.InitMetricOne(nodeID, payload, signature)
 }
 
 func (r *mutationResolver) UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error) {
-	panic(fmt.Errorf("not implemented"))
+	if err := r.MetricsService.UpdateMetricOne(nodeID, payload, signature); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.MetricsService.GetNodes(network)
 }
 
 func (r *queryResolver) GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.MetricsService.GetNode(network, nodeID)
 }
 
 func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {

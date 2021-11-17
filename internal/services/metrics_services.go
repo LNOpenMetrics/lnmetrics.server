@@ -34,24 +34,6 @@ func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *Metric
 	return &MetricsService{Storage: db, Backend: lnBackend}
 }
 
-// Verify and Store metrics one in the internal storage.
-// Deprecated: Used to test the first version of the server, not deprecated in favor or UpdateMetricOne, InitMetricOne, AppendMetricOne.
-func (instance *MetricsService) AddMetricOne(nodeID string, payload string) (*model.MetricOne, error) {
-	// TODO: make a function that check if the value are correct value.
-	var model model.MetricOne
-	if err := json.Unmarshal([]byte(payload), &model); err != nil {
-		return nil, fmt.Errorf("Error during reading JSON %s. It is a valid JSON?", err)
-	}
-
-	// TODO: Check the actual version supported by the server, and check the version of the paylad
-	// that the node has
-	if err := instance.Storage.InsertMetricOne(&model); err != nil {
-		return nil, err
-	}
-
-	return &model, nil
-}
-
 func (instance *MetricsService) InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error) {
 	ok, err := instance.Backend.VerifyMessage(&payload, &signature, &nodeID)
 	if !ok || err != nil {
