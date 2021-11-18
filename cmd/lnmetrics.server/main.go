@@ -64,6 +64,12 @@ func main() {
 		panic(err)
 	}
 
+	log.GetInstance().Info("Check if db need to be migrated")
+	if err := dbVal.Migrate(); err != nil {
+		log.GetInstance().Error(fmt.Sprintf("Error: %s", err))
+		panic(err)
+	}
+
 	var mb int64 = 1 << 20
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(
 		generated.Config{

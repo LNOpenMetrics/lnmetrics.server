@@ -46,7 +46,7 @@ type MetricOne {
   timezone: String! @goField(name: "Timezone")
   last_update: Int! @goField(name: "LastUpdate")
   up_time: [Status!]! @goField(name: "UpTime")
-  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  channels_info: [StatusChannel!]! @goField(name: "ChannelsInfo")
   # Same reason of the Network.
   version: Int @goField(name: "Version")
 }
@@ -113,6 +113,7 @@ type NodeAddress {
   port: Int! @goField(name: "Port")
 }
 
+# Deprecated, remove this when add node metrics will be removed
 input NodeMetrics {
      node_id: String! @goField(name: "NodeID")
      payload_metric_one: String! @goField(name: "PayloadMetricOne")
@@ -120,6 +121,9 @@ input NodeMetrics {
 
 # Query definition
 type Query {
+  # backword compatibility with old client, for two version
+  nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
+
   # Get the list of nodes that are contributing in metric collection
   getNodes(network: String!): [NodeMetadata!]!
   # Get the node metadata if exist on the server
@@ -130,6 +134,8 @@ type Query {
 }
 
 type Mutation {
+  # backword compatibility with old client, for two version
+  addNodeMetrics(input: NodeMetrics!): MetricOne! @deprecated(reason: "This method not support the signature, please considered to used init and update metric one.")
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we

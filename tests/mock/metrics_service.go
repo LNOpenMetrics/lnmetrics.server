@@ -10,12 +10,12 @@ type MockMetricsServices struct {
 	mock.Mock
 }
 
-func (instance *MockMetricsServices) InitMetricOne(nodeID string, payload string, signature string) (*model.MetricOne, error) {
-	args := instance.Called(nodeID, payload, signature)
+func (instance *MockMetricsServices) InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error) {
+	args := instance.Called(nodeID, *payload, signature)
 	return args.Get(0).(*model.MetricOne), nil
 }
 
-func (instance *MockMetricsServices) UpdateMetricOne(nodeID string, payload string, signature string) error {
+func (instance *MockMetricsServices) UpdateMetricOne(nodeID string, payload *string, signature string) error {
 	_ = instance.Called(nodeID, payload, signature)
 	return nil
 }
@@ -32,7 +32,22 @@ func (instance *MockMetricsServices) GetNode(network string, nodeID string) (*mo
 }
 
 // Get the metric one of one node and add a filtering option by period
-func (instance *MockMetricsServices) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
+func (instance *MockMetricsServices) GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
 	args := instance.Called(nodeID, startPeriod, endPeriod)
 	return args.Get(0).(*model.MetricOne), nil
+}
+
+// Get the metric one of one node and add a filtering option by period
+func (instance *MockMetricsServices) GetFullMetricOne(nodeID string) (*model.MetricOne, error) {
+	args := instance.Called(nodeID)
+	return args.Get(0).(*model.MetricOne), nil
+}
+
+// all deprecated function
+func (instance *MockMetricsServices) Nodes() ([]*string, error) {
+	return make([]*string, 0), nil
+}
+
+func (instance *MockMetricsServices) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
+	return nil, nil
 }

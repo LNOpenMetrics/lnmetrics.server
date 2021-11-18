@@ -22,7 +22,7 @@ type MetricsDatabase interface {
 	GetNode(network string, nodeID string, metriName string) (*model.NodeMetadata, error)
 
 	// Get all the node data by id
-	GetMetricOne(withId string, startPeriod uint, endPeriod uint) (*model.MetricOne, error)
+	GetMetricOne(withId string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 
 	// Update the metric of the node, with new one.
 	UpdateMetricOne(toInser *model.MetricOne) error

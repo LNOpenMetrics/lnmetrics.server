@@ -19,6 +19,7 @@ type NoSQLDatabase struct {
 	// the last version of the index cache
 	indexCache map[string][]uint
 	lock       *sync.Mutex
+	dbVersion  int
 }
 
 // Create a new instance of the NOSql database
@@ -32,12 +33,27 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		return nil, err
 	}
 
-	return &NoSQLDatabase{
+	//keys, _ := db.GetInstance().ListOfKeys()
+
+	instance := &NoSQLDatabase{
 		map[uint]string{1: "metric_one"},
 		false,
 		make(map[string][]uint),
 		new(sync.Mutex),
-	}, nil
+		1,
+	}
+	/*
+		for _, key := range keys {
+			fmt.Println(*key)
+			tokens := strings.Split(*key, "/")
+			nodeId := tokens[0]
+			if strings.Contains(nodeId, "data_version") || strings.Contains(nodeId, "node_index") {
+				continue
+			}
+			_ = instance.indexingInDB(nodeId)
+		}
+	*/
+	return instance, nil
 }
 
 // In the NO sql database, at list for the moment we don't need to
@@ -91,7 +107,15 @@ func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, 
 
 	nodesMetadata := make([]*model.NodeMetadata, 0)
 	for _, nodeID := range nodesID {
-		nodeMetadata, err := instance.GetNode(network, *nodeID, "metric_one")
+		if strings.Contains(nodeID, "node_index") ||
+			strings.Contains(nodeID, "data_version") ||
+			strings.Contains(nodeID, "abc") {
+			continue
+		}
+
+		log.GetInstance().Info(fmt.Sprintf("Finding node with id %s", nodeID))
+
+		nodeMetadata, err := instance.GetNode(network, nodeID, "metric_one")
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +129,7 @@ func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, 
 func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metric_name string) (*model.NodeMetadata, error) {
 	// FIXME(vincenzopalazzo) Need to remove the network from the API?
 	// in this case different network need to stay in different db
-	metadataIndex := strings.Join([]string{nodeID, metric_name, "medatata"}, "/")
+	metadataIndex := strings.Join([]string{nodeID, metric_name, "metadata"}, "/")
 	jsonNodeMeta, err := db.GetInstance().GetValue(metadataIndex)
 	if err != nil {
 		return nil, err
@@ -118,7 +142,7 @@ func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metric_nam
 }
 
 // Get all the metric of the node with a specified id
-func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod uint, endPeriod uint) (*model.MetricOne, error) {
+func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
 
 	// 1. Take the medatata
 	// 2. take the node index of timestamp, and filter by period
@@ -177,7 +201,10 @@ func (instance NoSQLDatabase) EraseAfterCloseDatabase() error {
 func (instance *NoSQLDatabase) Migrate() error {
 	versionData, err := instance.GetVersionData()
 	if versionData < 1 {
-		return instance.migrateFromBlobToTimestamp()
+		if err := instance.migrateFromBlobToTimestamp(); err != nil {
+			return err
+		}
+		return instance.SetVersionData()
 	}
 	log.GetInstance().Info(fmt.Sprintf("No db migration needed (db version = %d)", versionData))
 	return err
@@ -191,6 +218,13 @@ func (instance *NoSQLDatabase) GetVersionData() (uint, error) {
 	}
 	value, err := strconv.ParseUint(versionStr, 10, 32)
 	return uint(value), err
+}
+
+func (instance *NoSQLDatabase) SetVersionData() error {
+	if err := db.GetInstance().PutValue("data_version", fmt.Sprint(instance.dbVersion)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Generate the id of an item from a Metrics Model
@@ -232,6 +266,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 
 	_, found := dbIndexModel[nodeID]
 	if !found {
+		log.GetInstance().Info(fmt.Sprintf("Indexing node with id %s", nodeID))
 		// for now there is only the metric one
 		dbIndexModel[nodeID] = []uint{1}
 		jsonNewIndex, err := json.Marshal(dbIndexModel)
@@ -250,8 +285,8 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 // Return the list of node that are stored in the index
 // the leveldb index is stored with the key node_index
 //nolint:golint,unused
-func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
-	nodesIndex := make([]*string, 0)
+func (instance *NoSQLDatabase) getIndexDB() ([]string, error) {
+	nodesIndex := make([]string, 0)
 	// TODO: use cache
 	// TODO: during the megrationg create the index too.
 	dbIndex, err := db.GetInstance().GetValue("node_index")
@@ -266,8 +301,10 @@ func (instance *NoSQLDatabase) getIndexDB() ([]*string, error) {
 	}
 
 	for key := range dbIndexModel {
-		nodesIndex = append(nodesIndex, &key)
+		log.GetInstance().Info(fmt.Sprintf("Key found %s", key))
+		nodesIndex = append(nodesIndex, key)
 	}
+	log.GetInstance().Info(fmt.Sprintf("Index key set size %d", len(nodesIndex)))
 	return nodesIndex, nil
 }
 
@@ -287,16 +324,23 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 	}
 
 	// Create an empty index
-	jsonFakeIndex, err := json.Marshal(instance.indexCache)
+	// if any error occurs during the migration we don't need to lost all the data
+	_, err = db.GetInstance().GetValue("node_index")
 	if err != nil {
-		return err
-	}
-	if err := db.GetInstance().PutValue("node_index", string(jsonFakeIndex)); err != nil {
-		return err
-	}
+		jsonFakeIndex, err := json.Marshal(instance.indexCache)
+		if err != nil {
+			return err
+		}
 
+		if err := db.GetInstance().PutValue("node_index", string(jsonFakeIndex)); err != nil {
+			return err
+		}
+	}
 	for _, nodeId := range listNodes {
-
+		if strings.Contains(*nodeId, "/") ||
+			strings.Contains(*nodeId, "node_index") {
+			continue
+		}
 		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
 		if err := instance.indexingInDB(*nodeId); err != nil {
 			return err
@@ -342,6 +386,10 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 			return err
 		}
 
+		if err := db.GetInstance().DeleteValue(*nodeId); err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -356,7 +404,7 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 	}
 
 	metadata := model.NodeMetadata{
-		Version:  *metricOne.Version,
+		Version:  0,
 		NodeID:   metricOne.NodeID,
 		Alias:    metricOne.NodeAlias,
 		Color:    metricOne.Color,
@@ -398,14 +446,12 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 	// TODO iterate over timestamp and channels
 	sizeUpdates := len(metricOne.UpTime)
 	listUpTime := make([]*model.Status, 0)
-	listChannelsInfo := make([]*model.StatusChannel, 0)
 	listTimestamp := make([]int, 0)
 	timestamp := -1
 	for i := 0; i < sizeUpdates; i++ {
 		uptime := metricOne.UpTime[i]
-		channelsInfo := metricOne.ChannelsInfo[i]
+		listChannelsInfo := metricOne.ChannelsInfo
 		listUpTime = append(listUpTime, uptime)
-		listChannelsInfo = append(listChannelsInfo, channelsInfo)
 		if timestamp == -1 {
 			timestamp = uptime.Timestamp
 			listTimestamp = append(listTimestamp, timestamp)
@@ -433,7 +479,6 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 			}
 
 			listUpTime = nil
-			listChannelsInfo = nil
 			timestamp = -1
 
 			log.GetInstance().Info(fmt.Sprintf("Insert metric with id %s", metricKey))
@@ -456,7 +501,7 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 
 // Private function to get a single metric given a specific timestamp
 func (instance *NoSQLDatabase) retreivalNodeMetric(nodeKey string, timestamp uint, metricName string) (*model.NodeMetric, error) {
-	metricKey := strings.Join([]string{nodeKey, fmt.Sprint(timestamp), metricName}, "/")
+	metricKey := strings.Join([]string{nodeKey, fmt.Sprint(timestamp), "metric"}, "/")
 	metricJson, err := db.GetInstance().GetValue(metricKey)
 	if err != nil {
 		return nil, err
@@ -472,7 +517,7 @@ func (instance *NoSQLDatabase) retreivalNodeMetric(nodeKey string, timestamp uin
 
 // Private function that it is able to get the collection of metric in a period
 // expressed in unix time.
-func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName string, startPeriod uint, endPeriod uint) (*model.NodeMetric, error) {
+func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
 	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
 	timestampJson, err := db.GetInstance().GetValue(timestampsKey)
 	if err != nil {
@@ -491,9 +536,10 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 	}
 
 	for _, timestamp := range modelTimestamp {
-		if timestamp >= startPeriod && timestamp <= endPeriod {
-			tmpModelMetric, err := instance.retreivalNodeMetric(nodeKey,
-				timestamp, metricName)
+		if (startPeriod == -1 && endPeriod == -1) ||
+			(int(timestamp) >= startPeriod && int(timestamp) <= endPeriod) {
+			log.GetInstance().Info(fmt.Sprintf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp))
+			tmpModelMetric, err := instance.retreivalNodeMetric(nodeKey, timestamp, metricName)
 			if err != nil {
 				return nil, err
 			}
