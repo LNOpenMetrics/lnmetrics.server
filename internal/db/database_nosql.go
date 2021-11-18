@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
@@ -126,10 +127,10 @@ func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, 
 
 }
 
-func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metric_name string) (*model.NodeMetadata, error) {
+func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metricName string) (*model.NodeMetadata, error) {
 	// FIXME(vincenzopalazzo) Need to remove the network from the API?
 	// in this case different network need to stay in different db
-	metadataIndex := strings.Join([]string{nodeID, metric_name, "metadata"}, "/")
+	metadataIndex := strings.Join([]string{nodeID, metricName, "metadata"}, "/")
 	jsonNodeMeta, err := db.GetInstance().GetValue(metadataIndex)
 	if err != nil {
 		return nil, err
@@ -165,7 +166,6 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 		NodeInfo:     metadataNode.NodeInfo,
 		Address:      metadataNode.Address,
 		Timezone:     metadataNode.Timezone,
-		LastUpdate:   0,
 		UpTime:       make([]*model.Status, 0),
 		ChannelsInfo: make([]*model.StatusChannel, 0),
 	}
@@ -175,7 +175,6 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 		return nil, err
 	}
 
-	modelMetricOne.LastUpdate = nodeMetric.Timestamp
 	modelMetricOne.UpTime = nodeMetric.UpTime
 	modelMetricOne.ChannelsInfo = nodeMetric.ChannelsInfo
 
@@ -403,15 +402,18 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 		Version:        "unknown",
 	}
 
+	now := int(time.Now().Unix())
+
 	metadata := model.NodeMetadata{
-		Version:  0,
-		NodeID:   metricOne.NodeID,
-		Alias:    metricOne.NodeAlias,
-		Color:    metricOne.Color,
-		OSInfo:   metricOne.OSInfo,
-		NodeInfo: &nodeInfo,
-		Address:  make([]*model.NodeAddress, 0),
-		Timezone: metricOne.Timezone,
+		Version:    0,
+		NodeID:     metricOne.NodeID,
+		Alias:      metricOne.NodeAlias,
+		Color:      metricOne.Color,
+		OSInfo:     metricOne.OSInfo,
+		NodeInfo:   &nodeInfo,
+		Address:    make([]*model.NodeAddress, 0),
+		Timezone:   metricOne.Timezone,
+		LastUpdate: now,
 	}
 
 	metaJson, err := json.Marshal(metadata)

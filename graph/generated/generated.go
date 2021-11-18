@@ -65,7 +65,6 @@ type ComplexityRoot struct {
 		Address      func(childComplexity int) int
 		ChannelsInfo func(childComplexity int) int
 		Color        func(childComplexity int) int
-		LastUpdate   func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Network      func(childComplexity int) int
 		NodeAlias    func(childComplexity int) int
@@ -100,15 +99,16 @@ type ComplexityRoot struct {
 	}
 
 	NodeMetadata struct {
-		Address  func(childComplexity int) int
-		Alias    func(childComplexity int) int
-		Color    func(childComplexity int) int
-		Network  func(childComplexity int) int
-		NodeID   func(childComplexity int) int
-		NodeInfo func(childComplexity int) int
-		OSInfo   func(childComplexity int) int
-		Timezone func(childComplexity int) int
-		Version  func(childComplexity int) int
+		Address    func(childComplexity int) int
+		Alias      func(childComplexity int) int
+		Color      func(childComplexity int) int
+		LastUpdate func(childComplexity int) int
+		Network    func(childComplexity int) int
+		NodeID     func(childComplexity int) int
+		NodeInfo   func(childComplexity int) int
+		OSInfo     func(childComplexity int) int
+		Timezone   func(childComplexity int) int
+		Version    func(childComplexity int) int
 	}
 
 	NodeMetric struct {
@@ -273,13 +273,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOne.Color(childComplexity), true
-
-	case "MetricOne.last_update":
-		if e.complexity.MetricOne.LastUpdate == nil {
-			break
-		}
-
-		return e.complexity.MetricOne.LastUpdate(childComplexity), true
 
 	case "MetricOne.metric_name":
 		if e.complexity.MetricOne.Name == nil {
@@ -449,6 +442,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NodeMetadata.Color(childComplexity), true
+
+	case "NodeMetadata.last_update":
+		if e.complexity.NodeMetadata.LastUpdate == nil {
+			break
+		}
+
+		return e.complexity.NodeMetadata.LastUpdate(childComplexity), true
 
 	case "NodeMetadata.network":
 		if e.complexity.NodeMetadata.Network == nil {
@@ -827,9 +827,8 @@ type MetricOne {
   node_info: NodeImpInfo @goField(name: "NodeInfo")
   address: [NodeAddress!]! @goField(name: "Address")
   timezone: String! @goField(name: "Timezone")
-  last_update: Int! @goField(name: "LastUpdate")
   up_time: [Status!]! @goField(name: "UpTime")
-  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  channels_info: [StatusChannel!]! @goField(name: "ChannelsInfo")
   # Same reason of the Network.
   version: Int @goField(name: "Version")
 }
@@ -881,6 +880,7 @@ type NodeMetadata {
   os_info: OSInfo! @goField(name: "OSInfo")
   node_info: NodeImpInfo! @goField(name: "NodeInfo")
   timezone: String! @goField(name: "Timezone")
+  last_update: Int! @goField(name: "LastUpdate")
 }
 
 type NodeMetric {
@@ -1766,41 +1766,6 @@ func (ec *executionContext) _MetricOne_timezone(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOne_last_update(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "MetricOne",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _MetricOne_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1861,11 +1826,14 @@ func (ec *executionContext) _MetricOne_channels_info(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.StatusChannel)
 	fc.Result = res
-	return ec.marshalOStatusChannel2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, field.Selections, res)
+	return ec.marshalNStatusChannel2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannelᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -2584,6 +2552,41 @@ func (ec *executionContext) _NodeMetadata_timezone(ctx context.Context, field gr
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NodeMetadata_last_update(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "NodeMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NodeMetric_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.NodeMetric) (ret graphql.Marshaler) {
@@ -5041,11 +5044,6 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "last_update":
-			out.Values[i] = ec._MetricOne_last_update(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "up_time":
 			out.Values[i] = ec._MetricOne_up_time(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5053,6 +5051,9 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			}
 		case "channels_info":
 			out.Values[i] = ec._MetricOne_channels_info(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "version":
 			out.Values[i] = ec._MetricOne_version(ctx, field, obj)
 		default:
@@ -5261,6 +5262,11 @@ func (ec *executionContext) _NodeMetadata(ctx context.Context, sel ast.Selection
 			}
 		case "timezone":
 			out.Values[i] = ec._NodeMetadata_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "last_update":
+			out.Values[i] = ec._NodeMetadata_last_update(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6279,6 +6285,60 @@ func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnm
 		return graphql.Null
 	}
 	return ec._Status(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNStatusChannel2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StatusChannel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNStatusChannel2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNStatusChannel2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐStatusChannel(ctx context.Context, sel ast.SelectionSet, v *model.StatusChannel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._StatusChannel(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

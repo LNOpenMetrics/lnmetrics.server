@@ -44,7 +44,6 @@ type MetricOne {
   node_info: NodeImpInfo @goField(name: "NodeInfo")
   address: [NodeAddress!]! @goField(name: "Address")
   timezone: String! @goField(name: "Timezone")
-  last_update: Int! @goField(name: "LastUpdate")
   up_time: [Status!]! @goField(name: "UpTime")
   channels_info: [StatusChannel!]! @goField(name: "ChannelsInfo")
   # Same reason of the Network.
@@ -98,6 +97,7 @@ type NodeMetadata {
   os_info: OSInfo! @goField(name: "OSInfo")
   node_info: NodeImpInfo! @goField(name: "NodeInfo")
   timezone: String! @goField(name: "Timezone")
+  last_update: Int! @goField(name: "LastUpdate")
 }
 
 type NodeMetric {
