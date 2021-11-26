@@ -29,10 +29,6 @@
 
 TODO
 
-## Build With
-
-- [gqlgen](https://github.com/99designs/gqlgen)
-
 ## How to Use
 
 TODO
