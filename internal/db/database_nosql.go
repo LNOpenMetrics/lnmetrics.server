@@ -397,21 +397,17 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 // Private function that a metric on store only the meta information of the node
 // the key to store this information it is nodeID/metadata
 func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.MetricOne) error {
-	nodeInfo := model.NodeImpInfo{
-		Implementation: "unknown",
-		Version:        "unknown",
-	}
-
 	now := int(time.Now().Unix())
 
 	metadata := model.NodeMetadata{
-		Version:    0,
+		Version:    *metricOne.Version,
+		Network:    *metricOne.Network,
 		NodeID:     metricOne.NodeID,
 		Alias:      metricOne.NodeAlias,
 		Color:      metricOne.Color,
 		OSInfo:     metricOne.OSInfo,
-		NodeInfo:   &nodeInfo,
-		Address:    make([]*model.NodeAddress, 0),
+		NodeInfo:   metricOne.NodeInfo,
+		Address:    metricOne.Address,
 		Timezone:   metricOne.Timezone,
 		LastUpdate: now,
 	}

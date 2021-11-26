@@ -109,8 +109,8 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 		return err
 	}
 
-	now := time.Now().Unix()
-	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
+	now := time.Now().Format(time.RFC850)
+	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", now, nodeID))
 
 	return nil
 }
