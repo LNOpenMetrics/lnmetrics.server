@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
@@ -81,6 +82,9 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 		return nil, err
 	}
 
+	now := time.Now().Unix()
+	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
+
 	return &metricModel, nil
 }
 
@@ -104,6 +108,9 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {
 		return err
 	}
+
+	now := time.Now().Unix()
+	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
 
 	return nil
 }
