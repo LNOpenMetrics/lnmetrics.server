@@ -16,10 +16,16 @@ type MetricsDatabase interface {
 	InsertMetricOne(toInset *model.MetricOne) error
 
 	// Get all the node id stored in the database
-	GetNodesID() ([]*string, error)
+	GetNodes(network string) ([]*model.NodeMetadata, error)
+
+	// Get metric metadata of a specific node
+	GetNode(network string, nodeID string, metriName string) (*model.NodeMetadata, error)
 
 	// Get all the node data by id
-	GetMetricOne(withId string) (*model.MetricOne, error)
+	GetMetricOne(withId string, startPeriod int, endPeriod int) (*model.MetricOne, error)
+
+	// Update the metric of the node, with new one.
+	UpdateMetricOne(toInser *model.MetricOne) error
 
 	// Close the connection with the database
 	CloseDatabase() error
@@ -29,4 +35,16 @@ type MetricsDatabase interface {
 
 	// Close the connection and erase the database
 	EraseAfterCloseDatabase() error
+
+	// Return the version of the data in the database
+	GetVersionData() (uint, error)
+
+	// Migrate procedure to convert a more from aversion to another
+	Migrate() error
+
+	// From the metrics payload return the id of the node
+	ItemID(toInsert *model.MetricOne) (string, error)
+
+	// Check if the node it is indexed for a specific metrics
+	ContainsIndex(nodeID string, metricName string) bool
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPushMetricWithNodeId(t *testing.T) {
+func TestInitMetricWithNodeId(t *testing.T) {
 	t.Run("handle the push operation of the new metrics", func(t *testing.T) {
 		mockMetricsService := new(lnmock.MockMetricsServices)
 		resolvers := graph.Resolver{MetricsService: mockMetricsService}
@@ -24,17 +24,17 @@ func TestPushMetricWithNodeId(t *testing.T) {
 		}
 
 		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
-		query := utils.ComposeAddMetricOneQuery(modelObj.NodeID, `{name:\"mock\",node_id:\"fake_id\",color:\"0000\"}`)
+		query := utils.ComposeInitMetricOneQuery(modelObj.NodeID, `{name:\"mock\",node_id:\"fake_id\",color:\"0000\"}`, "123455")
 
-		mockMetricsService.On("AddMetricOne", modelObj.NodeID, `{name:"mock",node_id:"fake_id",color:"0000"}`).Return(&modelObj)
+		mockMetricsService.On("InitMetricOne", modelObj.NodeID, `{name:"mock",node_id:"fake_id",color:"0000"}`, "123455").Return(&modelObj)
 
 		var resp struct {
-			AddNodeMetrics utils.AddMetricOneResp
+			InitMetricOne utils.AddMetricOneResp
 		}
 		cli.MustPost(query, &resp)
 
 		mockMetricsService.AssertExpectations(t)
-		require.Equal(t, modelObj.NodeID, resp.AddNodeMetrics.NodeID)
+		require.Equal(t, modelObj.NodeID, resp.InitMetricOne.NodeID)
 	})
 }
 
@@ -48,16 +48,16 @@ func TestGetNodesId(t *testing.T) {
 		}
 		query := utils.ComposeGetNodesQuery()
 
-		emptyList := make([]*string, 0)
-		mockMetricsService.On("GetNodes").Return(emptyList)
+		emptyList := make([]*model.NodeMetadata, 0)
+		mockMetricsService.On("GetNodes", "bitcoin").Return(emptyList)
 
 		var resp struct {
-			Nodes []*string
+			GetNodes []*model.NodeMetadata
 		}
 		cli.MustPost(query, &resp)
 
 		mockMetricsService.AssertExpectations(t)
-		require.Equal(t, emptyList, resp.Nodes)
+		require.Equal(t, emptyList, resp.GetNodes)
 	})
 }
 
@@ -71,8 +71,8 @@ func TestGetMetricOneByNodeID(t *testing.T) {
 		}
 
 		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
-		mockMetricsService.On("GetMetricOne", modelObj.NodeID).Return(&modelObj)
-		query := utils.ComposeGetMetricOneQuery(modelObj.NodeID)
+		mockMetricsService.On("GetMetricOne", modelObj.NodeID, 0, 1).Return(&modelObj)
+		query := utils.ComposeGetMetricOneQuery(modelObj.NodeID, 0, 1)
 
 		var resp struct {
 			GetMetricOne *model.MetricOne

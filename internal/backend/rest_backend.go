@@ -1,11 +1,12 @@
 package backend
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/LNOpenMetrics/lnmetrics.utils/hash/sha256"
@@ -26,23 +27,35 @@ func NewRestBackend(baseUrl string) Backend {
 func (instance *RestBackend) VerifyMessage(message *string, signature *string, pubkey *string) (bool, error) {
 	restMethodName := "checkmessage"
 	toVerify := sha256.SHA256(message)
+	log.GetInstance().Info(fmt.Sprintf("Hash of the payload received: %s", toVerify))
 	// call the rest apu and pass the toVerify and the signature received, with
 	// the pub key information.
-	postBody, _ := json.Marshal(map[string]string{
-		"message": toVerify,
-		"zbase":   *signature,
-		"pubkey":  *pubkey,
-	})
 
-	log.GetInstance().Debug(fmt.Sprintf("verify message request: %s", string(postBody)))
+	data := url.Values{}
+	data.Set("message", toVerify)
+	data.Set("zbase", *signature)
+	data.Set("pubkey", *pubkey)
 
-	responseBody := bytes.NewBuffer(postBody)
-	resp, err := http.Post(strings.Join([]string{*instance.BaseUrl, restMethodName}, "/"), "application/json", responseBody)
-	//Handle Error
+	postData := data.Encode()
+	url := strings.Join([]string{*instance.BaseUrl, restMethodName}, "/")
+
+	log.GetInstance().Debug(fmt.Sprintf("rest backend url: %s", url))
+	log.GetInstance().Debug(fmt.Sprintf("verify message request: %s", string(postData)))
+
+	client := &http.Client{}
+	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(postData))
 	if err != nil {
+		log.GetInstance().Error(fmt.Sprintf("Backend Error: %s", err))
 		return false, err
 	}
+	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Add("Content-Length", strconv.Itoa(len(postData)))
 
+	resp, err := client.Do(request)
+	if err != nil {
+		log.GetInstance().Error(fmt.Sprintf("Error from backend: %s", err))
+		return false, nil
+	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

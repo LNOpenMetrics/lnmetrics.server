@@ -32,19 +32,20 @@ type NodeImpInfo {
 }
 
 type MetricOne {
-     metric_name: String! @goField(name: "Name")
-     node_id: String! @goField(name: "NodeID")
-     color: String! @goField(name: "Color")
+  metric_name: String! @goField(name: "Name")
+  node_id: String! @goField(name: "NodeID")
+  color: String! @goField(name: "Color")
   node_alias: String! @goField(name: "NodeAlias")
-  #Network must be not null but in the server we miss
+  # Network must be not null but in the server we miss
   # some migration policy, so for the momenet we accept null value
-     network: String @goField(name: "Network")
+  network: String @goField(name: "Network")
   os_info: OSInfo! @goField(name: "OSInfo")
   # Null for the same reason of Network
   node_info: NodeImpInfo @goField(name: "NodeInfo")
-     timezone: String! @goField(name: "Timezone")
-     up_time: [Status!]! @goField(name: "UpTime")
-  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+  address: [NodeAddress!]! @goField(name: "Address")
+  timezone: String! @goField(name: "Timezone")
+  up_time: [Status!]! @goField(name: "UpTime")
+  channels_info: [StatusChannel!]! @goField(name: "ChannelsInfo")
   # Same reason of the Network.
   version: Int @goField(name: "Version")
 }
@@ -85,6 +86,34 @@ type PaymentsSummary {
      failed: Int!  @goField(name: "Failed")
 }
 
+# Type that are used inside the query side
+type NodeMetadata {
+  version: Int! @goField(name: "Version")
+  node_id: String! @goField(name: "NodeId")
+  alias: String! @goField(name: "Alias")
+  color: String! @goField(name: "Color")
+  address: [NodeAddress!]! @goField(name: "Address")
+  network: String! @goField(name: "Network")
+  os_info: OSInfo! @goField(name: "OSInfo")
+  node_info: NodeImpInfo! @goField(name: "NodeInfo")
+  timezone: String! @goField(name: "Timezone")
+  last_update: Int! @goField(name: "LastUpdate")
+}
+
+type NodeMetric {
+  timestamp: Int! @goField(name: "Timestamp")
+  up_time: [Status!]! @goField(name: "UpTime")
+  channels_info: [StatusChannel] @goField(name: "ChannelsInfo")
+}
+
+# Node address to be reach
+type NodeAddress {
+  type: String! @goField(name: "Type")
+  host: String! @goField(name: "Host")
+  port: Int! @goField(name: "Port")
+}
+
+# Deprecated, remove this when add node metrics will be removed
 input NodeMetrics {
      node_id: String! @goField(name: "NodeID")
      payload_metric_one: String! @goField(name: "PayloadMetricOne")
@@ -92,10 +121,27 @@ input NodeMetrics {
 
 # Query definition
 type Query {
-  nodes: [String!]! @goField(name: "Nodes")
-  getMetricOne(node_id: String!): MetricOne!
+  # backword compatibility with old client, for two version
+  nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
+
+  # Get the list of nodes that are contributing in metric collection
+  getNodes(network: String!): [NodeMetadata!]!
+  # Get the node metadata if exist on the server
+  getNode(network: String!, node_id: String!): NodeMetadata!
+  # Get Metric One of the node id in a period [start, end], if the end and start are -1
+  # the query return all the data collected from the entire period of metrics collection.
+  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
 }
 
 type Mutation {
-  addNodeMetrics(input: NodeMetrics!): MetricOne!
+  # backword compatibility with old client, for two version
+  addNodeMetrics(input: NodeMetrics!): MetricOne! @deprecated(reason: "This method not support the signature, please considered to used init and update metric one.")
+  # Mutation query that it is called from client side when it is back
+  # or it is the first time that it is on online on the network
+  # in case we know already this metrics, and the client have a clean db, we
+  # will return the full Metric One
+  initMetricOne(node_id: String!, payload: String!, signature: String!): MetricOne!
+  # Mutation query that it is called from a client side when the time to
+  # Update the metrics came.
+  updateMetricOne(node_id: String!, payload: String!, signature: String!): Boolean!
 }

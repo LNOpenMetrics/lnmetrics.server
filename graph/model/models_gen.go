@@ -28,10 +28,17 @@ type MetricOne struct {
 	Network      *string          `json:"network"`
 	OSInfo       *OSInfo          `json:"os_info"`
 	NodeInfo     *NodeImpInfo     `json:"node_info"`
+	Address      []*NodeAddress   `json:"address"`
 	Timezone     string           `json:"timezone"`
 	UpTime       []*Status        `json:"up_time"`
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
 	Version      *int             `json:"version"`
+}
+
+type NodeAddress struct {
+	Type string `json:"type"`
+	Host string `json:"host"`
+	Port int    `json:"port"`
 }
 
 type NodeImpInfo struct {
@@ -42,6 +49,25 @@ type NodeImpInfo struct {
 type NodeInfo struct {
 	NodeID    string     `json:"node_id"`
 	MetricOne *MetricOne `json:"metric_one"`
+}
+
+type NodeMetadata struct {
+	Version    int            `json:"version"`
+	NodeID     string         `json:"node_id"`
+	Alias      string         `json:"alias"`
+	Color      string         `json:"color"`
+	Address    []*NodeAddress `json:"address"`
+	Network    string         `json:"network"`
+	OSInfo     *OSInfo        `json:"os_info"`
+	NodeInfo   *NodeImpInfo   `json:"node_info"`
+	Timezone   string         `json:"timezone"`
+	LastUpdate int            `json:"last_update"`
+}
+
+type NodeMetric struct {
+	Timestamp    int              `json:"timestamp"`
+	UpTime       []*Status        `json:"up_time"`
+	ChannelsInfo []*StatusChannel `json:"channels_info"`
 }
 
 type NodeMetrics struct {

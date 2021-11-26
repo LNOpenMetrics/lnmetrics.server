@@ -11,25 +11,42 @@ import (
 )
 
 func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	return r.MetricsService.AddMetricOne(input.NodeID, input.PayloadMetricOne)
+	return r.MetricsService.AddNodeMetrics(input.NodeID, &input.PayloadMetricOne)
+}
+
+func (r *mutationResolver) InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error) {
+	return r.MetricsService.InitMetricOne(nodeID, &payload, signature)
+}
+
+func (r *mutationResolver) UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error) {
+	if err := r.MetricsService.UpdateMetricOne(nodeID, &payload, signature); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) Nodes(ctx context.Context) ([]string, error) {
-	nodes, err := r.MetricsService.GetNodes()
+	nodes, err := r.MetricsService.GetNodes("bitcoin")
 	if err != nil {
-		return make([]string, 0), err
+		return nil, err
 	}
-	// TODO: Change in the generation code, the return type, from array of string
-	// to slice of string.
-	result := make([]string, 0)
-	for _, nodeId := range nodes {
-		result = append(result, *nodeId)
+	listNodes := make([]string, 0)
+	for _, node := range nodes {
+		listNodes = append(listNodes, node.NodeID)
 	}
-	return result, nil
+	return listNodes, nil
 }
 
-func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string) (*model.MetricOne, error) {
-	return r.MetricsService.GetMetricOne(nodeID)
+func (r *queryResolver) GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error) {
+	return r.MetricsService.GetNodes(network)
+}
+
+func (r *queryResolver) GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error) {
+	return r.MetricsService.GetNode(network, nodeID)
+}
+
+func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
+	return r.MetricsService.GetMetricOne(nodeID, startPeriod, endPeriod)
 }
 
 // Mutation returns generated.MutationResolver implementation.
