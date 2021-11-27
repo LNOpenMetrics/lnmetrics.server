@@ -29,7 +29,7 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	if !found {
 		return nil, fmt.Errorf("DB Path not specified in the options conf")
 	}
-
+	log.GetInstance().Info(fmt.Sprintf("Creating local db at %s", path))
 	if err := db.GetInstance().InitDB(path.(string)); err != nil {
 		return nil, err
 	}
@@ -43,6 +43,10 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		new(sync.Mutex),
 		1,
 	}
+	if err := instance.createIndexDBIfMissin(); err != nil {
+		return nil, err
+	}
+	//FIXME: Create a debug procedure
 	/*
 		for _, key := range keys {
 			fmt.Println(*key)
@@ -245,6 +249,21 @@ func (instance *NoSQLDatabase) ContainsIndex(nodeID string, metricName string) b
 	return true
 }
 
+func (instance *NoSQLDatabase) createIndexDBIfMissin() error {
+	_, err := db.GetInstance().GetValue("node_index")
+	if err != nil {
+		jsonFakeIndex, err := json.Marshal(instance.indexCache)
+		if err != nil {
+			return err
+		}
+
+		if err := db.GetInstance().PutValue("node_index", string(jsonFakeIndex)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Adding the nodeid to the node_index.
 // TODO: We need to lock this method to avoid concurrency
 func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
@@ -324,16 +343,8 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 
 	// Create an empty index
 	// if any error occurs during the migration we don't need to lost all the data
-	_, err = db.GetInstance().GetValue("node_index")
-	if err != nil {
-		jsonFakeIndex, err := json.Marshal(instance.indexCache)
-		if err != nil {
-			return err
-		}
-
-		if err := db.GetInstance().PutValue("node_index", string(jsonFakeIndex)); err != nil {
-			return err
-		}
+	if err := instance.createIndexDBIfMissin(); err != nil {
+		return err
 	}
 	for _, nodeId := range listNodes {
 		if strings.Contains(*nodeId, "/") ||
@@ -345,7 +356,6 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 			return err
 		}
 
-		// The old version of level db has a very frustating
 		// NODEID: {metric_name: full_payload}
 		metricOneBlob, err := db.GetInstance().GetValue(*nodeId)
 		if err != nil {
@@ -445,49 +455,47 @@ func (instance *NoSQLDatabase) extractNodeMetric(itemID string, metricOne *model
 	sizeUpdates := len(metricOne.UpTime)
 	listUpTime := make([]*model.Status, 0)
 	listTimestamp := make([]int, 0)
-	timestamp := -1
-	for i := 0; i < sizeUpdates; i++ {
-		uptime := metricOne.UpTime[i]
-		listChannelsInfo := metricOne.ChannelsInfo
-		listUpTime = append(listUpTime, uptime)
-		if timestamp == -1 {
-			timestamp = uptime.Timestamp
-			listTimestamp = append(listTimestamp, timestamp)
-		}
-		if uptime.Event == "on_update" {
-			metricKey := strings.Join([]string{
-				itemID,
-				fmt.Sprint(timestamp),
-				"metric",
-			}, "/")
-			nodeMetric := model.NodeMetric{
-				Timestamp:    timestamp,
-				UpTime:       listUpTime,
-				ChannelsInfo: listChannelsInfo,
-			}
-
-			jsonMetric, err := json.Marshal(nodeMetric)
-			if err != nil {
-				return err
-			}
-
-			// TODO store somewhere this index, or keep in memory.
-			if err := db.GetInstance().PutValue(metricKey, string(jsonMetric)); err != nil {
-				return err
-			}
-
-			listUpTime = nil
-			timestamp = -1
-
-			log.GetInstance().Info(fmt.Sprintf("Insert metric with id %s", metricKey))
-			continue
-		}
-	}
-
 	timestampIndex := strings.Join([]string{
 		itemID,
 		"index",
 	}, "/")
+
+	oldTimestamp, err := db.GetInstance().GetValue(timestampIndex)
+	if err == nil {
+		if err := json.Unmarshal([]byte(oldTimestamp), &listTimestamp); err != nil {
+			log.GetInstance().Error(fmt.Sprintf("Error: %s", err))
+		}
+	}
+	for i := 0; i < sizeUpdates; i++ {
+		uptime := metricOne.UpTime[i]
+		listChannelsInfo := metricOne.ChannelsInfo
+		listUpTime = append(listUpTime, uptime)
+		timestamp := uptime.Timestamp
+		listTimestamp = append(listTimestamp, timestamp)
+		metricKey := strings.Join([]string{
+			itemID,
+			fmt.Sprint(timestamp),
+			"metric",
+		}, "/")
+		nodeMetric := model.NodeMetric{
+			Timestamp:    timestamp,
+			UpTime:       listUpTime,
+			ChannelsInfo: listChannelsInfo,
+		}
+
+		jsonMetric, err := json.Marshal(nodeMetric)
+		if err != nil {
+			return err
+		}
+
+		// TODO store somewhere this index, or keep in memory.
+		if err := db.GetInstance().PutValue(metricKey, string(jsonMetric)); err != nil {
+			return err
+		}
+
+		log.GetInstance().Info(fmt.Sprintf("Insert metric with id %s", metricKey))
+
+	}
 
 	jsonIndex, err := json.Marshal(listTimestamp)
 	if err != nil {
@@ -518,6 +526,7 @@ func (instance *NoSQLDatabase) retreivalNodeMetric(nodeKey string, timestamp uin
 func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
 	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
 	timestampJson, err := db.GetInstance().GetValue(timestampsKey)
+	log.GetInstance().Debug(fmt.Sprintf("index of timestamp: %s", timestampJson))
 	if err != nil {
 		return nil, err
 	}
@@ -541,11 +550,13 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 			if err != nil {
 				return nil, err
 			}
-			if modelMetric.Timestamp < int(timestamp) {
-				modelMetric.Timestamp = int(timestamp)
-			}
+
+			//FIXME: It is safe? or it make sense?
+			modelMetric.Timestamp = int(timestamp)
 			modelMetric.UpTime = append(modelMetric.UpTime,
 				tmpModelMetric.UpTime...)
+			modelMetric.ChannelsInfo = append(modelMetric.ChannelsInfo,
+				tmpModelMetric.ChannelsInfo...)
 
 		}
 	}

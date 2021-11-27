@@ -89,6 +89,11 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 }
 
 func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, signature string) error {
+
+	if !instance.Storage.ContainsIndex(nodeID, "metric_one") {
+		return fmt.Errorf("Metrics One not initialized, please call initialize the metric.")
+	}
+
 	ok, err := instance.Backend.VerifyMessage(payload, &signature, &nodeID)
 	if !ok || err != nil {
 		if !ok {
@@ -110,7 +115,7 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	}
 
 	now := time.Now().Format(time.RFC850)
-	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", now, nodeID))
+	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", nodeID, now))
 
 	return nil
 }
