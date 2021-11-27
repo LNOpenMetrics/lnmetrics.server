@@ -125,6 +125,48 @@ type NodeAddress {
   port: Int! @goField(name: "Port")
 }
 
+## Type Used in the MetricOneResult
+type PaymentRating {
+  success: Int! @goField(name: "Success")
+  faulure: Int! @goField(name: "Faulure")
+  internal_failure: Int! @goField(name: "InternalFailure")
+}
+
+type PaymentRatingSummary {
+  one_day: PaymentRating! @goField(name: "OneDay")
+  ten_days: PaymentRating! @goField(name: "TenDays")
+  thirty_days: PaymentRating! @goField(name: "ThirtyDays")
+  six_months: PaymentRating! @goField(name: "SixMonth")
+  full: PaymentRating! @goField(name: "Full")
+}
+
+type UpTimeResult {
+  one_day: Int! @goField(name: "OneDay")
+  ten_days: Int! @goField(name: "TenDays")
+  thirty_days: Int! @goField(name: "ThirtyDays")
+  six_months: Int! @goField(name: "SixMonth")
+  full: Int! @goField(name: "Full")
+}
+
+type ChannelInfoResult {
+  channel_id: String! @goField(name: "ChannelID")
+  node_id: String! @goField(name: "NodeID")
+  capacity: Int! @goField(name: "Capacity")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
+  up_time: UpTimeResult! @goField(name: "UpTime")
+}
+
+# Implementation of the metric_one output
+# Defined in the spec
+type MetricOneResult {
+  version: Int! @goField(name: "Version")
+  age: Int! @goField(name: "Age")
+  payment_rating: PaymentRatingSummary! @goField(name: "PaymentRating")
+  up_time: UpTimeResult! @goField(name: "UpTime")
+  channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
+}
+
 # Deprecated, remove this when add node metrics will be removed
 input NodeMetrics {
      node_id: String! @goField(name: "NodeID")
@@ -143,6 +185,8 @@ type Query {
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
+  # Get the metric one result
+  getMetricOneResult(network: String!, node_id: String!): MetricOneResult!
 }
 
 type Mutation {
