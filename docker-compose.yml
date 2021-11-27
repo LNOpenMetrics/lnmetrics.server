@@ -10,3 +10,4 @@ services:
     environment:
       - SERVER_PORT=8080
       - DB_PATH=/lnmetrics/.lnmetrics
+      - BACKEND_PATH=https://bruce.bublina.eu.org
