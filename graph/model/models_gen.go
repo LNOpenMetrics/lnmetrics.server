@@ -2,6 +2,16 @@
 
 package model
 
+type ChannelFee struct {
+	Base    int `json:"base"`
+	PerMSat int `json:"per_msat"`
+}
+
+type ChannelLimits struct {
+	Min int `json:"min"`
+	Max int `json:"max"`
+}
+
 type ChannelStatus struct {
 	Timestamp int    `json:"timestamp"`
 	Status    string `json:"status"`
@@ -111,4 +121,6 @@ type StatusChannel struct {
 	LastUpdate int              `json:"last_update"`
 	Public     bool             `json:"public"`
 	Direction  string           `json:"direction"`
+	Fee        *ChannelFee      `json:"fee"`
+	Limits     *ChannelLimits   `json:"limits"`
 }

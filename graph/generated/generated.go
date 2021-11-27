@@ -43,6 +43,16 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ChannelFee struct {
+		Base    func(childComplexity int) int
+		PerMSat func(childComplexity int) int
+	}
+
+	ChannelLimits struct {
+		Max func(childComplexity int) int
+		Min func(childComplexity int) int
+	}
+
 	ChannelStatus struct {
 		Status    func(childComplexity int) int
 		Timestamp func(childComplexity int) int
@@ -153,8 +163,10 @@ type ComplexityRoot struct {
 		Capacity   func(childComplexity int) int
 		Color      func(childComplexity int) int
 		Direction  func(childComplexity int) int
+		Fee        func(childComplexity int) int
 		Forwards   func(childComplexity int) int
 		LastUpdate func(childComplexity int) int
+		Limits     func(childComplexity int) int
 		NodeAlias  func(childComplexity int) int
 		NodeID     func(childComplexity int) int
 		Online     func(childComplexity int) int
@@ -189,6 +201,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ChannelFee.base":
+		if e.complexity.ChannelFee.Base == nil {
+			break
+		}
+
+		return e.complexity.ChannelFee.Base(childComplexity), true
+
+	case "ChannelFee.per_msat":
+		if e.complexity.ChannelFee.PerMSat == nil {
+			break
+		}
+
+		return e.complexity.ChannelFee.PerMSat(childComplexity), true
+
+	case "ChannelLimits.max":
+		if e.complexity.ChannelLimits.Max == nil {
+			break
+		}
+
+		return e.complexity.ChannelLimits.Max(childComplexity), true
+
+	case "ChannelLimits.min":
+		if e.complexity.ChannelLimits.Min == nil {
+			break
+		}
+
+		return e.complexity.ChannelLimits.Min(childComplexity), true
 
 	case "ChannelStatus.status":
 		if e.complexity.ChannelStatus.Status == nil {
@@ -668,6 +708,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StatusChannel.Direction(childComplexity), true
 
+	case "StatusChannel.fee":
+		if e.complexity.StatusChannel.Fee == nil {
+			break
+		}
+
+		return e.complexity.StatusChannel.Fee(childComplexity), true
+
 	case "StatusChannel.forwards":
 		if e.complexity.StatusChannel.Forwards == nil {
 			break
@@ -681,6 +728,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.StatusChannel.LastUpdate(childComplexity), true
+
+	case "StatusChannel.limits":
+		if e.complexity.StatusChannel.Limits == nil {
+			break
+		}
+
+		return e.complexity.StatusChannel.Limits(childComplexity), true
 
 	case "StatusChannel.node_alias":
 		if e.complexity.StatusChannel.NodeAlias == nil {
@@ -783,17 +837,29 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/metric_one.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
+type ChannelFee {
+  base: Int! @goField(name: "base")
+  per_msat: Int! @goField(name: "PerMSat")
+}
+
+type ChannelLimits {
+  min: Int! @goField(name: "Min")
+  max: Int! @goField(name: "Max")
+}
+
 type StatusChannel {
-     node_id: String! @goField(name: "NodeId")
-     node_alias: String! @goField(name: "NodeAlias")
-     color: String! @goField(name: "Color")
-     capacity: Int! @goField(name: "Capacity")
-     forwards: [PaymentInfo!]! @goField(name: "Forwards")
-     up_times: [ChannelStatus!]! @goField(name: "UpTimes")
-     online: Boolean! @goField(name: "Online")
-     last_update: Int! @goField(name: "LastUpdate")
-     public: Boolean! @goField(name: "Public")
-     direction: String! @goField(name: "Direction")
+  node_id: String! @goField(name: "NodeId")
+  node_alias: String! @goField(name: "NodeAlias")
+  color: String! @goField(name: "Color")
+  capacity: Int! @goField(name: "Capacity")
+  forwards: [PaymentInfo!]! @goField(name: "Forwards")
+  up_times: [ChannelStatus!]! @goField(name: "UpTimes")
+  online: Boolean! @goField(name: "Online")
+  last_update: Int! @goField(name: "LastUpdate")
+  public: Boolean! @goField(name: "Public")
+  direction: String! @goField(name: "Direction")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type PaymentInfo {
@@ -1141,6 +1207,146 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ChannelFee_base(ctx context.Context, field graphql.CollectedField, obj *model.ChannelFee) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelFee",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Base, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelFee_per_msat(ctx context.Context, field graphql.CollectedField, obj *model.ChannelFee) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelFee",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMSat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelLimits_min(ctx context.Context, field graphql.CollectedField, obj *model.ChannelLimits) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelLimits",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Min, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelLimits_max(ctx context.Context, field graphql.CollectedField, obj *model.ChannelLimits) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelLimits",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Max, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _ChannelStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.ChannelStatus) (ret graphql.Marshaler) {
 	defer func() {
@@ -3722,6 +3928,76 @@ func (ec *executionContext) _StatusChannel_direction(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _StatusChannel_fee(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "StatusChannel",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fee, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelFee)
+	fc.Result = res
+	return ec.marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _StatusChannel_limits(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "StatusChannel",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Limits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelLimits)
+	fc.Result = res
+	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4883,6 +5159,70 @@ func (ec *executionContext) unmarshalInputNodeMetrics(ctx context.Context, obj i
 
 // region    **************************** object.gotpl ****************************
 
+var channelFeeImplementors = []string{"ChannelFee"}
+
+func (ec *executionContext) _ChannelFee(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelFee) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelFeeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelFee")
+		case "base":
+			out.Values[i] = ec._ChannelFee_base(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "per_msat":
+			out.Values[i] = ec._ChannelFee_per_msat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var channelLimitsImplementors = []string{"ChannelLimits"}
+
+func (ec *executionContext) _ChannelLimits(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelLimits) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelLimitsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelLimits")
+		case "min":
+			out.Values[i] = ec._ChannelLimits_min(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "max":
+			out.Values[i] = ec._ChannelLimits_max(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var channelStatusImplementors = []string{"ChannelStatus"}
 
 func (ec *executionContext) _ChannelStatus(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelStatus) graphql.Marshaler {
@@ -5609,6 +5949,16 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "fee":
+			out.Values[i] = ec._StatusChannel_fee(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "limits":
+			out.Values[i] = ec._StatusChannel_limits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5883,6 +6233,26 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx context.Context, sel ast.SelectionSet, v *model.ChannelFee) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelFee(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx context.Context, sel ast.SelectionSet, v *model.ChannelLimits) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelLimits(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelStatus) graphql.Marshaler {

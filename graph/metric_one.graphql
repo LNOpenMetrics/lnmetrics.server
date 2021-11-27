@@ -1,16 +1,28 @@
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
+type ChannelFee {
+  base: Int! @goField(name: "base")
+  per_msat: Int! @goField(name: "PerMSat")
+}
+
+type ChannelLimits {
+  min: Int! @goField(name: "Min")
+  max: Int! @goField(name: "Max")
+}
+
 type StatusChannel {
-     node_id: String! @goField(name: "NodeId")
-     node_alias: String! @goField(name: "NodeAlias")
-     color: String! @goField(name: "Color")
-     capacity: Int! @goField(name: "Capacity")
-     forwards: [PaymentInfo!]! @goField(name: "Forwards")
-     up_times: [ChannelStatus!]! @goField(name: "UpTimes")
-     online: Boolean! @goField(name: "Online")
-     last_update: Int! @goField(name: "LastUpdate")
-     public: Boolean! @goField(name: "Public")
-     direction: String! @goField(name: "Direction")
+  node_id: String! @goField(name: "NodeId")
+  node_alias: String! @goField(name: "NodeAlias")
+  color: String! @goField(name: "Color")
+  capacity: Int! @goField(name: "Capacity")
+  forwards: [PaymentInfo!]! @goField(name: "Forwards")
+  up_times: [ChannelStatus!]! @goField(name: "UpTimes")
+  online: Boolean! @goField(name: "Online")
+  last_update: Int! @goField(name: "LastUpdate")
+  public: Boolean! @goField(name: "Public")
+  direction: String! @goField(name: "Direction")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type PaymentInfo {
