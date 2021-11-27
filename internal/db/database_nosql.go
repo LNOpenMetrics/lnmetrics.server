@@ -203,10 +203,12 @@ func (instance NoSQLDatabase) EraseAfterCloseDatabase() error {
 // Migrate procedure
 func (instance *NoSQLDatabase) Migrate() error {
 	versionData, err := instance.GetVersionData()
-	if versionData < 1 {
+	if versionData <= 1 {
+		log.GetInstance().Info("Migration process started")
 		if err := instance.migrateFromBlobToTimestamp(); err != nil {
 			return err
 		}
+		log.GetInstance().Info("Migration process Ended with success")
 		return instance.SetVersionData()
 	}
 	log.GetInstance().Info(fmt.Sprintf("No db migration needed (db version = %d)", versionData))
@@ -336,7 +338,9 @@ func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 
 // Private function to migrate the nosql data model from a view to another view
 func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
+	log.GetInstance().Info("Get list of key in the db")
 	listNodes, err := db.GetInstance().ListOfKeys()
+	log.GetInstance().Info(fmt.Sprintf("Found %d keys in the db", len(listNodes)))
 	if err != nil {
 		return err
 	}
@@ -347,8 +351,10 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		return err
 	}
 	for _, nodeId := range listNodes {
+		log.GetInstance().Info(fmt.Sprintf("DB key under analysis is: %s", *nodeId))
 		if strings.Contains(*nodeId, "/") ||
-			strings.Contains(*nodeId, "node_index") {
+			strings.Contains(*nodeId, "node_index") ||
+			strings.Contains(*nodeId, "data_version") {
 			continue
 		}
 		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
@@ -409,9 +415,20 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.MetricOne) error {
 	now := int(time.Now().Unix())
 
+	version := 0
+	network := "unknown"
+
+	if metricOne.Version != nil {
+		version = *metricOne.Version
+	}
+
+	if metricOne.Network != nil {
+		network = *metricOne.Network
+	}
+
 	metadata := model.NodeMetadata{
-		Version:    *metricOne.Version,
-		Network:    *metricOne.Network,
+		Version:    version,
+		Network:    network,
 		NodeID:     metricOne.NodeID,
 		Alias:      metricOne.NodeAlias,
 		Color:      metricOne.Color,
