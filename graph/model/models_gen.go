@@ -2,6 +2,25 @@
 
 package model
 
+type ChannelFee struct {
+	Base    int `json:"base"`
+	PerMSat int `json:"per_msat"`
+}
+
+type ChannelInfoResult struct {
+	ChannelID string         `json:"channel_id"`
+	NodeID    string         `json:"node_id"`
+	Capacity  int            `json:"capacity"`
+	Fee       *ChannelFee    `json:"fee"`
+	Limits    *ChannelLimits `json:"limits"`
+	UpTime    *UpTimeResult  `json:"up_time"`
+}
+
+type ChannelLimits struct {
+	Min int `json:"min"`
+	Max int `json:"max"`
+}
+
 type ChannelStatus struct {
 	Timestamp int    `json:"timestamp"`
 	Status    string `json:"status"`
@@ -33,6 +52,14 @@ type MetricOne struct {
 	UpTime       []*Status        `json:"up_time"`
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
 	Version      *int             `json:"version"`
+}
+
+type MetricOneResult struct {
+	Version       int                   `json:"version"`
+	Age           int                   `json:"age"`
+	PaymentRating *PaymentRatingSummary `json:"payment_rating"`
+	UpTime        *UpTimeResult         `json:"up_time"`
+	ChannelsInfo  []*ChannelInfoResult  `json:"channes_info"`
 }
 
 type NodeAddress struct {
@@ -88,6 +115,20 @@ type PaymentInfo struct {
 	FailureCode   *int    `json:"failure_code"`
 }
 
+type PaymentRating struct {
+	Success         int `json:"success"`
+	Faulure         int `json:"faulure"`
+	InternalFailure int `json:"internal_failure"`
+}
+
+type PaymentRatingSummary struct {
+	OneDay     *PaymentRating `json:"one_day"`
+	TenDays    *PaymentRating `json:"ten_days"`
+	ThirtyDays *PaymentRating `json:"thirty_days"`
+	SixMonth   *PaymentRating `json:"six_months"`
+	Full       *PaymentRating `json:"full"`
+}
+
 type PaymentsSummary struct {
 	Completed int `json:"completed"`
 	Failed    int `json:"failed"`
@@ -111,4 +152,14 @@ type StatusChannel struct {
 	LastUpdate int              `json:"last_update"`
 	Public     bool             `json:"public"`
 	Direction  string           `json:"direction"`
+	Fee        *ChannelFee      `json:"fee"`
+	Limits     *ChannelLimits   `json:"limits"`
+}
+
+type UpTimeResult struct {
+	OneDay     int `json:"one_day"`
+	TenDays    int `json:"ten_days"`
+	ThirtyDays int `json:"thirty_days"`
+	SixMonth   int `json:"six_months"`
+	Full       int `json:"full"`
 }

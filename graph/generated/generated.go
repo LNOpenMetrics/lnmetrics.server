@@ -43,6 +43,25 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ChannelFee struct {
+		Base    func(childComplexity int) int
+		PerMSat func(childComplexity int) int
+	}
+
+	ChannelInfoResult struct {
+		Capacity  func(childComplexity int) int
+		ChannelID func(childComplexity int) int
+		Fee       func(childComplexity int) int
+		Limits    func(childComplexity int) int
+		NodeID    func(childComplexity int) int
+		UpTime    func(childComplexity int) int
+	}
+
+	ChannelLimits struct {
+		Max func(childComplexity int) int
+		Min func(childComplexity int) int
+	}
+
 	ChannelStatus struct {
 		Status    func(childComplexity int) int
 		Timestamp func(childComplexity int) int
@@ -74,6 +93,14 @@ type ComplexityRoot struct {
 		Timezone     func(childComplexity int) int
 		UpTime       func(childComplexity int) int
 		Version      func(childComplexity int) int
+	}
+
+	MetricOneResult struct {
+		Age           func(childComplexity int) int
+		ChannelsInfo  func(childComplexity int) int
+		PaymentRating func(childComplexity int) int
+		UpTime        func(childComplexity int) int
+		Version       func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -130,16 +157,31 @@ type ComplexityRoot struct {
 		Status        func(childComplexity int) int
 	}
 
+	PaymentRating struct {
+		Faulure         func(childComplexity int) int
+		InternalFailure func(childComplexity int) int
+		Success         func(childComplexity int) int
+	}
+
+	PaymentRatingSummary struct {
+		Full       func(childComplexity int) int
+		OneDay     func(childComplexity int) int
+		SixMonth   func(childComplexity int) int
+		TenDays    func(childComplexity int) int
+		ThirtyDays func(childComplexity int) int
+	}
+
 	PaymentsSummary struct {
 		Completed func(childComplexity int) int
 		Failed    func(childComplexity int) int
 	}
 
 	Query struct {
-		GetMetricOne func(childComplexity int, nodeID string, startPeriod int, endPeriod int) int
-		GetNode      func(childComplexity int, network string, nodeID string) int
-		GetNodes     func(childComplexity int, network string) int
-		Nodes        func(childComplexity int) int
+		GetMetricOne       func(childComplexity int, nodeID string, startPeriod int, endPeriod int) int
+		GetMetricOneResult func(childComplexity int, network string, nodeID string) int
+		GetNode            func(childComplexity int, network string, nodeID string) int
+		GetNodes           func(childComplexity int, network string) int
+		Nodes              func(childComplexity int) int
 	}
 
 	Status struct {
@@ -153,13 +195,23 @@ type ComplexityRoot struct {
 		Capacity   func(childComplexity int) int
 		Color      func(childComplexity int) int
 		Direction  func(childComplexity int) int
+		Fee        func(childComplexity int) int
 		Forwards   func(childComplexity int) int
 		LastUpdate func(childComplexity int) int
+		Limits     func(childComplexity int) int
 		NodeAlias  func(childComplexity int) int
 		NodeID     func(childComplexity int) int
 		Online     func(childComplexity int) int
 		Public     func(childComplexity int) int
 		UpTimes    func(childComplexity int) int
+	}
+
+	UpTimeResult struct {
+		Full       func(childComplexity int) int
+		OneDay     func(childComplexity int) int
+		SixMonth   func(childComplexity int) int
+		TenDays    func(childComplexity int) int
+		ThirtyDays func(childComplexity int) int
 	}
 }
 
@@ -173,6 +225,7 @@ type QueryResolver interface {
 	GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error)
 	GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error)
 	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
+	GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneResult, error)
 }
 
 type executableSchema struct {
@@ -189,6 +242,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ChannelFee.base":
+		if e.complexity.ChannelFee.Base == nil {
+			break
+		}
+
+		return e.complexity.ChannelFee.Base(childComplexity), true
+
+	case "ChannelFee.per_msat":
+		if e.complexity.ChannelFee.PerMSat == nil {
+			break
+		}
+
+		return e.complexity.ChannelFee.PerMSat(childComplexity), true
+
+	case "ChannelInfoResult.capacity":
+		if e.complexity.ChannelInfoResult.Capacity == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.Capacity(childComplexity), true
+
+	case "ChannelInfoResult.channel_id":
+		if e.complexity.ChannelInfoResult.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.ChannelID(childComplexity), true
+
+	case "ChannelInfoResult.fee":
+		if e.complexity.ChannelInfoResult.Fee == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.Fee(childComplexity), true
+
+	case "ChannelInfoResult.limits":
+		if e.complexity.ChannelInfoResult.Limits == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.Limits(childComplexity), true
+
+	case "ChannelInfoResult.node_id":
+		if e.complexity.ChannelInfoResult.NodeID == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.NodeID(childComplexity), true
+
+	case "ChannelInfoResult.up_time":
+		if e.complexity.ChannelInfoResult.UpTime == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.UpTime(childComplexity), true
+
+	case "ChannelLimits.max":
+		if e.complexity.ChannelLimits.Max == nil {
+			break
+		}
+
+		return e.complexity.ChannelLimits.Max(childComplexity), true
+
+	case "ChannelLimits.min":
+		if e.complexity.ChannelLimits.Min == nil {
+			break
+		}
+
+		return e.complexity.ChannelLimits.Min(childComplexity), true
 
 	case "ChannelStatus.status":
 		if e.complexity.ChannelStatus.Status == nil {
@@ -336,6 +459,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOne.Version(childComplexity), true
+
+	case "MetricOneResult.age":
+		if e.complexity.MetricOneResult.Age == nil {
+			break
+		}
+
+		return e.complexity.MetricOneResult.Age(childComplexity), true
+
+	case "MetricOneResult.channes_info":
+		if e.complexity.MetricOneResult.ChannelsInfo == nil {
+			break
+		}
+
+		return e.complexity.MetricOneResult.ChannelsInfo(childComplexity), true
+
+	case "MetricOneResult.payment_rating":
+		if e.complexity.MetricOneResult.PaymentRating == nil {
+			break
+		}
+
+		return e.complexity.MetricOneResult.PaymentRating(childComplexity), true
+
+	case "MetricOneResult.up_time":
+		if e.complexity.MetricOneResult.UpTime == nil {
+			break
+		}
+
+		return e.complexity.MetricOneResult.UpTime(childComplexity), true
+
+	case "MetricOneResult.version":
+		if e.complexity.MetricOneResult.Version == nil {
+			break
+		}
+
+		return e.complexity.MetricOneResult.Version(childComplexity), true
 
 	case "Mutation.addNodeMetrics":
 		if e.complexity.Mutation.AddNodeMetrics == nil {
@@ -562,6 +720,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PaymentInfo.Status(childComplexity), true
 
+	case "PaymentRating.faulure":
+		if e.complexity.PaymentRating.Faulure == nil {
+			break
+		}
+
+		return e.complexity.PaymentRating.Faulure(childComplexity), true
+
+	case "PaymentRating.internal_failure":
+		if e.complexity.PaymentRating.InternalFailure == nil {
+			break
+		}
+
+		return e.complexity.PaymentRating.InternalFailure(childComplexity), true
+
+	case "PaymentRating.success":
+		if e.complexity.PaymentRating.Success == nil {
+			break
+		}
+
+		return e.complexity.PaymentRating.Success(childComplexity), true
+
+	case "PaymentRatingSummary.full":
+		if e.complexity.PaymentRatingSummary.Full == nil {
+			break
+		}
+
+		return e.complexity.PaymentRatingSummary.Full(childComplexity), true
+
+	case "PaymentRatingSummary.one_day":
+		if e.complexity.PaymentRatingSummary.OneDay == nil {
+			break
+		}
+
+		return e.complexity.PaymentRatingSummary.OneDay(childComplexity), true
+
+	case "PaymentRatingSummary.six_months":
+		if e.complexity.PaymentRatingSummary.SixMonth == nil {
+			break
+		}
+
+		return e.complexity.PaymentRatingSummary.SixMonth(childComplexity), true
+
+	case "PaymentRatingSummary.ten_days":
+		if e.complexity.PaymentRatingSummary.TenDays == nil {
+			break
+		}
+
+		return e.complexity.PaymentRatingSummary.TenDays(childComplexity), true
+
+	case "PaymentRatingSummary.thirty_days":
+		if e.complexity.PaymentRatingSummary.ThirtyDays == nil {
+			break
+		}
+
+		return e.complexity.PaymentRatingSummary.ThirtyDays(childComplexity), true
+
 	case "PaymentsSummary.completed":
 		if e.complexity.PaymentsSummary.Completed == nil {
 			break
@@ -587,6 +801,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetMetricOne(childComplexity, args["node_id"].(string), args["start_period"].(int), args["end_period"].(int)), true
+
+	case "Query.getMetricOneResult":
+		if e.complexity.Query.GetMetricOneResult == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getMetricOneResult_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetMetricOneResult(childComplexity, args["network"].(string), args["node_id"].(string)), true
 
 	case "Query.getNode":
 		if e.complexity.Query.GetNode == nil {
@@ -668,6 +894,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StatusChannel.Direction(childComplexity), true
 
+	case "StatusChannel.fee":
+		if e.complexity.StatusChannel.Fee == nil {
+			break
+		}
+
+		return e.complexity.StatusChannel.Fee(childComplexity), true
+
 	case "StatusChannel.forwards":
 		if e.complexity.StatusChannel.Forwards == nil {
 			break
@@ -681,6 +914,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.StatusChannel.LastUpdate(childComplexity), true
+
+	case "StatusChannel.limits":
+		if e.complexity.StatusChannel.Limits == nil {
+			break
+		}
+
+		return e.complexity.StatusChannel.Limits(childComplexity), true
 
 	case "StatusChannel.node_alias":
 		if e.complexity.StatusChannel.NodeAlias == nil {
@@ -716,6 +956,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.StatusChannel.UpTimes(childComplexity), true
+
+	case "UpTimeResult.full":
+		if e.complexity.UpTimeResult.Full == nil {
+			break
+		}
+
+		return e.complexity.UpTimeResult.Full(childComplexity), true
+
+	case "UpTimeResult.one_day":
+		if e.complexity.UpTimeResult.OneDay == nil {
+			break
+		}
+
+		return e.complexity.UpTimeResult.OneDay(childComplexity), true
+
+	case "UpTimeResult.six_months":
+		if e.complexity.UpTimeResult.SixMonth == nil {
+			break
+		}
+
+		return e.complexity.UpTimeResult.SixMonth(childComplexity), true
+
+	case "UpTimeResult.ten_days":
+		if e.complexity.UpTimeResult.TenDays == nil {
+			break
+		}
+
+		return e.complexity.UpTimeResult.TenDays(childComplexity), true
+
+	case "UpTimeResult.thirty_days":
+		if e.complexity.UpTimeResult.ThirtyDays == nil {
+			break
+		}
+
+		return e.complexity.UpTimeResult.ThirtyDays(childComplexity), true
 
 	}
 	return 0, false
@@ -783,17 +1058,29 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/metric_one.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
+type ChannelFee {
+  base: Int! @goField(name: "base")
+  per_msat: Int! @goField(name: "PerMSat")
+}
+
+type ChannelLimits {
+  min: Int! @goField(name: "Min")
+  max: Int! @goField(name: "Max")
+}
+
 type StatusChannel {
-     node_id: String! @goField(name: "NodeId")
-     node_alias: String! @goField(name: "NodeAlias")
-     color: String! @goField(name: "Color")
-     capacity: Int! @goField(name: "Capacity")
-     forwards: [PaymentInfo!]! @goField(name: "Forwards")
-     up_times: [ChannelStatus!]! @goField(name: "UpTimes")
-     online: Boolean! @goField(name: "Online")
-     last_update: Int! @goField(name: "LastUpdate")
-     public: Boolean! @goField(name: "Public")
-     direction: String! @goField(name: "Direction")
+  node_id: String! @goField(name: "NodeId")
+  node_alias: String! @goField(name: "NodeAlias")
+  color: String! @goField(name: "Color")
+  capacity: Int! @goField(name: "Capacity")
+  forwards: [PaymentInfo!]! @goField(name: "Forwards")
+  up_times: [ChannelStatus!]! @goField(name: "UpTimes")
+  online: Boolean! @goField(name: "Online")
+  last_update: Int! @goField(name: "LastUpdate")
+  public: Boolean! @goField(name: "Public")
+  direction: String! @goField(name: "Direction")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type PaymentInfo {
@@ -896,6 +1183,48 @@ type NodeAddress {
   port: Int! @goField(name: "Port")
 }
 
+## Type Used in the MetricOneResult
+type PaymentRating {
+  success: Int! @goField(name: "Success")
+  faulure: Int! @goField(name: "Faulure")
+  internal_failure: Int! @goField(name: "InternalFailure")
+}
+
+type PaymentRatingSummary {
+  one_day: PaymentRating! @goField(name: "OneDay")
+  ten_days: PaymentRating! @goField(name: "TenDays")
+  thirty_days: PaymentRating! @goField(name: "ThirtyDays")
+  six_months: PaymentRating! @goField(name: "SixMonth")
+  full: PaymentRating! @goField(name: "Full")
+}
+
+type UpTimeResult {
+  one_day: Int! @goField(name: "OneDay")
+  ten_days: Int! @goField(name: "TenDays")
+  thirty_days: Int! @goField(name: "ThirtyDays")
+  six_months: Int! @goField(name: "SixMonth")
+  full: Int! @goField(name: "Full")
+}
+
+type ChannelInfoResult {
+  channel_id: String! @goField(name: "ChannelID")
+  node_id: String! @goField(name: "NodeID")
+  capacity: Int! @goField(name: "Capacity")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
+  up_time: UpTimeResult! @goField(name: "UpTime")
+}
+
+# Implementation of the metric_one output
+# Defined in the spec
+type MetricOneResult {
+  version: Int! @goField(name: "Version")
+  age: Int! @goField(name: "Age")
+  payment_rating: PaymentRatingSummary! @goField(name: "PaymentRating")
+  up_time: UpTimeResult! @goField(name: "UpTime")
+  channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
+}
+
 # Deprecated, remove this when add node metrics will be removed
 input NodeMetrics {
      node_id: String! @goField(name: "NodeID")
@@ -914,6 +1243,8 @@ type Query {
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
+  # Get the metric one result
+  getMetricOneResult(network: String!, node_id: String!): MetricOneResult!
 }
 
 type Mutation {
@@ -1032,6 +1363,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getMetricOneResult_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["network"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["network"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["node_id"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getMetricOne_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1141,6 +1496,356 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ChannelFee_base(ctx context.Context, field graphql.CollectedField, obj *model.ChannelFee) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelFee",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Base, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelFee_per_msat(ctx context.Context, field graphql.CollectedField, obj *model.ChannelFee) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelFee",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMSat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_channel_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_node_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_capacity(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Capacity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_fee(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fee, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelFee)
+	fc.Result = res
+	return ec.marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_limits(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Limits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelLimits)
+	fc.Result = res
+	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoResult_up_time(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UpTimeResult)
+	fc.Result = res
+	return ec.marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelLimits_min(ctx context.Context, field graphql.CollectedField, obj *model.ChannelLimits) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelLimits",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Min, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelLimits_max(ctx context.Context, field graphql.CollectedField, obj *model.ChannelLimits) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelLimits",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Max, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _ChannelStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.ChannelStatus) (ret graphql.Marshaler) {
 	defer func() {
@@ -1866,6 +2571,181 @@ func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphq
 	res := resTmp.(*int)
 	fc.Result = res
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneResult_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneResult_age(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Age, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PaymentRating, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRatingSummary)
+	fc.Result = res
+	return ec.marshalNPaymentRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRatingSummary(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneResult_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UpTimeResult)
+	fc.Result = res
+	return ec.marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneResult_channes_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelsInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ChannelInfoResult)
+	fc.Result = res
+	return ec.marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResultᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2930,6 +3810,286 @@ func (ec *executionContext) _PaymentInfo_failure_code(ctx context.Context, field
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PaymentRating_success(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRating_faulure(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Faulure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRating_internal_failure(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalFailure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRatingSummary_one_day(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OneDay, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRating)
+	fc.Result = res
+	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRatingSummary_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TenDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRating)
+	fc.Result = res
+	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRatingSummary_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ThirtyDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRating)
+	fc.Result = res
+	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRatingSummary_six_months(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SixMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRating)
+	fc.Result = res
+	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentRatingSummary_full(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Full, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PaymentRating)
+	fc.Result = res
+	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PaymentsSummary_completed(ctx context.Context, field graphql.CollectedField, obj *model.PaymentsSummary) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3159,6 +4319,48 @@ func (ec *executionContext) _Query_getMetricOne(ctx context.Context, field graph
 	res := resTmp.(*model.MetricOne)
 	fc.Result = res
 	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getMetricOneResult(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getMetricOneResult_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetMetricOneResult(rctx, args["network"].(string), args["node_id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MetricOneResult)
+	fc.Result = res
+	return ec.marshalNMetricOneResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3720,6 +4922,251 @@ func (ec *executionContext) _StatusChannel_direction(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _StatusChannel_fee(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "StatusChannel",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fee, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelFee)
+	fc.Result = res
+	return ec.marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _StatusChannel_limits(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "StatusChannel",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Limits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelLimits)
+	fc.Result = res
+	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UpTimeResult_one_day(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UpTimeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OneDay, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UpTimeResult_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UpTimeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TenDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UpTimeResult_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UpTimeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ThirtyDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UpTimeResult_six_months(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UpTimeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SixMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UpTimeResult_full(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "UpTimeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Full, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -4883,6 +6330,122 @@ func (ec *executionContext) unmarshalInputNodeMetrics(ctx context.Context, obj i
 
 // region    **************************** object.gotpl ****************************
 
+var channelFeeImplementors = []string{"ChannelFee"}
+
+func (ec *executionContext) _ChannelFee(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelFee) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelFeeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelFee")
+		case "base":
+			out.Values[i] = ec._ChannelFee_base(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "per_msat":
+			out.Values[i] = ec._ChannelFee_per_msat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var channelInfoResultImplementors = []string{"ChannelInfoResult"}
+
+func (ec *executionContext) _ChannelInfoResult(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelInfoResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelInfoResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelInfoResult")
+		case "channel_id":
+			out.Values[i] = ec._ChannelInfoResult_channel_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node_id":
+			out.Values[i] = ec._ChannelInfoResult_node_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "capacity":
+			out.Values[i] = ec._ChannelInfoResult_capacity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fee":
+			out.Values[i] = ec._ChannelInfoResult_fee(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "limits":
+			out.Values[i] = ec._ChannelInfoResult_limits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "up_time":
+			out.Values[i] = ec._ChannelInfoResult_up_time(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var channelLimitsImplementors = []string{"ChannelLimits"}
+
+func (ec *executionContext) _ChannelLimits(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelLimits) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelLimitsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelLimits")
+		case "min":
+			out.Values[i] = ec._ChannelLimits_min(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "max":
+			out.Values[i] = ec._ChannelLimits_max(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var channelStatusImplementors = []string{"ChannelStatus"}
 
 func (ec *executionContext) _ChannelStatus(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelStatus) graphql.Marshaler {
@@ -5056,6 +6619,53 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 			}
 		case "version":
 			out.Values[i] = ec._MetricOne_version(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var metricOneResultImplementors = []string{"MetricOneResult"}
+
+func (ec *executionContext) _MetricOneResult(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOneResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metricOneResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MetricOneResult")
+		case "version":
+			out.Values[i] = ec._MetricOneResult_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "age":
+			out.Values[i] = ec._MetricOneResult_age(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "payment_rating":
+			out.Values[i] = ec._MetricOneResult_payment_rating(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "up_time":
+			out.Values[i] = ec._MetricOneResult_up_time(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "channes_info":
+			out.Values[i] = ec._MetricOneResult_channes_info(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5388,6 +6998,90 @@ func (ec *executionContext) _PaymentInfo(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var paymentRatingImplementors = []string{"PaymentRating"}
+
+func (ec *executionContext) _PaymentRating(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentRating) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, paymentRatingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PaymentRating")
+		case "success":
+			out.Values[i] = ec._PaymentRating_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "faulure":
+			out.Values[i] = ec._PaymentRating_faulure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "internal_failure":
+			out.Values[i] = ec._PaymentRating_internal_failure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var paymentRatingSummaryImplementors = []string{"PaymentRatingSummary"}
+
+func (ec *executionContext) _PaymentRatingSummary(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentRatingSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, paymentRatingSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PaymentRatingSummary")
+		case "one_day":
+			out.Values[i] = ec._PaymentRatingSummary_one_day(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ten_days":
+			out.Values[i] = ec._PaymentRatingSummary_ten_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "thirty_days":
+			out.Values[i] = ec._PaymentRatingSummary_thirty_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "six_months":
+			out.Values[i] = ec._PaymentRatingSummary_six_months(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "full":
+			out.Values[i] = ec._PaymentRatingSummary_full(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var paymentsSummaryImplementors = []string{"PaymentsSummary"}
 
 func (ec *executionContext) _PaymentsSummary(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentsSummary) graphql.Marshaler {
@@ -5486,6 +7180,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getMetricOne(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "getMetricOneResult":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getMetricOneResult(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5606,6 +7314,63 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 			}
 		case "direction":
 			out.Values[i] = ec._StatusChannel_direction(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fee":
+			out.Values[i] = ec._StatusChannel_fee(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "limits":
+			out.Values[i] = ec._StatusChannel_limits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var upTimeResultImplementors = []string{"UpTimeResult"}
+
+func (ec *executionContext) _UpTimeResult(ctx context.Context, sel ast.SelectionSet, obj *model.UpTimeResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upTimeResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpTimeResult")
+		case "one_day":
+			out.Values[i] = ec._UpTimeResult_one_day(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ten_days":
+			out.Values[i] = ec._UpTimeResult_ten_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "thirty_days":
+			out.Values[i] = ec._UpTimeResult_thirty_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "six_months":
+			out.Values[i] = ec._UpTimeResult_six_months(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "full":
+			out.Values[i] = ec._UpTimeResult_full(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -5885,6 +7650,80 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx context.Context, sel ast.SelectionSet, v *model.ChannelFee) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelFee(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelInfoResult) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelInfoResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResult(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNChannelInfoResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResult(ctx context.Context, sel ast.SelectionSet, v *model.ChannelInfoResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelInfoResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx context.Context, sel ast.SelectionSet, v *model.ChannelLimits) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelLimits(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNChannelStatus2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelStatus) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -6030,6 +7869,20 @@ func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋ
 		return graphql.Null
 	}
 	return ec._MetricOne(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMetricOneResult2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx context.Context, sel ast.SelectionSet, v model.MetricOneResult) graphql.Marshaler {
+	return ec._MetricOneResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMetricOneResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx context.Context, sel ast.SelectionSet, v *model.MetricOneResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MetricOneResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNodeAddress2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeAddress) graphql.Marshaler {
@@ -6223,6 +8076,26 @@ func (ec *executionContext) marshalNPaymentInfo2ᚖgithubᚗcomᚋLNOpenMetrics�
 	return ec._PaymentInfo(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx context.Context, sel ast.SelectionSet, v *model.PaymentRating) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PaymentRating(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPaymentRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRatingSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentRatingSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PaymentRatingSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPaymentsSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentsSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentsSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -6390,6 +8263,16 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx context.Context, sel ast.SelectionSet, v *model.UpTimeResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._UpTimeResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
