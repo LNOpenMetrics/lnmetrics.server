@@ -48,6 +48,10 @@ func (instance *MetricsService) AddNodeMetrics(nodeID string, payload *string) (
 		return nil, err
 	}
 
+	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
+		return nil, fmt.Errorf("Unsupported network, or old client version")
+	}
+
 	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
 		return nil, err
 	}
@@ -68,14 +72,16 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
 	if instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		//FIXME: The node can put a modify version of the payload, maybe the plugin and the server
-		// need to share some secret.
 		return nil, fmt.Errorf("Metrics Already initialized, please call get metric one API to get your last update here")
 	}
 
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
 		return nil, err
+	}
+
+	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
+		return nil, fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
 	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
@@ -108,6 +114,10 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
 		return err
+	}
+
+	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
+		return fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
 	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {
