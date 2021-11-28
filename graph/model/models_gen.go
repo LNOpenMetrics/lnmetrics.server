@@ -8,12 +8,13 @@ type ChannelFee struct {
 }
 
 type ChannelInfoResult struct {
-	ChannelID string         `json:"channel_id"`
-	NodeID    string         `json:"node_id"`
-	Capacity  int            `json:"capacity"`
-	Fee       *ChannelFee    `json:"fee"`
-	Limits    *ChannelLimits `json:"limits"`
-	UpTime    *UpTimeResult  `json:"up_time"`
+	ChannelID      string                 `json:"channel_id"`
+	NodeID         string                 `json:"node_id"`
+	Capacity       int                    `json:"capacity"`
+	Fee            *ChannelFee            `json:"fee"`
+	Limits         *ChannelLimits         `json:"limits"`
+	UpTime         *UpTimeResult          `json:"up_time"`
+	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
 }
 
 type ChannelLimits struct {
@@ -39,6 +40,20 @@ type ChannelsSummary struct {
 	Summary     []*ChannelSummary `json:"summary"`
 }
 
+type ForwardsRating struct {
+	Success         int `json:"success"`
+	Faulure         int `json:"faulure"`
+	InternalFailure int `json:"internal_failure"`
+}
+
+type ForwardsRatingSummary struct {
+	OneDay     *ForwardsRating `json:"one_day"`
+	TenDays    *ForwardsRating `json:"ten_days"`
+	ThirtyDays *ForwardsRating `json:"thirty_days"`
+	SixMonth   *ForwardsRating `json:"six_months"`
+	Full       *ForwardsRating `json:"full"`
+}
+
 type MetricOne struct {
 	Name         string           `json:"metric_name"`
 	NodeID       string           `json:"node_id"`
@@ -55,11 +70,11 @@ type MetricOne struct {
 }
 
 type MetricOneResult struct {
-	Version       int                   `json:"version"`
-	Age           int                   `json:"age"`
-	PaymentRating *PaymentRatingSummary `json:"payment_rating"`
-	UpTime        *UpTimeResult         `json:"up_time"`
-	ChannelsInfo  []*ChannelInfoResult  `json:"channes_info"`
+	Version        int                    `json:"version"`
+	Age            int                    `json:"age"`
+	ForwardsRating *ForwardsRatingSummary `json:"payment_rating"`
+	UpTime         *UpTimeResult          `json:"up_time"`
+	ChannelsInfo   []*ChannelInfoResult   `json:"channes_info"`
 }
 
 type NodeAddress struct {
@@ -113,20 +128,6 @@ type PaymentInfo struct {
 	Status        string  `json:"status"`
 	FailureReason *string `json:"failure_reason"`
 	FailureCode   *int    `json:"failure_code"`
-}
-
-type PaymentRating struct {
-	Success         int `json:"success"`
-	Faulure         int `json:"faulure"`
-	InternalFailure int `json:"internal_failure"`
-}
-
-type PaymentRatingSummary struct {
-	OneDay     *PaymentRating `json:"one_day"`
-	TenDays    *PaymentRating `json:"ten_days"`
-	ThirtyDays *PaymentRating `json:"thirty_days"`
-	SixMonth   *PaymentRating `json:"six_months"`
-	Full       *PaymentRating `json:"full"`
 }
 
 type PaymentsSummary struct {

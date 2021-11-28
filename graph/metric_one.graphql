@@ -125,18 +125,18 @@ type NodeAddress {
 }
 
 ## Type Used in the MetricOneResult
-type PaymentRating {
+type ForwardsRating {
   success: Int! @goField(name: "Success")
   faulure: Int! @goField(name: "Faulure")
   internal_failure: Int! @goField(name: "InternalFailure")
 }
 
-type PaymentRatingSummary {
-  one_day: PaymentRating! @goField(name: "OneDay")
-  ten_days: PaymentRating! @goField(name: "TenDays")
-  thirty_days: PaymentRating! @goField(name: "ThirtyDays")
-  six_months: PaymentRating! @goField(name: "SixMonth")
-  full: PaymentRating! @goField(name: "Full")
+type ForwardsRatingSummary {
+  one_day: ForwardsRating! @goField(name: "OneDay")
+  ten_days: ForwardsRating! @goField(name: "TenDays")
+  thirty_days: ForwardsRating! @goField(name: "ThirtyDays")
+  six_months: ForwardsRating! @goField(name: "SixMonth")
+  full: ForwardsRating! @goField(name: "Full")
 }
 
 type UpTimeResult {
@@ -154,6 +154,7 @@ type ChannelInfoResult {
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
   up_time: UpTimeResult! @goField(name: "UpTime")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
 }
 
 # Implementation of the metric_one output
@@ -161,7 +162,7 @@ type ChannelInfoResult {
 type MetricOneResult {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
-  payment_rating: PaymentRatingSummary! @goField(name: "PaymentRating")
+  payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeResult! @goField(name: "UpTime")
   channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
 }

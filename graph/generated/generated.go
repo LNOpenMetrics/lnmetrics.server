@@ -49,12 +49,13 @@ type ComplexityRoot struct {
 	}
 
 	ChannelInfoResult struct {
-		Capacity  func(childComplexity int) int
-		ChannelID func(childComplexity int) int
-		Fee       func(childComplexity int) int
-		Limits    func(childComplexity int) int
-		NodeID    func(childComplexity int) int
-		UpTime    func(childComplexity int) int
+		Capacity       func(childComplexity int) int
+		ChannelID      func(childComplexity int) int
+		Fee            func(childComplexity int) int
+		ForwardsRating func(childComplexity int) int
+		Limits         func(childComplexity int) int
+		NodeID         func(childComplexity int) int
+		UpTime         func(childComplexity int) int
 	}
 
 	ChannelLimits struct {
@@ -80,6 +81,20 @@ type ComplexityRoot struct {
 		TotChannels func(childComplexity int) int
 	}
 
+	ForwardsRating struct {
+		Faulure         func(childComplexity int) int
+		InternalFailure func(childComplexity int) int
+		Success         func(childComplexity int) int
+	}
+
+	ForwardsRatingSummary struct {
+		Full       func(childComplexity int) int
+		OneDay     func(childComplexity int) int
+		SixMonth   func(childComplexity int) int
+		TenDays    func(childComplexity int) int
+		ThirtyDays func(childComplexity int) int
+	}
+
 	MetricOne struct {
 		Address      func(childComplexity int) int
 		ChannelsInfo func(childComplexity int) int
@@ -96,11 +111,11 @@ type ComplexityRoot struct {
 	}
 
 	MetricOneResult struct {
-		Age           func(childComplexity int) int
-		ChannelsInfo  func(childComplexity int) int
-		PaymentRating func(childComplexity int) int
-		UpTime        func(childComplexity int) int
-		Version       func(childComplexity int) int
+		Age            func(childComplexity int) int
+		ChannelsInfo   func(childComplexity int) int
+		ForwardsRating func(childComplexity int) int
+		UpTime         func(childComplexity int) int
+		Version        func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -155,20 +170,6 @@ type ComplexityRoot struct {
 		FailureCode   func(childComplexity int) int
 		FailureReason func(childComplexity int) int
 		Status        func(childComplexity int) int
-	}
-
-	PaymentRating struct {
-		Faulure         func(childComplexity int) int
-		InternalFailure func(childComplexity int) int
-		Success         func(childComplexity int) int
-	}
-
-	PaymentRatingSummary struct {
-		Full       func(childComplexity int) int
-		OneDay     func(childComplexity int) int
-		SixMonth   func(childComplexity int) int
-		TenDays    func(childComplexity int) int
-		ThirtyDays func(childComplexity int) int
 	}
 
 	PaymentsSummary struct {
@@ -277,6 +278,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelInfoResult.Fee(childComplexity), true
 
+	case "ChannelInfoResult.forwards_rating":
+		if e.complexity.ChannelInfoResult.ForwardsRating == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoResult.ForwardsRating(childComplexity), true
+
 	case "ChannelInfoResult.limits":
 		if e.complexity.ChannelInfoResult.Limits == nil {
 			break
@@ -374,6 +382,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelsSummary.TotChannels(childComplexity), true
+
+	case "ForwardsRating.faulure":
+		if e.complexity.ForwardsRating.Faulure == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRating.Faulure(childComplexity), true
+
+	case "ForwardsRating.internal_failure":
+		if e.complexity.ForwardsRating.InternalFailure == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRating.InternalFailure(childComplexity), true
+
+	case "ForwardsRating.success":
+		if e.complexity.ForwardsRating.Success == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRating.Success(childComplexity), true
+
+	case "ForwardsRatingSummary.full":
+		if e.complexity.ForwardsRatingSummary.Full == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRatingSummary.Full(childComplexity), true
+
+	case "ForwardsRatingSummary.one_day":
+		if e.complexity.ForwardsRatingSummary.OneDay == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRatingSummary.OneDay(childComplexity), true
+
+	case "ForwardsRatingSummary.six_months":
+		if e.complexity.ForwardsRatingSummary.SixMonth == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRatingSummary.SixMonth(childComplexity), true
+
+	case "ForwardsRatingSummary.ten_days":
+		if e.complexity.ForwardsRatingSummary.TenDays == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRatingSummary.TenDays(childComplexity), true
+
+	case "ForwardsRatingSummary.thirty_days":
+		if e.complexity.ForwardsRatingSummary.ThirtyDays == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRatingSummary.ThirtyDays(childComplexity), true
 
 	case "MetricOne.address":
 		if e.complexity.MetricOne.Address == nil {
@@ -474,11 +538,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.MetricOneResult.ChannelsInfo(childComplexity), true
 
 	case "MetricOneResult.payment_rating":
-		if e.complexity.MetricOneResult.PaymentRating == nil {
+		if e.complexity.MetricOneResult.ForwardsRating == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.PaymentRating(childComplexity), true
+		return e.complexity.MetricOneResult.ForwardsRating(childComplexity), true
 
 	case "MetricOneResult.up_time":
 		if e.complexity.MetricOneResult.UpTime == nil {
@@ -718,62 +782,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PaymentInfo.Status(childComplexity), true
-
-	case "PaymentRating.faulure":
-		if e.complexity.PaymentRating.Faulure == nil {
-			break
-		}
-
-		return e.complexity.PaymentRating.Faulure(childComplexity), true
-
-	case "PaymentRating.internal_failure":
-		if e.complexity.PaymentRating.InternalFailure == nil {
-			break
-		}
-
-		return e.complexity.PaymentRating.InternalFailure(childComplexity), true
-
-	case "PaymentRating.success":
-		if e.complexity.PaymentRating.Success == nil {
-			break
-		}
-
-		return e.complexity.PaymentRating.Success(childComplexity), true
-
-	case "PaymentRatingSummary.full":
-		if e.complexity.PaymentRatingSummary.Full == nil {
-			break
-		}
-
-		return e.complexity.PaymentRatingSummary.Full(childComplexity), true
-
-	case "PaymentRatingSummary.one_day":
-		if e.complexity.PaymentRatingSummary.OneDay == nil {
-			break
-		}
-
-		return e.complexity.PaymentRatingSummary.OneDay(childComplexity), true
-
-	case "PaymentRatingSummary.six_months":
-		if e.complexity.PaymentRatingSummary.SixMonth == nil {
-			break
-		}
-
-		return e.complexity.PaymentRatingSummary.SixMonth(childComplexity), true
-
-	case "PaymentRatingSummary.ten_days":
-		if e.complexity.PaymentRatingSummary.TenDays == nil {
-			break
-		}
-
-		return e.complexity.PaymentRatingSummary.TenDays(childComplexity), true
-
-	case "PaymentRatingSummary.thirty_days":
-		if e.complexity.PaymentRatingSummary.ThirtyDays == nil {
-			break
-		}
-
-		return e.complexity.PaymentRatingSummary.ThirtyDays(childComplexity), true
 
 	case "PaymentsSummary.completed":
 		if e.complexity.PaymentsSummary.Completed == nil {
@@ -1175,18 +1183,18 @@ type NodeAddress {
 }
 
 ## Type Used in the MetricOneResult
-type PaymentRating {
+type ForwardsRating {
   success: Int! @goField(name: "Success")
   faulure: Int! @goField(name: "Faulure")
   internal_failure: Int! @goField(name: "InternalFailure")
 }
 
-type PaymentRatingSummary {
-  one_day: PaymentRating! @goField(name: "OneDay")
-  ten_days: PaymentRating! @goField(name: "TenDays")
-  thirty_days: PaymentRating! @goField(name: "ThirtyDays")
-  six_months: PaymentRating! @goField(name: "SixMonth")
-  full: PaymentRating! @goField(name: "Full")
+type ForwardsRatingSummary {
+  one_day: ForwardsRating! @goField(name: "OneDay")
+  ten_days: ForwardsRating! @goField(name: "TenDays")
+  thirty_days: ForwardsRating! @goField(name: "ThirtyDays")
+  six_months: ForwardsRating! @goField(name: "SixMonth")
+  full: ForwardsRating! @goField(name: "Full")
 }
 
 type UpTimeResult {
@@ -1204,6 +1212,7 @@ type ChannelInfoResult {
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
   up_time: UpTimeResult! @goField(name: "UpTime")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
 }
 
 # Implementation of the metric_one output
@@ -1211,7 +1220,7 @@ type ChannelInfoResult {
 type MetricOneResult {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
-  payment_rating: PaymentRatingSummary! @goField(name: "PaymentRating")
+  payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeResult! @goField(name: "UpTime")
   channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
 }
@@ -1768,6 +1777,41 @@ func (ec *executionContext) _ChannelInfoResult_up_time(ctx context.Context, fiel
 	return ec.marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ChannelInfoResult_forwards_rating(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ForwardsRating, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRatingSummary)
+	fc.Result = res
+	return ec.marshalNForwardsRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRatingSummary(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ChannelLimits_min(ctx context.Context, field graphql.CollectedField, obj *model.ChannelLimits) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2151,6 +2195,286 @@ func (ec *executionContext) _ChannelsSummary_summary(ctx context.Context, field 
 	res := resTmp.([]*model.ChannelSummary)
 	fc.Result = res
 	return ec.marshalNChannelSummary2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelSummaryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRating_success(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRating_faulure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Faulure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRating_internal_failure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalFailure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRatingSummary_one_day(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OneDay, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRating)
+	fc.Result = res
+	return ec.marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRatingSummary_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TenDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRating)
+	fc.Result = res
+	return ec.marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRatingSummary_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ThirtyDays, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRating)
+	fc.Result = res
+	return ec.marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRatingSummary_six_months(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SixMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRating)
+	fc.Result = res
+	return ec.marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRatingSummary_full(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRatingSummary) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRatingSummary",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Full, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ForwardsRating)
+	fc.Result = res
+	return ec.marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOne_metric_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOne) (ret graphql.Marshaler) {
@@ -2652,7 +2976,7 @@ func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context,
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PaymentRating, nil
+		return obj.ForwardsRating, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2664,9 +2988,9 @@ func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.PaymentRatingSummary)
+	res := resTmp.(*model.ForwardsRatingSummary)
 	fc.Result = res
-	return ec.marshalNPaymentRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRatingSummary(ctx, field.Selections, res)
+	return ec.marshalNForwardsRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRatingSummary(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MetricOneResult_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
@@ -3799,286 +4123,6 @@ func (ec *executionContext) _PaymentInfo_failure_code(ctx context.Context, field
 	res := resTmp.(*int)
 	fc.Result = res
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRating_success(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRating",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Success, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRating_faulure(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRating",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Faulure, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRating_internal_failure(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRating) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRating",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.InternalFailure, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRatingSummary_one_day(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRatingSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OneDay, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PaymentRating)
-	fc.Result = res
-	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRatingSummary_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRatingSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TenDays, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PaymentRating)
-	fc.Result = res
-	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRatingSummary_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRatingSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ThirtyDays, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PaymentRating)
-	fc.Result = res
-	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRatingSummary_six_months(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRatingSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SixMonth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PaymentRating)
-	fc.Result = res
-	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _PaymentRatingSummary_full(ctx context.Context, field graphql.CollectedField, obj *model.PaymentRatingSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "PaymentRatingSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Full, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.PaymentRating)
-	fc.Result = res
-	return ec.marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PaymentsSummary_completed(ctx context.Context, field graphql.CollectedField, obj *model.PaymentsSummary) (ret graphql.Marshaler) {
@@ -6359,6 +6403,11 @@ func (ec *executionContext) _ChannelInfoResult(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "forwards_rating":
+			out.Values[i] = ec._ChannelInfoResult_forwards_rating(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6499,6 +6548,90 @@ func (ec *executionContext) _ChannelsSummary(ctx context.Context, sel ast.Select
 			}
 		case "summary":
 			out.Values[i] = ec._ChannelsSummary_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var forwardsRatingImplementors = []string{"ForwardsRating"}
+
+func (ec *executionContext) _ForwardsRating(ctx context.Context, sel ast.SelectionSet, obj *model.ForwardsRating) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, forwardsRatingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ForwardsRating")
+		case "success":
+			out.Values[i] = ec._ForwardsRating_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "faulure":
+			out.Values[i] = ec._ForwardsRating_faulure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "internal_failure":
+			out.Values[i] = ec._ForwardsRating_internal_failure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var forwardsRatingSummaryImplementors = []string{"ForwardsRatingSummary"}
+
+func (ec *executionContext) _ForwardsRatingSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ForwardsRatingSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, forwardsRatingSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ForwardsRatingSummary")
+		case "one_day":
+			out.Values[i] = ec._ForwardsRatingSummary_one_day(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ten_days":
+			out.Values[i] = ec._ForwardsRatingSummary_ten_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "thirty_days":
+			out.Values[i] = ec._ForwardsRatingSummary_thirty_days(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "six_months":
+			out.Values[i] = ec._ForwardsRatingSummary_six_months(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "full":
+			out.Values[i] = ec._ForwardsRatingSummary_full(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6943,90 +7076,6 @@ func (ec *executionContext) _PaymentInfo(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PaymentInfo_failure_reason(ctx, field, obj)
 		case "failure_code":
 			out.Values[i] = ec._PaymentInfo_failure_code(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var paymentRatingImplementors = []string{"PaymentRating"}
-
-func (ec *executionContext) _PaymentRating(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentRating) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, paymentRatingImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PaymentRating")
-		case "success":
-			out.Values[i] = ec._PaymentRating_success(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "faulure":
-			out.Values[i] = ec._PaymentRating_faulure(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "internal_failure":
-			out.Values[i] = ec._PaymentRating_internal_failure(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var paymentRatingSummaryImplementors = []string{"PaymentRatingSummary"}
-
-func (ec *executionContext) _PaymentRatingSummary(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentRatingSummary) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, paymentRatingSummaryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PaymentRatingSummary")
-		case "one_day":
-			out.Values[i] = ec._PaymentRatingSummary_one_day(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "ten_days":
-			out.Values[i] = ec._PaymentRatingSummary_ten_days(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "thirty_days":
-			out.Values[i] = ec._PaymentRatingSummary_thirty_days(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "six_months":
-			out.Values[i] = ec._PaymentRatingSummary_six_months(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "full":
-			out.Values[i] = ec._PaymentRatingSummary_full(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7793,6 +7842,26 @@ func (ec *executionContext) marshalNChannelsSummary2ᚖgithubᚗcomᚋLNOpenMetr
 	return ec._ChannelsSummary(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNForwardsRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRating(ctx context.Context, sel ast.SelectionSet, v *model.ForwardsRating) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ForwardsRating(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNForwardsRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRatingSummary(ctx context.Context, sel ast.SelectionSet, v *model.ForwardsRatingSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ForwardsRatingSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8025,26 +8094,6 @@ func (ec *executionContext) marshalNPaymentInfo2ᚖgithubᚗcomᚋLNOpenMetrics�
 		return graphql.Null
 	}
 	return ec._PaymentInfo(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPaymentRating2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRating(ctx context.Context, sel ast.SelectionSet, v *model.PaymentRating) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PaymentRating(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNPaymentRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentRatingSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentRatingSummary) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._PaymentRatingSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPaymentsSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentsSummary(ctx context.Context, sel ast.SelectionSet, v *model.PaymentsSummary) graphql.Marshaler {
