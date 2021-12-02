@@ -11,3 +11,4 @@ services:
       - SERVER_PORT=8080
       - DB_PATH=/lnmetrics/.lnmetrics
       - BACKEND_PATH=https://bruce.bublina.eu.org
+      - METRICS_LOG=/lnmetrics/.lnmetrics
