@@ -202,8 +202,7 @@ type ComplexityRoot struct {
 		NodeAlias  func(childComplexity int) int
 		NodeID     func(childComplexity int) int
 		Online     func(childComplexity int) int
-		Public     func(childComplexity int) int
-		UpTimes    func(childComplexity int) int
+		UpTime     func(childComplexity int) int
 	}
 
 	UpTimeResult struct {
@@ -943,19 +942,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StatusChannel.Online(childComplexity), true
 
-	case "StatusChannel.public":
-		if e.complexity.StatusChannel.Public == nil {
+	case "StatusChannel.up_time":
+		if e.complexity.StatusChannel.UpTime == nil {
 			break
 		}
 
-		return e.complexity.StatusChannel.Public(childComplexity), true
-
-	case "StatusChannel.up_times":
-		if e.complexity.StatusChannel.UpTimes == nil {
-			break
-		}
-
-		return e.complexity.StatusChannel.UpTimes(childComplexity), true
+		return e.complexity.StatusChannel.UpTime(childComplexity), true
 
 	case "UpTimeResult.full":
 		if e.complexity.UpTimeResult.Full == nil {
@@ -1074,10 +1066,9 @@ type StatusChannel {
   color: String! @goField(name: "Color")
   capacity: Int! @goField(name: "Capacity")
   forwards: [PaymentInfo!]! @goField(name: "Forwards")
-  up_times: [ChannelStatus!]! @goField(name: "UpTimes")
+  up_time: [ChannelStatus!]! @goField(name: "UpTime")
   online: Boolean! @goField(name: "Online")
   last_update: Int! @goField(name: "LastUpdate")
-  public: Boolean! @goField(name: "Public")
   direction: String! @goField(name: "Direction")
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
@@ -4749,7 +4740,7 @@ func (ec *executionContext) _StatusChannel_forwards(ctx context.Context, field g
 	return ec.marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _StatusChannel_up_times(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+func (ec *executionContext) _StatusChannel_up_time(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4767,7 +4758,7 @@ func (ec *executionContext) _StatusChannel_up_times(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UpTimes, nil
+		return obj.UpTime, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4852,41 +4843,6 @@ func (ec *executionContext) _StatusChannel_last_update(ctx context.Context, fiel
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _StatusChannel_public(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "StatusChannel",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Public, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _StatusChannel_direction(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
@@ -7292,8 +7248,8 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "up_times":
-			out.Values[i] = ec._StatusChannel_up_times(ctx, field, obj)
+		case "up_time":
+			out.Values[i] = ec._StatusChannel_up_time(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7304,11 +7260,6 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 			}
 		case "last_update":
 			out.Values[i] = ec._StatusChannel_last_update(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "public":
-			out.Values[i] = ec._StatusChannel_public(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

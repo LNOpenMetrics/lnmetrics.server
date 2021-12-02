@@ -147,10 +147,9 @@ type StatusChannel struct {
 	Color      string           `json:"color"`
 	Capacity   int              `json:"capacity"`
 	Forwards   []*PaymentInfo   `json:"forwards"`
-	UpTimes    []*ChannelStatus `json:"up_times"`
+	UpTime     []*ChannelStatus `json:"up_time"`
 	Online     bool             `json:"online"`
 	LastUpdate int              `json:"last_update"`
-	Public     bool             `json:"public"`
 	Direction  string           `json:"direction"`
 	Fee        *ChannelFee      `json:"fee"`
 	Limits     *ChannelLimits   `json:"limits"`
