@@ -7,6 +7,12 @@ import (
 // Interface to abstract from an db implementation the
 // the logic to store and make analysis over the data.
 type MetricsDatabase interface {
+	// Get access to the raw data contained with the specified key
+	GetRawValue(key string) ([]byte, error)
+
+	// Put a raw value with the specified key in the db
+	PutRawValue(key string, value []byte) error
+
 	// Prepare the database for the metric one data model
 	// Takes a interface, if the db implementation required some
 	// custom propieties

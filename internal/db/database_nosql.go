@@ -61,6 +61,16 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	return instance, nil
 }
 
+// Get access to the raw data contained with the specified key
+func (instance NoSQLDatabase) GetRawValue(key string) ([]byte, error) {
+	return db.GetInstance().GetValueInBytes(key)
+}
+
+// Put a raw value with the specified key in the db
+func (instance NoSQLDatabase) PutRawValue(key string, value []byte) error {
+	return db.GetInstance().PutValueInBytes(key, value)
+}
+
 // In the NO sql database, at list for the moment we don't need to
 // make a schema. The data are the schema it self.
 func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) error {

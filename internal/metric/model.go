@@ -1,5 +1,9 @@
 package metric
 
+import (
+	"time"
+)
+
 // Wrapper struct that contains the information
 // to calculate the metric one output in a incremental way
 // we need to store a raw metric output with all the
@@ -27,25 +31,25 @@ type RawPercentageData struct {
 	TodayTotal uint64 `json:"today_tot"`
 	// Last day timestamp to check if this data collected are
 	// still valid
-	TodayTimestamp uint64 `json:"today_timestamp"`
+	TodayTimestamp int64 `json:"today_timestamp"`
 	// Number of operation completed with success in the last 10 days
 	TenDaysSuccess uint64 `json:"ten_days_success"`
 	// last valid day in the range of 10 days.
-	TedDaysTimestamp uint64 `json:"ten_days_timestamp"`
+	TenDaysTimestamp int64 `json:"ten_days_timestamp"`
 	// Total Number of operation in the last 10 days
-	TenDatsTotal uint64 `json:"ten_days_tot"`
+	TenDaysTotal uint64 `json:"ten_days_tot"`
 	// Number of operation completed with success in the last thirty days
 	ThirtyDaysSuccess uint64 `json:"thirty_days_success"`
 	// Total Forwards in the last 30 days
 	ThirtyDaysTot uint64 `json:"thirty_days_tot"`
 	// Last valid day contained in the range of the last 30 days
-	ThirtyDaysTimestamp uint64 `json:"thirty_days_timestamp"`
+	ThirtyDaysTimestamp int64 `json:"thirty_days_timestamp"`
 	// Number of operation completed with success in the last 6 months
 	SixMonthsSuccess uint64 `json:"six_months_success"`
 	// Total Number of operation in the last 6 months
 	SixMonthsTot uint64 `json:"six_months_tot"`
 	// Last valid day contained in the 6 months period
-	SixMonthsTimestamp uint64 `json:"six_months_timestamp"`
+	SixMonthsTimestamp int64 `json:"six_months_timestamp"`
 	// Number of operation completed with success in the all known period
 	FullSuccess uint64 `json:"full_success"`
 	// Total Number of operation in all the known period
@@ -61,21 +65,21 @@ type RawChannelRating struct {
 // Wrapper struct around the forwards rating
 type RawForwardsRating struct {
 	// Forwards Rating in the current day
-	TodayRaing *RawForwardRating `json:"one_day"`
+	TodayRating *RawForwardRating `json:"one_day"`
 	// The timestamp of the current day
-	TodayTimestamp uint64 `json:"one_day_timestamp"`
+	TodayTimestamp int64 `json:"one_day_timestamp"`
 	// Forwards Rating in the last 10 days
 	TenDaysRating *RawForwardRating `json:"ten_days"`
 	// The timestamp of the last 10th day
-	TenDaysTimestamp uint64 `json:"ten_days_timestamp"`
+	TenDaysTimestamp int64 `json:"ten_days_timestamp"`
 	// Forwards Rating of the last 30 days
 	ThirtyDaysRating *RawForwardRating `json:"thirty_days"`
 	// the timestamp of the 30th day
-	ThirtyDaysTimestamp uint64 `json:"thirty_days_timestamp"`
+	ThirtyDaysTimestamp int64 `json:"thirty_days_timestamp"`
 	// Forwards Rating of the last 6 months
 	SixMonthsRating *RawForwardRating `json:"six_months"`
 	// Timestamp of the last day in the 6 month period
-	SixMonthsTimestamo uint64 `json:"six_months_timestamp"`
+	SixMonthsTimestamo int64 `json:"six_months_timestamp"`
 	// Overall Forward Rating of the known period
 	FullRating *RawForwardRating `json:"full"`
 }
@@ -84,7 +88,33 @@ type RawForwardsRating struct {
 // that contains information about the number
 // of success, failure and internal failure
 type RawForwardRating struct {
-	Success uint64 `json:"success"`
-	Failure uint64 `json:"failure"`
+	Success         uint64 `json:"success"`
+	Failure         uint64 `json:"failure"`
 	InternalFailure uint64 `json:"internal_failure"`
+}
+
+// Create a new Raw Metric One Output with all the default value
+func NewRawMetricOneOutput(timestamp uint64) *RawMetricOneOutput {
+	return &RawMetricOneOutput{
+		Version:        0,
+		LastUpdate:     timestamp,
+		ForwardsRating: NewRawForwardsRating(),
+	}
+}
+
+// TODO: complete to fill
+func NewRawForwardsRating() *RawForwardsRating {
+	return &RawForwardsRating{
+		TodayRating:    NewRawForwardRating(),
+		TodayTimestamp: time.Now().Unix(),
+	}
+}
+
+// Create a new item that contains information about the forwards status.
+func NewRawForwardRating() *RawForwardRating {
+	return &RawForwardRating{
+		Success:         0,
+		Failure:         0,
+		InternalFailure: 0,
+	}
 }
