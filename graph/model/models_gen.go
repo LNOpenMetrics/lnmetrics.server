@@ -7,13 +7,13 @@ type ChannelFee struct {
 	PerMSat int `json:"per_msat"`
 }
 
-type ChannelInfoResult struct {
+type ChannelInfoOutput struct {
 	ChannelID      string                 `json:"channel_id"`
 	NodeID         string                 `json:"node_id"`
 	Capacity       int                    `json:"capacity"`
 	Fee            *ChannelFee            `json:"fee"`
 	Limits         *ChannelLimits         `json:"limits"`
-	UpTime         *UpTimeResult          `json:"up_time"`
+	UpTime         *UpTimeOutput          `json:"up_time"`
 	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
 }
 
@@ -69,12 +69,12 @@ type MetricOne struct {
 	Version      *int             `json:"version"`
 }
 
-type MetricOneResult struct {
+type MetricOneOutput struct {
 	Version        int                    `json:"version"`
 	Age            int                    `json:"age"`
 	ForwardsRating *ForwardsRatingSummary `json:"payment_rating"`
-	UpTime         *UpTimeResult          `json:"up_time"`
-	ChannelsInfo   []*ChannelInfoResult   `json:"channes_info"`
+	UpTime         *UpTimeOutput          `json:"up_time"`
+	ChannelsInfo   []*ChannelInfoOutput   `json:"channes_info"`
 }
 
 type NodeAddress struct {
@@ -156,7 +156,7 @@ type StatusChannel struct {
 	Limits     *ChannelLimits   `json:"limits"`
 }
 
-type UpTimeResult struct {
+type UpTimeOutput struct {
 	OneDay     int `json:"one_day"`
 	TenDays    int `json:"ten_days"`
 	ThirtyDays int `json:"thirty_days"`

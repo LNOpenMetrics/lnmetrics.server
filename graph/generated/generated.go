@@ -48,7 +48,7 @@ type ComplexityRoot struct {
 		PerMSat func(childComplexity int) int
 	}
 
-	ChannelInfoResult struct {
+	ChannelInfoOutput struct {
 		Capacity       func(childComplexity int) int
 		ChannelID      func(childComplexity int) int
 		Fee            func(childComplexity int) int
@@ -110,7 +110,7 @@ type ComplexityRoot struct {
 		Version      func(childComplexity int) int
 	}
 
-	MetricOneResult struct {
+	MetricOneOutput struct {
 		Age            func(childComplexity int) int
 		ChannelsInfo   func(childComplexity int) int
 		ForwardsRating func(childComplexity int) int
@@ -206,7 +206,7 @@ type ComplexityRoot struct {
 		UpTime     func(childComplexity int) int
 	}
 
-	UpTimeResult struct {
+	UpTimeOutput struct {
 		Full       func(childComplexity int) int
 		OneDay     func(childComplexity int) int
 		SixMonth   func(childComplexity int) int
@@ -225,7 +225,7 @@ type QueryResolver interface {
 	GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error)
 	GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error)
 	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
-	GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneResult, error)
+	GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error)
 }
 
 type executableSchema struct {
@@ -257,54 +257,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelFee.PerMSat(childComplexity), true
 
-	case "ChannelInfoResult.capacity":
-		if e.complexity.ChannelInfoResult.Capacity == nil {
+	case "ChannelInfoOutput.capacity":
+		if e.complexity.ChannelInfoOutput.Capacity == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.Capacity(childComplexity), true
+		return e.complexity.ChannelInfoOutput.Capacity(childComplexity), true
 
-	case "ChannelInfoResult.channel_id":
-		if e.complexity.ChannelInfoResult.ChannelID == nil {
+	case "ChannelInfoOutput.channel_id":
+		if e.complexity.ChannelInfoOutput.ChannelID == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.ChannelID(childComplexity), true
+		return e.complexity.ChannelInfoOutput.ChannelID(childComplexity), true
 
-	case "ChannelInfoResult.fee":
-		if e.complexity.ChannelInfoResult.Fee == nil {
+	case "ChannelInfoOutput.fee":
+		if e.complexity.ChannelInfoOutput.Fee == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.Fee(childComplexity), true
+		return e.complexity.ChannelInfoOutput.Fee(childComplexity), true
 
-	case "ChannelInfoResult.forwards_rating":
-		if e.complexity.ChannelInfoResult.ForwardsRating == nil {
+	case "ChannelInfoOutput.forwards_rating":
+		if e.complexity.ChannelInfoOutput.ForwardsRating == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.ForwardsRating(childComplexity), true
+		return e.complexity.ChannelInfoOutput.ForwardsRating(childComplexity), true
 
-	case "ChannelInfoResult.limits":
-		if e.complexity.ChannelInfoResult.Limits == nil {
+	case "ChannelInfoOutput.limits":
+		if e.complexity.ChannelInfoOutput.Limits == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.Limits(childComplexity), true
+		return e.complexity.ChannelInfoOutput.Limits(childComplexity), true
 
-	case "ChannelInfoResult.node_id":
-		if e.complexity.ChannelInfoResult.NodeID == nil {
+	case "ChannelInfoOutput.node_id":
+		if e.complexity.ChannelInfoOutput.NodeID == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.NodeID(childComplexity), true
+		return e.complexity.ChannelInfoOutput.NodeID(childComplexity), true
 
-	case "ChannelInfoResult.up_time":
-		if e.complexity.ChannelInfoResult.UpTime == nil {
+	case "ChannelInfoOutput.up_time":
+		if e.complexity.ChannelInfoOutput.UpTime == nil {
 			break
 		}
 
-		return e.complexity.ChannelInfoResult.UpTime(childComplexity), true
+		return e.complexity.ChannelInfoOutput.UpTime(childComplexity), true
 
 	case "ChannelLimits.max":
 		if e.complexity.ChannelLimits.Max == nil {
@@ -523,40 +523,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOne.Version(childComplexity), true
 
-	case "MetricOneResult.age":
-		if e.complexity.MetricOneResult.Age == nil {
+	case "MetricOneOutput.age":
+		if e.complexity.MetricOneOutput.Age == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.Age(childComplexity), true
+		return e.complexity.MetricOneOutput.Age(childComplexity), true
 
-	case "MetricOneResult.channes_info":
-		if e.complexity.MetricOneResult.ChannelsInfo == nil {
+	case "MetricOneOutput.channes_info":
+		if e.complexity.MetricOneOutput.ChannelsInfo == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.ChannelsInfo(childComplexity), true
+		return e.complexity.MetricOneOutput.ChannelsInfo(childComplexity), true
 
-	case "MetricOneResult.payment_rating":
-		if e.complexity.MetricOneResult.ForwardsRating == nil {
+	case "MetricOneOutput.payment_rating":
+		if e.complexity.MetricOneOutput.ForwardsRating == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.ForwardsRating(childComplexity), true
+		return e.complexity.MetricOneOutput.ForwardsRating(childComplexity), true
 
-	case "MetricOneResult.up_time":
-		if e.complexity.MetricOneResult.UpTime == nil {
+	case "MetricOneOutput.up_time":
+		if e.complexity.MetricOneOutput.UpTime == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.UpTime(childComplexity), true
+		return e.complexity.MetricOneOutput.UpTime(childComplexity), true
 
-	case "MetricOneResult.version":
-		if e.complexity.MetricOneResult.Version == nil {
+	case "MetricOneOutput.version":
+		if e.complexity.MetricOneOutput.Version == nil {
 			break
 		}
 
-		return e.complexity.MetricOneResult.Version(childComplexity), true
+		return e.complexity.MetricOneOutput.Version(childComplexity), true
 
 	case "Mutation.addNodeMetrics":
 		if e.complexity.Mutation.AddNodeMetrics == nil {
@@ -957,40 +957,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StatusChannel.UpTime(childComplexity), true
 
-	case "UpTimeResult.full":
-		if e.complexity.UpTimeResult.Full == nil {
+	case "UpTimeOutput.full":
+		if e.complexity.UpTimeOutput.Full == nil {
 			break
 		}
 
-		return e.complexity.UpTimeResult.Full(childComplexity), true
+		return e.complexity.UpTimeOutput.Full(childComplexity), true
 
-	case "UpTimeResult.one_day":
-		if e.complexity.UpTimeResult.OneDay == nil {
+	case "UpTimeOutput.one_day":
+		if e.complexity.UpTimeOutput.OneDay == nil {
 			break
 		}
 
-		return e.complexity.UpTimeResult.OneDay(childComplexity), true
+		return e.complexity.UpTimeOutput.OneDay(childComplexity), true
 
-	case "UpTimeResult.six_months":
-		if e.complexity.UpTimeResult.SixMonth == nil {
+	case "UpTimeOutput.six_months":
+		if e.complexity.UpTimeOutput.SixMonth == nil {
 			break
 		}
 
-		return e.complexity.UpTimeResult.SixMonth(childComplexity), true
+		return e.complexity.UpTimeOutput.SixMonth(childComplexity), true
 
-	case "UpTimeResult.ten_days":
-		if e.complexity.UpTimeResult.TenDays == nil {
+	case "UpTimeOutput.ten_days":
+		if e.complexity.UpTimeOutput.TenDays == nil {
 			break
 		}
 
-		return e.complexity.UpTimeResult.TenDays(childComplexity), true
+		return e.complexity.UpTimeOutput.TenDays(childComplexity), true
 
-	case "UpTimeResult.thirty_days":
-		if e.complexity.UpTimeResult.ThirtyDays == nil {
+	case "UpTimeOutput.thirty_days":
+		if e.complexity.UpTimeOutput.ThirtyDays == nil {
 			break
 		}
 
-		return e.complexity.UpTimeResult.ThirtyDays(childComplexity), true
+		return e.complexity.UpTimeOutput.ThirtyDays(childComplexity), true
 
 	}
 	return 0, false
@@ -1197,7 +1197,7 @@ type ForwardsRatingSummary {
   full: ForwardsRating! @goField(name: "Full")
 }
 
-type UpTimeResult {
+type UpTimeOutput {
   one_day: Int! @goField(name: "OneDay")
   ten_days: Int! @goField(name: "TenDays")
   thirty_days: Int! @goField(name: "ThirtyDays")
@@ -1205,24 +1205,24 @@ type UpTimeResult {
   full: Int! @goField(name: "Full")
 }
 
-type ChannelInfoResult {
+type ChannelInfoOutput {
   channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
-  up_time: UpTimeResult! @goField(name: "UpTime")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
   forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
 }
 
 # Implementation of the metric_one output
 # Defined in the spec
-type MetricOneResult {
+type MetricOneOutput {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
   payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
-  up_time: UpTimeResult! @goField(name: "UpTime")
-  channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
+  channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
 }
 
 # Deprecated, remove this when add node metrics will be removed
@@ -1244,7 +1244,7 @@ type Query {
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
   # Get the metric one result
-  getMetricOneResult(network: String!, node_id: String!): MetricOneResult!
+  getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
 }
 
 type Mutation {
@@ -1567,7 +1567,7 @@ func (ec *executionContext) _ChannelFee_per_msat(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_channel_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_channel_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1575,7 +1575,7 @@ func (ec *executionContext) _ChannelInfoResult_channel_id(ctx context.Context, f
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1602,7 +1602,7 @@ func (ec *executionContext) _ChannelInfoResult_channel_id(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_node_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_node_id(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1610,7 +1610,7 @@ func (ec *executionContext) _ChannelInfoResult_node_id(ctx context.Context, fiel
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1637,7 +1637,7 @@ func (ec *executionContext) _ChannelInfoResult_node_id(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_capacity(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_capacity(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1645,7 +1645,7 @@ func (ec *executionContext) _ChannelInfoResult_capacity(ctx context.Context, fie
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1672,7 +1672,7 @@ func (ec *executionContext) _ChannelInfoResult_capacity(ctx context.Context, fie
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_fee(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_fee(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1680,7 +1680,7 @@ func (ec *executionContext) _ChannelInfoResult_fee(ctx context.Context, field gr
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1707,7 +1707,7 @@ func (ec *executionContext) _ChannelInfoResult_fee(ctx context.Context, field gr
 	return ec.marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_limits(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_limits(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1715,7 +1715,7 @@ func (ec *executionContext) _ChannelInfoResult_limits(ctx context.Context, field
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1742,7 +1742,7 @@ func (ec *executionContext) _ChannelInfoResult_limits(ctx context.Context, field
 	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_up_time(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_up_time(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1750,7 +1750,7 @@ func (ec *executionContext) _ChannelInfoResult_up_time(ctx context.Context, fiel
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1772,12 +1772,12 @@ func (ec *executionContext) _ChannelInfoResult_up_time(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UpTimeResult)
+	res := resTmp.(*model.UpTimeOutput)
 	fc.Result = res
-	return ec.marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx, field.Selections, res)
+	return ec.marshalNUpTimeOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeOutput(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ChannelInfoResult_forwards_rating(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _ChannelInfoOutput_forwards_rating(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1785,7 +1785,7 @@ func (ec *executionContext) _ChannelInfoResult_forwards_rating(ctx context.Conte
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "ChannelInfoResult",
+		Object:     "ChannelInfoOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -2888,7 +2888,7 @@ func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphq
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneResult_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2896,7 +2896,7 @@ func (ec *executionContext) _MetricOneResult_version(ctx context.Context, field 
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "MetricOneResult",
+		Object:     "MetricOneOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -2923,7 +2923,7 @@ func (ec *executionContext) _MetricOneResult_version(ctx context.Context, field 
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneResult_age(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_age(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2931,7 +2931,7 @@ func (ec *executionContext) _MetricOneResult_age(ctx context.Context, field grap
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "MetricOneResult",
+		Object:     "MetricOneOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -2958,7 +2958,7 @@ func (ec *executionContext) _MetricOneResult_age(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_payment_rating(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2966,7 +2966,7 @@ func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context,
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "MetricOneResult",
+		Object:     "MetricOneOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -2993,7 +2993,7 @@ func (ec *executionContext) _MetricOneResult_payment_rating(ctx context.Context,
 	return ec.marshalNForwardsRatingSummary2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐForwardsRatingSummary(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneResult_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_up_time(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3001,7 +3001,7 @@ func (ec *executionContext) _MetricOneResult_up_time(ctx context.Context, field 
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "MetricOneResult",
+		Object:     "MetricOneOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -3023,12 +3023,12 @@ func (ec *executionContext) _MetricOneResult_up_time(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UpTimeResult)
+	res := resTmp.(*model.UpTimeOutput)
 	fc.Result = res
-	return ec.marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx, field.Selections, res)
+	return ec.marshalNUpTimeOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeOutput(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneResult_channes_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_channes_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3036,7 +3036,7 @@ func (ec *executionContext) _MetricOneResult_channes_info(ctx context.Context, f
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "MetricOneResult",
+		Object:     "MetricOneOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -3058,9 +3058,9 @@ func (ec *executionContext) _MetricOneResult_channes_info(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.ChannelInfoResult)
+	res := resTmp.([]*model.ChannelInfoOutput)
 	fc.Result = res
-	return ec.marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResultᚄ(ctx, field.Selections, res)
+	return ec.marshalNChannelInfoOutput2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoOutputᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4393,9 +4393,9 @@ func (ec *executionContext) _Query_getMetricOneResult(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.MetricOneResult)
+	res := resTmp.(*model.MetricOneOutput)
 	fc.Result = res
-	return ec.marshalNMetricOneResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx, field.Selections, res)
+	return ec.marshalNMetricOneOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneOutput(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4994,7 +4994,7 @@ func (ec *executionContext) _StatusChannel_limits(ctx context.Context, field gra
 	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _UpTimeResult_one_day(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _UpTimeOutput_one_day(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5002,7 +5002,7 @@ func (ec *executionContext) _UpTimeResult_one_day(ctx context.Context, field gra
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "UpTimeResult",
+		Object:     "UpTimeOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -5029,7 +5029,7 @@ func (ec *executionContext) _UpTimeResult_one_day(ctx context.Context, field gra
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _UpTimeResult_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _UpTimeOutput_ten_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5037,7 +5037,7 @@ func (ec *executionContext) _UpTimeResult_ten_days(ctx context.Context, field gr
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "UpTimeResult",
+		Object:     "UpTimeOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -5064,7 +5064,7 @@ func (ec *executionContext) _UpTimeResult_ten_days(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _UpTimeResult_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _UpTimeOutput_thirty_days(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5072,7 +5072,7 @@ func (ec *executionContext) _UpTimeResult_thirty_days(ctx context.Context, field
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "UpTimeResult",
+		Object:     "UpTimeOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -5099,7 +5099,7 @@ func (ec *executionContext) _UpTimeResult_thirty_days(ctx context.Context, field
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _UpTimeResult_six_months(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _UpTimeOutput_six_months(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5107,7 +5107,7 @@ func (ec *executionContext) _UpTimeResult_six_months(ctx context.Context, field 
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "UpTimeResult",
+		Object:     "UpTimeOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -5134,7 +5134,7 @@ func (ec *executionContext) _UpTimeResult_six_months(ctx context.Context, field 
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _UpTimeResult_full(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeResult) (ret graphql.Marshaler) {
+func (ec *executionContext) _UpTimeOutput_full(ctx context.Context, field graphql.CollectedField, obj *model.UpTimeOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5142,7 +5142,7 @@ func (ec *executionContext) _UpTimeResult_full(ctx context.Context, field graphq
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "UpTimeResult",
+		Object:     "UpTimeOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -6362,49 +6362,49 @@ func (ec *executionContext) _ChannelFee(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var channelInfoResultImplementors = []string{"ChannelInfoResult"}
+var channelInfoOutputImplementors = []string{"ChannelInfoOutput"}
 
-func (ec *executionContext) _ChannelInfoResult(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelInfoResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, channelInfoResultImplementors)
+func (ec *executionContext) _ChannelInfoOutput(ctx context.Context, sel ast.SelectionSet, obj *model.ChannelInfoOutput) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelInfoOutputImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("ChannelInfoResult")
+			out.Values[i] = graphql.MarshalString("ChannelInfoOutput")
 		case "channel_id":
-			out.Values[i] = ec._ChannelInfoResult_channel_id(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_channel_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "node_id":
-			out.Values[i] = ec._ChannelInfoResult_node_id(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_node_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "capacity":
-			out.Values[i] = ec._ChannelInfoResult_capacity(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_capacity(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "fee":
-			out.Values[i] = ec._ChannelInfoResult_fee(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_fee(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "limits":
-			out.Values[i] = ec._ChannelInfoResult_limits(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_limits(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "up_time":
-			out.Values[i] = ec._ChannelInfoResult_up_time(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_up_time(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "forwards_rating":
-			out.Values[i] = ec._ChannelInfoResult_forwards_rating(ctx, field, obj)
+			out.Values[i] = ec._ChannelInfoOutput_forwards_rating(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6719,39 +6719,39 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
-var metricOneResultImplementors = []string{"MetricOneResult"}
+var metricOneOutputImplementors = []string{"MetricOneOutput"}
 
-func (ec *executionContext) _MetricOneResult(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOneResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, metricOneResultImplementors)
+func (ec *executionContext) _MetricOneOutput(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOneOutput) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metricOneOutputImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("MetricOneResult")
+			out.Values[i] = graphql.MarshalString("MetricOneOutput")
 		case "version":
-			out.Values[i] = ec._MetricOneResult_version(ctx, field, obj)
+			out.Values[i] = ec._MetricOneOutput_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "age":
-			out.Values[i] = ec._MetricOneResult_age(ctx, field, obj)
+			out.Values[i] = ec._MetricOneOutput_age(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "payment_rating":
-			out.Values[i] = ec._MetricOneResult_payment_rating(ctx, field, obj)
+			out.Values[i] = ec._MetricOneOutput_payment_rating(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "up_time":
-			out.Values[i] = ec._MetricOneResult_up_time(ctx, field, obj)
+			out.Values[i] = ec._MetricOneOutput_up_time(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "channes_info":
-			out.Values[i] = ec._MetricOneResult_channes_info(ctx, field, obj)
+			out.Values[i] = ec._MetricOneOutput_channes_info(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7338,39 +7338,39 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 	return out
 }
 
-var upTimeResultImplementors = []string{"UpTimeResult"}
+var upTimeOutputImplementors = []string{"UpTimeOutput"}
 
-func (ec *executionContext) _UpTimeResult(ctx context.Context, sel ast.SelectionSet, obj *model.UpTimeResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, upTimeResultImplementors)
+func (ec *executionContext) _UpTimeOutput(ctx context.Context, sel ast.SelectionSet, obj *model.UpTimeOutput) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upTimeOutputImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("UpTimeResult")
+			out.Values[i] = graphql.MarshalString("UpTimeOutput")
 		case "one_day":
-			out.Values[i] = ec._UpTimeResult_one_day(ctx, field, obj)
+			out.Values[i] = ec._UpTimeOutput_one_day(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "ten_days":
-			out.Values[i] = ec._UpTimeResult_ten_days(ctx, field, obj)
+			out.Values[i] = ec._UpTimeOutput_ten_days(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "thirty_days":
-			out.Values[i] = ec._UpTimeResult_thirty_days(ctx, field, obj)
+			out.Values[i] = ec._UpTimeOutput_thirty_days(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "six_months":
-			out.Values[i] = ec._UpTimeResult_six_months(ctx, field, obj)
+			out.Values[i] = ec._UpTimeOutput_six_months(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "full":
-			out.Values[i] = ec._UpTimeResult_full(ctx, field, obj)
+			out.Values[i] = ec._UpTimeOutput_full(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7660,7 +7660,7 @@ func (ec *executionContext) marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetrics�
 	return ec._ChannelFee(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelInfoResult) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelInfoOutput2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoOutputᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ChannelInfoOutput) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -7684,7 +7684,7 @@ func (ec *executionContext) marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpe
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChannelInfoResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResult(ctx, sel, v[i])
+			ret[i] = ec.marshalNChannelInfoOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7704,14 +7704,14 @@ func (ec *executionContext) marshalNChannelInfoResult2ᚕᚖgithubᚗcomᚋLNOpe
 	return ret
 }
 
-func (ec *executionContext) marshalNChannelInfoResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoResult(ctx context.Context, sel ast.SelectionSet, v *model.ChannelInfoResult) graphql.Marshaler {
+func (ec *executionContext) marshalNChannelInfoOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoOutput(ctx context.Context, sel ast.SelectionSet, v *model.ChannelInfoOutput) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._ChannelInfoResult(ctx, sel, v)
+	return ec._ChannelInfoOutput(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx context.Context, sel ast.SelectionSet, v *model.ChannelLimits) graphql.Marshaler {
@@ -7891,18 +7891,18 @@ func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋ
 	return ec._MetricOne(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMetricOneResult2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx context.Context, sel ast.SelectionSet, v model.MetricOneResult) graphql.Marshaler {
-	return ec._MetricOneResult(ctx, sel, &v)
+func (ec *executionContext) marshalNMetricOneOutput2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneOutput(ctx context.Context, sel ast.SelectionSet, v model.MetricOneOutput) graphql.Marshaler {
+	return ec._MetricOneOutput(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMetricOneResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneResult(ctx context.Context, sel ast.SelectionSet, v *model.MetricOneResult) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricOneOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneOutput(ctx context.Context, sel ast.SelectionSet, v *model.MetricOneOutput) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._MetricOneResult(ctx, sel, v)
+	return ec._MetricOneOutput(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNodeAddress2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeAddress) graphql.Marshaler {
@@ -8265,14 +8265,14 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNUpTimeResult2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeResult(ctx context.Context, sel ast.SelectionSet, v *model.UpTimeResult) graphql.Marshaler {
+func (ec *executionContext) marshalNUpTimeOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeOutput(ctx context.Context, sel ast.SelectionSet, v *model.UpTimeOutput) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._UpTimeResult(ctx, sel, v)
+	return ec._UpTimeOutput(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

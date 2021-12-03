@@ -50,7 +50,7 @@ func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string, startPe
 	return r.MetricsService.GetMetricOne(nodeID, startPeriod, endPeriod)
 }
 
-func (r *queryResolver) GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneResult, error) {
+func (r *queryResolver) GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

@@ -139,7 +139,7 @@ type ForwardsRatingSummary {
   full: ForwardsRating! @goField(name: "Full")
 }
 
-type UpTimeResult {
+type UpTimeOutput {
   one_day: Int! @goField(name: "OneDay")
   ten_days: Int! @goField(name: "TenDays")
   thirty_days: Int! @goField(name: "ThirtyDays")
@@ -147,24 +147,24 @@ type UpTimeResult {
   full: Int! @goField(name: "Full")
 }
 
-type ChannelInfoResult {
+type ChannelInfoOutput {
   channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
-  up_time: UpTimeResult! @goField(name: "UpTime")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
   forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
 }
 
 # Implementation of the metric_one output
 # Defined in the spec
-type MetricOneResult {
+type MetricOneOutput {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
   payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
-  up_time: UpTimeResult! @goField(name: "UpTime")
-  channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
+  channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
 }
 
 # Deprecated, remove this when add node metrics will be removed
@@ -186,7 +186,7 @@ type Query {
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
   # Get the metric one result
-  getMetricOneResult(network: String!, node_id: String!): MetricOneResult!
+  getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
 }
 
 type Mutation {
