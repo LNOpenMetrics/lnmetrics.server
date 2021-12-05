@@ -13,6 +13,7 @@ type MetricsDatabase interface {
 	// Put a raw value with the specified key in the db
 	PutRawValue(key string, value []byte) error
 
+	RawIterateThrough(start string, end string, callback func(string) error) error
 	// Prepare the database for the metric one data model
 	// Takes a interface, if the db implementation required some
 	// custom propieties

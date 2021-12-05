@@ -71,6 +71,11 @@ func (instance NoSQLDatabase) PutRawValue(key string, value []byte) error {
 	return db.GetInstance().PutValueInBytes(key, value)
 }
 
+func (instance NoSQLDatabase) RawIterateThrough(start string, end string, callback func(string) error) error {
+
+	return db.GetInstance().IterateThrough(start, end, callback)
+}
+
 // In the NO sql database, at list for the moment we don't need to
 // make a schema. The data are the schema it self.
 func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) error {

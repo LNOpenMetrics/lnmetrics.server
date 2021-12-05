@@ -41,19 +41,19 @@ type RawPercentageData struct {
 	// Number of operation completed with success in the last thirty days
 	ThirtyDaysSuccess uint64 `json:"thirty_days_success"`
 	// Total Forwards in the last 30 days
-	ThirtyDaysTot uint64 `json:"thirty_days_tot"`
+	ThirtyDaysTotal uint64 `json:"thirty_days_tot"`
 	// Last valid day contained in the range of the last 30 days
 	ThirtyDaysTimestamp int64 `json:"thirty_days_timestamp"`
 	// Number of operation completed with success in the last 6 months
 	SixMonthsSuccess uint64 `json:"six_months_success"`
 	// Total Number of operation in the last 6 months
-	SixMonthsTot uint64 `json:"six_months_tot"`
+	SixMonthsTotal uint64 `json:"six_months_tot"`
 	// Last valid day contained in the 6 months period
 	SixMonthsTimestamp int64 `json:"six_months_timestamp"`
 	// Number of operation completed with success in the all known period
 	FullSuccess uint64 `json:"full_success"`
 	// Total Number of operation in all the known period
-	FullTot uint64 `json:"full_tot"`
+	FullTotal uint64 `json:"full_tot"`
 }
 
 // Wrapper struct that contains all the information about the metric one output
