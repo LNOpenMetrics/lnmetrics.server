@@ -140,6 +140,8 @@ type Status struct {
 	Channels  *ChannelsSummary `json:"channels"`
 	Forwards  *PaymentsSummary `json:"forwards"`
 	Timestamp int              `json:"timestamp"`
+	Fee       *ChannelFee      `json:"fee"`
+	Limits    *ChannelLimits   `json:"limits"`
 }
 
 type StatusChannel struct {

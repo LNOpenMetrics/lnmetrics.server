@@ -62,21 +62,23 @@ type MetricOne {
 }
 
 type NodeInfo {
-     node_id: String! @goField(name: "NodeId")
-     metric_one: MetricOne! @goField(name: "MetricOne")
+  node_id: String! @goField(name: "NodeId")
+  metric_one: MetricOne! @goField(name: "MetricOne")
 }
 
 type OSInfo {
-     os: String! @goField(name: "Os")
-     version: String! @goField(name: "Version")
-     architecture: String! @goField(name: "Architecture")
+  os: String! @goField(name: "Os")
+  version: String! @goField(name: "Version")
+  architecture: String! @goField(name: "Architecture")
 }
 
 type Status {
-     event: String! @goField(name: "Event")
-     channels: ChannelsSummary! @goField(name: "Channels")
-     forwards: PaymentsSummary! @goField(name: "Forwards")
-     timestamp: Int! @goField(name: "Timestamp")
+  event: String! @goField(name: "Event")
+  channels: ChannelsSummary! @goField(name: "Channels")
+  forwards: PaymentsSummary! @goField(name: "Forwards")
+  timestamp: Int! @goField(name: "Timestamp")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type ChannelsSummary {

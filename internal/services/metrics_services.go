@@ -84,6 +84,10 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 		return nil, fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
+	if metricModel.Version != nil || *metricModel.Version < 4 {
+		return nil, fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
+	}
+
 	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
 		return nil, err
 	}
@@ -118,6 +122,10 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 
 	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
 		return fmt.Errorf("Unsupported network, or an old client version is sending this data")
+	}
+
+	if metricModel.Version == nil || *metricModel.Version < 4 {
+		return fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
 	}
 
 	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {

@@ -188,7 +188,9 @@ type ComplexityRoot struct {
 	Status struct {
 		Channels  func(childComplexity int) int
 		Event     func(childComplexity int) int
+		Fee       func(childComplexity int) int
 		Forwards  func(childComplexity int) int
+		Limits    func(childComplexity int) int
 		Timestamp func(childComplexity int) int
 	}
 
@@ -866,12 +868,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Status.Event(childComplexity), true
 
+	case "Status.fee":
+		if e.complexity.Status.Fee == nil {
+			break
+		}
+
+		return e.complexity.Status.Fee(childComplexity), true
+
 	case "Status.forwards":
 		if e.complexity.Status.Forwards == nil {
 			break
 		}
 
 		return e.complexity.Status.Forwards(childComplexity), true
+
+	case "Status.limits":
+		if e.complexity.Status.Limits == nil {
+			break
+		}
+
+		return e.complexity.Status.Limits(childComplexity), true
 
 	case "Status.timestamp":
 		if e.complexity.Status.Timestamp == nil {
@@ -1120,21 +1136,23 @@ type MetricOne {
 }
 
 type NodeInfo {
-     node_id: String! @goField(name: "NodeId")
-     metric_one: MetricOne! @goField(name: "MetricOne")
+  node_id: String! @goField(name: "NodeId")
+  metric_one: MetricOne! @goField(name: "MetricOne")
 }
 
 type OSInfo {
-     os: String! @goField(name: "Os")
-     version: String! @goField(name: "Version")
-     architecture: String! @goField(name: "Architecture")
+  os: String! @goField(name: "Os")
+  version: String! @goField(name: "Version")
+  architecture: String! @goField(name: "Architecture")
 }
 
 type Status {
-     event: String! @goField(name: "Event")
-     channels: ChannelsSummary! @goField(name: "Channels")
-     forwards: PaymentsSummary! @goField(name: "Forwards")
-     timestamp: Int! @goField(name: "Timestamp")
+  event: String! @goField(name: "Event")
+  channels: ChannelsSummary! @goField(name: "Channels")
+  forwards: PaymentsSummary! @goField(name: "Forwards")
+  timestamp: Int! @goField(name: "Timestamp")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type ChannelsSummary {
@@ -4609,6 +4627,76 @@ func (ec *executionContext) _Status_timestamp(ctx context.Context, field graphql
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Status_fee(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Status",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fee, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelFee)
+	fc.Result = res
+	return ec.marshalNChannelFee2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelFee(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Status_limits(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Status",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Limits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ChannelLimits)
+	fc.Result = res
+	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _StatusChannel_node_id(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7247,6 +7335,16 @@ func (ec *executionContext) _Status(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "timestamp":
 			out.Values[i] = ec._Status_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fee":
+			out.Values[i] = ec._Status_fee(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "limits":
+			out.Values[i] = ec._Status_limits(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
