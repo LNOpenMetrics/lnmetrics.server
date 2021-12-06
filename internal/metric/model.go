@@ -79,7 +79,7 @@ type RawForwardsRating struct {
 	// Forwards Rating of the last 6 months
 	SixMonthsRating *RawForwardRating `json:"six_months"`
 	// Timestamp of the last day in the 6 month period
-	SixMonthsTimestamo int64 `json:"six_months_timestamp"`
+	SixMonthsTimestamp int64 `json:"six_months_timestamp"`
 	// Overall Forward Rating of the known period
 	FullRating *RawForwardRating `json:"full"`
 }
@@ -102,11 +102,17 @@ func NewRawMetricOneOutput(timestamp uint64) *RawMetricOneOutput {
 	}
 }
 
-// TODO: complete to fill
 func NewRawForwardsRating() *RawForwardsRating {
 	return &RawForwardsRating{
-		TodayRating:    NewRawForwardRating(),
-		TodayTimestamp: time.Now().Unix(),
+		TodayRating:         NewRawForwardRating(),
+		TodayTimestamp:      time.Now().Unix(),
+		TenDaysRating:       NewRawForwardRating(),
+		TenDaysTimestamp:    time.Now().Unix(),
+		ThirtyDaysRating:    NewRawForwardRating(),
+		ThirtyDaysTimestamp: time.Now().Unix(),
+		SixMonthsRating:     NewRawForwardRating(),
+		SixMonthsTimestamp:  time.Now().Unix(),
+		FullRating:          NewRawForwardRating(),
 	}
 }
 
