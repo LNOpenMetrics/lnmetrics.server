@@ -14,7 +14,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 )
 
-var rawMetricOne = "raw_metric_one"
+var rawMetricOnePrefix = "raw_metric_one"
 
 type accumulator struct {
 	Selected int64
@@ -24,8 +24,8 @@ type accumulator struct {
 // Method to calculate the metric one output and store the result
 // on the server
 func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.MetricOne) error {
-	metricKey := strings.Join([]string{metricModel.NodeID, rawMetricOne}, "/")
-	log.GetInstance().Infof("Raw metric key output is: %s", metricKey)
+	metricKey := strings.Join([]string{metricModel.NodeID, rawMetricOnePrefix}, "/")
+	log.GetInstance().Infof("Raw metric for node %s key output is: %s", metricModel.NodeID, metricKey)
 	rawMetric, err := storage.GetRawValue(metricKey)
 	var rawMetricModel RawMetricOneOutput
 	if err != nil {
@@ -44,14 +44,17 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	go calculateForwardsRatingMetricOne(storage, rawMetricModel.ForwardsRating, metricModel, &lockGroup)
 	// TODO: Run a go routine to calculate the rating about each channels.
 	lockGroup.Wait()
-	return nil
+
+	// As result we store the value on the db
+	metricModelBytes, err := json.Marshal(rawMetricModel)
+	if err != nil {
+		return err
+	}
+	return storage.PutRawValue(metricKey, metricModelBytes)
 }
 
 // Execute the uptime rating of the node
 func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercentageData, metricModel *model.MetricOne, lock *sync.WaitGroup) {
-	// TODO: Get the timestamp from the metricModel
-	// TODO: Update all the timestamp that we have in the nodeUpTime
-	// log if some error happens
 	totUpdate := uint64(0)
 	onlineUpdate := uint64(0)
 	lastTimestamp := int64(0)

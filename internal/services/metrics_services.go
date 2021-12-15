@@ -8,28 +8,37 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/metric"
+
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
 type IMetricsService interface {
 	// Deprecated
 	AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error)
+
 	// Init method it is called only the first time from the node
 	// when it is not init in the server, but it has some metrics collected
 	InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error)
+
 	//  Append other metrics collected in a range of period by the node
 	UpdateMetricOne(nodeID string, payload *string, signature string) error
+
 	// Deprecated: Use GetNode isteand
 	// Return the list of node IF available on the server.
 	Nodes() ([]*string, error)
+
 	// Return the list of nodes available on the server
 	GetNodes(network string) ([]*model.NodeMetadata, error)
+
 	// Return the node metadata available on the server (utils for the init method)
 	GetNode(network string, nodeID string) (*model.NodeMetadata, error)
+
 	// Return the node metrics with a nodeID, and option range, from start to an end period
 	GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
-	// Return the node metric with a nodeID that contains the all period of the collected metric
-	GetFullMetricOne(nodeID string) (*model.MetricOne, error)
+
+	// Return the metric one output
+	GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error)
 }
 
 type MetricsService struct {
@@ -94,7 +103,9 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 
 	now := time.Now().Unix()
 	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
-
+	if err := metric.CalculateMetricOneOutput(instance.Storage, &metricModel); err != nil {
+		return nil, err
+	}
 	return &metricModel, nil
 }
 
@@ -135,6 +146,10 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	now := time.Now().Format(time.RFC850)
 	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", nodeID, now))
 
+	if err := metric.CalculateMetricOneOutput(instance.Storage, &metricModel); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -174,6 +189,6 @@ func (instance *MetricsService) GetMetricOne(nodeID string, startPeriod int, end
 	return metricNodeInfo, nil
 }
 
-func (instance *MetricsService) GetFullMetricOne(nodeID string) (*model.MetricOne, error) {
-	return nil, nil
+func (instance *MetricsService) GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error) {
+	return instance.Storage.GetMetricOneOutput(nodeID)
 }

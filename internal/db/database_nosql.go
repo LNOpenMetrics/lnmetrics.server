@@ -200,6 +200,22 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 	return modelMetricOne, nil
 }
 
+// TODO: Move in a global file that contains all the app constants.
+var rawMetricOnePrefix = "raw_metric_one"
+
+func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error) {
+	metricKey := strings.Join([]string{nodeID, rawMetricOnePrefix}, "/")
+	rawOutput, err := instance.GetRawValue(metricKey)
+	if err != nil {
+		return nil, err
+	}
+	var metricOneModel model.MetricOneOutput
+	if err := json.Unmarshal(rawOutput, &metricOneModel); err != nil {
+		return nil, err
+	}
+	return &metricOneModel, nil
+}
+
 // close the connection with database
 func (instance NoSQLDatabase) CloseDatabase() error {
 	return db.GetInstance().CloseDatabase()

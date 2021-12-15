@@ -31,6 +31,8 @@ type MetricsDatabase interface {
 	// Get all the node data by id
 	GetMetricOne(withId string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 
+	GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error)
+
 	// Update the metric of the node, with new one.
 	UpdateMetricOne(toInser *model.MetricOne) error
 
