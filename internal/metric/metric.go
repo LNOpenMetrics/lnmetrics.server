@@ -14,7 +14,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 )
 
-var rawMetricOnePrefix = "raw_metric_one"
+var rawMetricOnePrefix = "raw_metric_one_output"
 
 type accumulator struct {
 	Selected int64
@@ -27,11 +27,11 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	metricKey := strings.Join([]string{metricModel.NodeID, rawMetricOnePrefix}, "/")
 	log.GetInstance().Infof("Raw metric for node %s key output is: %s", metricModel.NodeID, metricKey)
 	rawMetric, err := storage.GetRawValue(metricKey)
-	var rawMetricModel RawMetricOneOutput
+	var rawMetricModel *RawMetricOneOutput
 	if err != nil {
 		// If the metrics it is not found, create a new one
 		// and continue to fill it.
-		rawMetricModel = *NewRawMetricOneOutput(0)
+		rawMetricModel = NewRawMetricOneOutput(time.Now().Unix())
 	} else {
 		if err := json.Unmarshal(rawMetric, &rawMetricModel); err != nil {
 			return err

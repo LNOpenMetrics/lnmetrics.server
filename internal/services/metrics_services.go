@@ -3,6 +3,9 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
@@ -48,7 +51,75 @@ type MetricsService struct {
 
 // Constructor method.
 func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
-	return &MetricsService{Storage: db, Backend: lnBackend}
+	instance := &MetricsService{Storage: db, Backend: lnBackend}
+	if err := instance.initMetricOneOutput(); err != nil {
+		log.GetInstance().Infof("Error: %s", err)
+	}
+	return instance
+}
+
+// Function to help to init the metric one output on the server
+// for the old data that have no metric one supported
+// This function it is used only for the server update
+func (instance *MetricsService) initMetricOneOutput() error {
+	nodes, err := instance.GetNodes("bitcoin")
+	if err != nil {
+		return err
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
+	for _, node := range nodes {
+		go instance.initMetricOneOuputOnNode(node, &wg)
+	}
+	wg.Wait()
+	return nil
+}
+
+func (instance *MetricsService) initMetricOneOuputOnNode(node *model.NodeMetadata, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if !instance.containsMetricOneOutput(node) {
+		// DONE 1. Get the index list of the node
+		// DONE 2. Iterate over the timestamp and load the metric model
+		// TODO 3. Skip the if the timestamp difference it is less of 20 minutes and
+		// it is made from the same event
+		log.GetInstance().Infof("Calculate Metric One Output for the node %s", node.NodeID)
+		timestampIndex, err := instance.Storage.GetMetricOneIndex(node.NodeID)
+		if err != nil {
+			log.GetInstance().Infof("Error: %s", err)
+			return
+		}
+		sort.Slice(timestampIndex, func(i, j int) bool { return timestampIndex[i] < timestampIndex[j] })
+		start := timestampIndex[0]
+		end := timestampIndex[len(timestampIndex)-1]
+		keyPrefix := strings.Join([]string{node.NodeID, "metric_one"}, "/")
+		startIndex := strings.Join([]string{keyPrefix, fmt.Sprint(start), "metric"}, "/")
+		endIndex := strings.Join([]string{keyPrefix, fmt.Sprint(end), "metric"}, "/")
+		err = instance.Storage.RawIterateThrough(startIndex, endIndex, func(metricOne string) error {
+			var model model.MetricOne
+			if err := json.Unmarshal([]byte(metricOne), &model); err != nil {
+				return err
+			}
+
+			return metric.CalculateMetricOneOutput(instance.Storage, &model)
+		})
+		if err != nil {
+			log.GetInstance().Infof("Error: %s", err)
+			return
+		}
+	}
+}
+
+// TODO: Move in a global file that contains all the app constants.
+var rawMetricOnePrefix = "raw_metric_one"
+
+func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata) bool {
+	metricKey := strings.Join([]string{node.NodeID, "metric_one", rawMetricOnePrefix}, "/")
+	_, err := instance.Storage.GetRawValue(metricKey)
+	if err != nil {
+		log.GetInstance().Errorf("Error: %s", err)
+		return false
+	}
+	return true
 }
 
 func (instance *MetricsService) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
@@ -93,7 +164,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 		return nil, fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
-	if metricModel.Version != nil || *metricModel.Version < 4 {
+	if metricModel.Version == nil || *metricModel.Version < 4 {
 		return nil, fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
 	}
 

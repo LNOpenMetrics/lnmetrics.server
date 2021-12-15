@@ -216,6 +216,19 @@ func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricO
 	return &metricOneModel, nil
 }
 
+func (instance *NoSQLDatabase) GetMetricOneIndex(nodeID string) ([]int64, error) {
+	indexKey := strings.Join([]string{nodeID, "metric_one", "index"}, "/")
+	indexRaw, err := instance.GetRawValue(indexKey)
+	if err != nil {
+		return nil, err
+	}
+	var index []int64
+	if err := json.Unmarshal(indexRaw, &index); err != nil {
+		return nil, err
+	}
+	return index, nil
+}
+
 // close the connection with database
 func (instance NoSQLDatabase) CloseDatabase() error {
 	return db.GetInstance().CloseDatabase()

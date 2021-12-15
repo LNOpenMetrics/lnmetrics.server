@@ -2,6 +2,8 @@ package metric
 
 import (
 	"time"
+
+	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
 // Wrapper struct that contains the information
@@ -12,7 +14,7 @@ type RawMetricOneOutput struct {
 	// The version of the metric one output
 	Version uint `json:"version"`
 	// The last time that this raw was update
-	LastUpdate uint64 `json:"last_update"`
+	LastUpdate int64 `json:"last_update"`
 	//forwards rating with all the information attached
 	ForwardsRating *RawForwardsRating `json:"forwards_rating"`
 	// UpTime Rating about the node
@@ -58,8 +60,16 @@ type RawPercentageData struct {
 
 // Wrapper struct that contains all the information about the metric one output
 type RawChannelRating struct {
-	UpTimeRating   *RawPercentageData `json:"up_time_rating"`
-	ForwardsRating *RawForwardsRating `json:"forwards_rating"`
+	// Age of the channels, it is the first time that the node
+	// is catch from the channel
+	Age            int64                `json:"age"`
+	ChannelID      string               `json:"channel_id"`
+	NodeID         string               `json:"node_id"`
+	Capacity       int64                `json:"capacity"`
+	Fee            *model.ChannelFee    `json:"fee"`
+	Limits         *model.ChannelLimits `json:"limits"`
+	UpTimeRating   *RawPercentageData   `json:"up_time_rating"`
+	ForwardsRating *RawForwardsRating   `json:"forwards_rating"`
 }
 
 // Wrapper struct around the forwards rating
@@ -94,11 +104,32 @@ type RawForwardRating struct {
 }
 
 // Create a new Raw Metric One Output with all the default value
-func NewRawMetricOneOutput(timestamp uint64) *RawMetricOneOutput {
+func NewRawMetricOneOutput(timestamp int64) *RawMetricOneOutput {
 	return &RawMetricOneOutput{
 		Version:        0,
 		LastUpdate:     timestamp,
 		ForwardsRating: NewRawForwardsRating(),
+		UpTime:         NewRawPercentageData(),
+		ChannelsRating: make(map[string]*RawChannelRating),
+	}
+}
+
+func NewRawPercentageData() *RawPercentageData {
+	return &RawPercentageData{
+		TodaySuccess:        0,
+		TodayTotal:          0,
+		TodayTimestamp:      0,
+		TenDaysSuccess:      0,
+		TenDaysTimestamp:    0,
+		TenDaysTotal:        0,
+		ThirtyDaysSuccess:   0,
+		ThirtyDaysTotal:     0,
+		ThirtyDaysTimestamp: 0,
+		SixMonthsSuccess:    0,
+		SixMonthsTotal:      0,
+		SixMonthsTimestamp:  0,
+		FullSuccess:         0,
+		FullTotal:           0,
 	}
 }
 

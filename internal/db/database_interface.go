@@ -36,6 +36,8 @@ type MetricsDatabase interface {
 	// Update the metric of the node, with new one.
 	UpdateMetricOne(toInser *model.MetricOne) error
 
+	GetMetricOneIndex(nodeID string) ([]int64, error)
+
 	// Close the connection with the database
 	CloseDatabase() error
 
