@@ -10,10 +10,6 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
-func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	return r.MetricsService.AddNodeMetrics(input.NodeID, &input.PayloadMetricOne)
-}
-
 func (r *mutationResolver) InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error) {
 	return r.MetricsService.InitMetricOne(nodeID, &payload, signature)
 }

@@ -13,6 +13,8 @@ import (
 type RawMetricOneOutput struct {
 	// The version of the metric one output
 	Version uint `json:"version"`
+	// First time that the node it is shows from the server
+	Age int64 `json:"age"`
 	// The last time that this raw was update
 	LastUpdate int64 `json:"last_update"`
 	//forwards rating with all the information attached
@@ -65,7 +67,7 @@ type RawChannelRating struct {
 	Age            int64                `json:"age"`
 	ChannelID      string               `json:"channel_id"`
 	NodeID         string               `json:"node_id"`
-	Capacity       int64                `json:"capacity"`
+	Capacity       int                  `json:"capacity"`
 	Fee            *model.ChannelFee    `json:"fee"`
 	Limits         *model.ChannelLimits `json:"limits"`
 	UpTimeRating   *RawPercentageData   `json:"up_time_rating"`
@@ -107,7 +109,8 @@ type RawForwardRating struct {
 func NewRawMetricOneOutput(timestamp int64) *RawMetricOneOutput {
 	return &RawMetricOneOutput{
 		Version:        0,
-		LastUpdate:     timestamp,
+		Age:            timestamp,
+		LastUpdate:     time.Now().Unix(),
 		ForwardsRating: NewRawForwardsRating(),
 		UpTime:         NewRawPercentageData(),
 		ChannelsRating: make(map[string]*RawChannelRating),

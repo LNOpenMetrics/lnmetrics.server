@@ -10,6 +10,7 @@ import (
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/metric"
 
@@ -17,9 +18,6 @@ import (
 )
 
 type IMetricsService interface {
-	// Deprecated
-	AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error)
-
 	// Init method it is called only the first time from the node
 	// when it is not init in the server, but it has some metrics collected
 	InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error)
@@ -109,34 +107,14 @@ func (instance *MetricsService) initMetricOneOuputOnNode(node *model.NodeMetadat
 	}
 }
 
-// TODO: Move in a global file that contains all the app constants.
-var rawMetricOnePrefix = "raw_metric_one"
-
 func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata) bool {
-	metricKey := strings.Join([]string{node.NodeID, "metric_one", rawMetricOnePrefix}, "/")
+	metricKey := strings.Join([]string{node.NodeID, config.RawMetricOnePrefix}, "/")
 	_, err := instance.Storage.GetRawValue(metricKey)
 	if err != nil {
 		log.GetInstance().Errorf("Error: %s", err)
 		return false
 	}
 	return true
-}
-
-func (instance *MetricsService) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
-	var metricModel model.MetricOne
-	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
-		return nil, err
-	}
-
-	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
-		return nil, fmt.Errorf("Unsupported network, or old client version")
-	}
-
-	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
-		return nil, err
-	}
-
-	return &metricModel, nil
 }
 
 func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error) {

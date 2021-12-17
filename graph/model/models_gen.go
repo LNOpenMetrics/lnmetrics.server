@@ -72,7 +72,8 @@ type MetricOne struct {
 type MetricOneOutput struct {
 	Version        int                    `json:"version"`
 	Age            int                    `json:"age"`
-	ForwardsRating *ForwardsRatingSummary `json:"payment_rating"`
+	LastUpdate     int                    `json:"last_update"`
+	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
 	UpTime         *UpTimeOutput          `json:"up_time"`
 	ChannelsInfo   []*ChannelInfoOutput   `json:"channes_info"`
 }
@@ -112,11 +113,6 @@ type NodeMetric struct {
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
 }
 
-type NodeMetrics struct {
-	NodeID           string `json:"node_id"`
-	PayloadMetricOne string `json:"payload_metric_one"`
-}
-
 type OSInfo struct {
 	Os           string `json:"os"`
 	Version      string `json:"version"`
@@ -145,6 +141,7 @@ type Status struct {
 }
 
 type StatusChannel struct {
+	ChannelID  string           `json:"channel_id"`
 	NodeID     string           `json:"node_id"`
 	NodeAlias  string           `json:"node_alias"`
 	Color      string           `json:"color"`

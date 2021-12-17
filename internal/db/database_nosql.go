@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
+
 	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
@@ -34,8 +36,6 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		return nil, err
 	}
 
-	//keys, _ := db.GetInstance().ListOfKeys()
-
 	instance := &NoSQLDatabase{
 		map[uint]string{1: "metric_one"},
 		false,
@@ -46,18 +46,6 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	if err := instance.createIndexDBIfMissin(); err != nil {
 		return nil, err
 	}
-	//FIXME: Create a debug procedure
-	/*
-		for _, key := range keys {
-			fmt.Println(*key)
-			tokens := strings.Split(*key, "/")
-			nodeId := tokens[0]
-			if strings.Contains(nodeId, "data_version") || strings.Contains(nodeId, "node_index") {
-				continue
-			}
-			_ = instance.indexingInDB(nodeId)
-		}
-	*/
 	return instance, nil
 }
 
@@ -200,11 +188,8 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 	return modelMetricOne, nil
 }
 
-// TODO: Move in a global file that contains all the app constants.
-var rawMetricOnePrefix = "raw_metric_one"
-
 func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error) {
-	metricKey := strings.Join([]string{nodeID, rawMetricOnePrefix}, "/")
+	metricKey := strings.Join([]string{nodeID, config.RawMetricOnePrefix}, "/")
 	rawOutput, err := instance.GetRawValue(metricKey)
 	if err != nil {
 		return nil, err

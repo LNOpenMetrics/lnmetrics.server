@@ -114,12 +114,12 @@ type ComplexityRoot struct {
 		Age            func(childComplexity int) int
 		ChannelsInfo   func(childComplexity int) int
 		ForwardsRating func(childComplexity int) int
+		LastUpdate     func(childComplexity int) int
 		UpTime         func(childComplexity int) int
 		Version        func(childComplexity int) int
 	}
 
 	Mutation struct {
-		AddNodeMetrics  func(childComplexity int, input model.NodeMetrics) int
 		InitMetricOne   func(childComplexity int, nodeID string, payload string, signature string) int
 		UpdateMetricOne func(childComplexity int, nodeID string, payload string, signature string) int
 	}
@@ -196,6 +196,7 @@ type ComplexityRoot struct {
 
 	StatusChannel struct {
 		Capacity   func(childComplexity int) int
+		ChannelID  func(childComplexity int) int
 		Color      func(childComplexity int) int
 		Direction  func(childComplexity int) int
 		Fee        func(childComplexity int) int
@@ -218,7 +219,6 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error)
 	InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error)
 	UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error)
 }
@@ -539,12 +539,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOneOutput.ChannelsInfo(childComplexity), true
 
-	case "MetricOneOutput.payment_rating":
+	case "MetricOneOutput.forwards_rating":
 		if e.complexity.MetricOneOutput.ForwardsRating == nil {
 			break
 		}
 
 		return e.complexity.MetricOneOutput.ForwardsRating(childComplexity), true
+
+	case "MetricOneOutput.last_update":
+		if e.complexity.MetricOneOutput.LastUpdate == nil {
+			break
+		}
+
+		return e.complexity.MetricOneOutput.LastUpdate(childComplexity), true
 
 	case "MetricOneOutput.up_time":
 		if e.complexity.MetricOneOutput.UpTime == nil {
@@ -559,18 +566,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOneOutput.Version(childComplexity), true
-
-	case "Mutation.addNodeMetrics":
-		if e.complexity.Mutation.AddNodeMetrics == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_addNodeMetrics_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.AddNodeMetrics(childComplexity, args["input"].(model.NodeMetrics)), true
 
 	case "Mutation.initMetricOne":
 		if e.complexity.Mutation.InitMetricOne == nil {
@@ -903,6 +898,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StatusChannel.Capacity(childComplexity), true
 
+	case "StatusChannel.channel_id":
+		if e.complexity.StatusChannel.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.StatusChannel.ChannelID(childComplexity), true
+
 	case "StatusChannel.color":
 		if e.complexity.StatusChannel.Color == nil {
 			break
@@ -1085,6 +1087,7 @@ type ChannelLimits {
 }
 
 type StatusChannel {
+  channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeId")
   node_alias: String! @goField(name: "NodeAlias")
   color: String! @goField(name: "Color")
@@ -1238,15 +1241,10 @@ type ChannelInfoOutput {
 type MetricOneOutput {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
-  payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
+  last_update: Int! @goField(name: "LastUpdate")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeOutput! @goField(name: "UpTime")
   channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
-}
-
-# Deprecated, remove this when add node metrics will be removed
-input NodeMetrics {
-     node_id: String! @goField(name: "NodeID")
-     payload_metric_one: String! @goField(name: "PayloadMetricOne")
 }
 
 # Query definition
@@ -1266,8 +1264,6 @@ type Query {
 }
 
 type Mutation {
-  # backword compatibility with old client, for two version
-  addNodeMetrics(input: NodeMetrics!): MetricOne! @deprecated(reason: "This method not support the signature, please considered to used init and update metric one.")
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we
@@ -1284,21 +1280,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) field_Mutation_addNodeMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.NodeMetrics
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNodeMetrics2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Mutation_initMetricOne_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2976,7 +2957,42 @@ func (ec *executionContext) _MetricOneOutput_age(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneOutput_payment_rating(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_last_update(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastUpdate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneOutput_forwards_rating(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3079,48 +3095,6 @@ func (ec *executionContext) _MetricOneOutput_channes_info(ctx context.Context, f
 	res := resTmp.([]*model.ChannelInfoOutput)
 	fc.Result = res
 	return ec.marshalNChannelInfoOutput2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelInfoOutputᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_addNodeMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_addNodeMetrics_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddNodeMetrics(rctx, args["input"].(model.NodeMetrics))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.MetricOne)
-	fc.Result = res
-	return ec.marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOne(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_initMetricOne(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4695,6 +4669,41 @@ func (ec *executionContext) _Status_limits(ctx context.Context, field graphql.Co
 	res := resTmp.(*model.ChannelLimits)
 	fc.Result = res
 	return ec.marshalNChannelLimits2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐChannelLimits(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _StatusChannel_channel_id(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "StatusChannel",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _StatusChannel_node_id(ctx context.Context, field graphql.CollectedField, obj *model.StatusChannel) (ret graphql.Marshaler) {
@@ -6379,37 +6388,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNodeMetrics(ctx context.Context, obj interface{}) (model.NodeMetrics, error) {
-	var it model.NodeMetrics
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	for k, v := range asMap {
-		switch k {
-		case "node_id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
-			it.NodeID, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "payload_metric_one":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload_metric_one"))
-			it.PayloadMetricOne, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -6828,8 +6806,13 @@ func (ec *executionContext) _MetricOneOutput(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "payment_rating":
-			out.Values[i] = ec._MetricOneOutput_payment_rating(ctx, field, obj)
+		case "last_update":
+			out.Values[i] = ec._MetricOneOutput_last_update(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "forwards_rating":
+			out.Values[i] = ec._MetricOneOutput_forwards_rating(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6869,11 +6852,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "addNodeMetrics":
-			out.Values[i] = ec._Mutation_addNodeMetrics(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "initMetricOne":
 			out.Values[i] = ec._Mutation_initMetricOne(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -7370,6 +7348,11 @@ func (ec *executionContext) _StatusChannel(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("StatusChannel")
+		case "channel_id":
+			out.Values[i] = ec._StatusChannel_channel_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "node_id":
 			out.Values[i] = ec._StatusChannel_node_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8123,11 +8106,6 @@ func (ec *executionContext) marshalNNodeMetadata2ᚖgithubᚗcomᚋLNOpenMetrics
 		return graphql.Null
 	}
 	return ec._NodeMetadata(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNNodeMetrics2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetrics(ctx context.Context, v interface{}) (model.NodeMetrics, error) {
-	res, err := ec.unmarshalInputNodeMetrics(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐOSInfo(ctx context.Context, sel ast.SelectionSet, v *model.OSInfo) graphql.Marshaler {

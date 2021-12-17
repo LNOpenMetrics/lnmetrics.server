@@ -11,6 +11,7 @@ type ChannelLimits {
 }
 
 type StatusChannel {
+  channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeId")
   node_alias: String! @goField(name: "NodeAlias")
   color: String! @goField(name: "Color")
@@ -164,15 +165,10 @@ type ChannelInfoOutput {
 type MetricOneOutput {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
-  payment_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
+  last_update: Int! @goField(name: "LastUpdate")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeOutput! @goField(name: "UpTime")
   channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
-}
-
-# Deprecated, remove this when add node metrics will be removed
-input NodeMetrics {
-     node_id: String! @goField(name: "NodeID")
-     payload_metric_one: String! @goField(name: "PayloadMetricOne")
 }
 
 # Query definition
@@ -192,8 +188,6 @@ type Query {
 }
 
 type Mutation {
-  # backword compatibility with old client, for two version
-  addNodeMetrics(input: NodeMetrics!): MetricOne! @deprecated(reason: "This method not support the signature, please considered to used init and update metric one.")
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we

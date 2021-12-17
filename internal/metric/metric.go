@@ -3,18 +3,18 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 )
-
-var rawMetricOnePrefix = "raw_metric_one_output"
 
 type accumulator struct {
 	Selected int64
@@ -24,7 +24,7 @@ type accumulator struct {
 // Method to calculate the metric one output and store the result
 // on the server
 func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.MetricOne) error {
-	metricKey := strings.Join([]string{metricModel.NodeID, rawMetricOnePrefix}, "/")
+	metricKey := strings.Join([]string{metricModel.NodeID, config.RawMetricOnePrefix}, "/")
 	log.GetInstance().Infof("Raw metric for node %s key output is: %s", metricModel.NodeID, metricKey)
 	rawMetric, err := storage.GetRawValue(metricKey)
 	var rawMetricModel *RawMetricOneOutput
@@ -39,12 +39,13 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	}
 
 	var lockGroup sync.WaitGroup
-	lockGroup.Add(2)
+	lockGroup.Add(3)
 	go calculateUptimeMetricOne(storage, rawMetricModel.UpTime, metricModel, &lockGroup)
 	go calculateForwardsRatingMetricOne(storage, rawMetricModel.ForwardsRating, metricModel, &lockGroup)
-	// TODO: Run a go routine to calculate the rating about each channels.
+	go calculateRationForChannels(storage, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo, &lockGroup)
 	lockGroup.Wait()
 
+	rawMetricModel.LastUpdate = time.Now().Unix()
 	// As result we store the value on the db
 	metricModelBytes, err := json.Marshal(rawMetricModel)
 	if err != nil {
@@ -54,7 +55,9 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 }
 
 // Execute the uptime rating of the node
+// TODO: Refactoring this logic and use the channels
 func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercentageData, metricModel *model.MetricOne, lock *sync.WaitGroup) {
+	defer lock.Done()
 	totUpdate := uint64(0)
 	onlineUpdate := uint64(0)
 	lastTimestamp := int64(0)
@@ -147,7 +150,6 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 	// full
 	nodeUpTime.FullSuccess += onlineUpdate
 	nodeUpTime.FullTotal += totUpdate
-	lock.Done()
 }
 
 // Get last timestamp inside the uptime
@@ -336,4 +338,44 @@ func accumulateForwardsRating(payload *string, acc *forwardsAccumulator) error {
 	acc.Failed += tmpAcc.Failed
 	acc.LocalFailed += tmpAcc.LocalFailed
 	return nil
+}
+
+// calculate the rating for each channels in the code
+func calculateRationForChannels(storage db.MetricsDatabase, channelsRating map[string]*RawChannelRating, channelsInfo []*model.StatusChannel, lockGroup *sync.WaitGroup) {
+	defer lockGroup.Done()
+
+	if len(channelsInfo) == 0 {
+		return
+	}
+	chanForChannels := make(chan *RawChannelRating, len(channelsInfo)-1)
+	for _, channelInfo := range channelsInfo {
+		rating, found := channelsRating[channelInfo.ChannelID]
+		if !found {
+			//TODO: Create a new channel Rating.
+			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
+			rating = &RawChannelRating{
+				Age:            int64(channelInfo.UpTime[0].Timestamp),
+				ChannelID:      channelInfo.ChannelID,
+				NodeID:         channelInfo.NodeID,
+				Capacity:       channelInfo.Capacity,
+				UpTimeRating:   NewRawPercentageData(),
+				ForwardsRating: NewRawForwardsRating(),
+			}
+		}
+		rating.Fee = channelInfo.Fee
+		rating.Limits = channelInfo.Limits
+		rating.Capacity = channelInfo.Capacity
+		go calculateRatingForChannel(storage, rating, channelInfo, chanForChannels)
+	}
+
+	for rating := range chanForChannels {
+		channelsRating[rating.ChannelID] = rating
+	}
+}
+
+// calculate the ration of one single channels
+func calculateRatingForChannel(storage db.MetricsDatabase, channelRating *RawChannelRating, channelInfo *model.StatusChannel, comm chan *RawChannelRating) {
+	// TODO: calculate up time
+	// TODO: calculate payment rating
+	comm <- channelRating
 }
