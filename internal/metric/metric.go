@@ -42,7 +42,8 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	lockGroup.Add(3)
 	go calculateUptimeMetricOne(storage, rawMetricModel.UpTime, metricModel, &lockGroup)
 	go calculateForwardsRatingMetricOne(storage, rawMetricModel.ForwardsRating, metricModel, &lockGroup)
-	go calculateRationForChannels(storage, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo, &lockGroup)
+	itemKey, _ := storage.ItemID(metricModel)
+	go calculateRationForChannels(storage, itemKey, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo, &lockGroup)
 	lockGroup.Wait()
 
 	rawMetricModel.LastUpdate = time.Now().Unix()
@@ -203,11 +204,10 @@ type forwardsAccumulator struct {
 
 func calculateForwardsRatingMetricOne(storage db.MetricsDatabase, forwardsRating *RawForwardsRating,
 	metricModel *model.MetricOne, lock *sync.WaitGroup) {
-
+	defer lock.Done()
 	acc := countForwards(metricModel.ChannelsInfo)
 	lastTimestamp := getLatestTimestamp(metricModel.UpTime)
 	calculateForwardsRatingByTimestamp(storage, metricModel, forwardsRating, acc, lastTimestamp)
-	lock.Done()
 }
 
 func countForwards(channelsInfo []*model.StatusChannel) *forwardsAccumulator {
@@ -341,7 +341,14 @@ func accumulateForwardsRating(payload *string, acc *forwardsAccumulator) error {
 }
 
 // calculate the rating for each channels in the code
-func calculateRationForChannels(storage db.MetricsDatabase, channelsRating map[string]*RawChannelRating, channelsInfo []*model.StatusChannel, lockGroup *sync.WaitGroup) {
+//
+// storage: TODO
+// itemKey: TODO
+// channelsRating: TODO
+// channelsInfo: TODO
+// lockGroud: TODO
+func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, channelsRating map[string]*RawChannelRating,
+	channelsInfo []*model.StatusChannel, lockGroup *sync.WaitGroup) {
 	defer lockGroup.Done()
 
 	if len(channelsInfo) == 0 {
@@ -351,7 +358,6 @@ func calculateRationForChannels(storage db.MetricsDatabase, channelsRating map[s
 	for _, channelInfo := range channelsInfo {
 		rating, found := channelsRating[channelInfo.ChannelID]
 		if !found {
-			//TODO: Create a new channel Rating.
 			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
 			rating = &RawChannelRating{
 				Age:            int64(channelInfo.UpTime[0].Timestamp),
@@ -365,7 +371,7 @@ func calculateRationForChannels(storage db.MetricsDatabase, channelsRating map[s
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
 		rating.Capacity = channelInfo.Capacity
-		go calculateRatingForChannel(storage, rating, channelInfo, chanForChannels)
+		go calculateRatingForChannel(storage, itemKey, rating, channelInfo, chanForChannels)
 	}
 
 	for rating := range chanForChannels {
@@ -374,8 +380,166 @@ func calculateRationForChannels(storage db.MetricsDatabase, channelsRating map[s
 }
 
 // calculate the ration of one single channels
-func calculateRatingForChannel(storage db.MetricsDatabase, channelRating *RawChannelRating, channelInfo *model.StatusChannel, comm chan *RawChannelRating) {
-	// TODO: calculate up time
+func calculateRatingForChannel(storage db.MetricsDatabase, itemKey string, channelRating *RawChannelRating,
+	channelInfo *model.StatusChannel, comm chan *RawChannelRating) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go calculateUpTimeRatingChannel(storage, itemKey, channelInfo.ChannelID, channelRating, channelInfo.UpTime, &wg)
 	// TODO: calculate payment rating
-	comm <- channelRating
+
+	wg.Wait()
+}
+
+type wrapperUpTimeAccumulator struct {
+	acc       *accumulator
+	timestamp int64
+}
+
+func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string, channelID string, channelRating *RawChannelRating,
+	upTimes []*model.ChannelStatus, lock *sync.WaitGroup) {
+	defer lock.Done()
+
+	todayChan := make(chan *wrapperUpTimeAccumulator)
+	todayValue := &wrapperUpTimeAccumulator{
+		acc: &accumulator{
+			Selected: int64(channelRating.UpTimeRating.TodaySuccess),
+			Total:    int64(channelRating.UpTimeRating.TodayTotal),
+		},
+		timestamp: channelRating.UpTimeRating.TodayTimestamp,
+	}
+	go calculateUpTimeRatingByPeriod(storage, itemKey, channelID, todayValue, upTimes, 24*time.Hour, todayChan)
+	tenDaysChan := make(chan *wrapperUpTimeAccumulator)
+	tenDaysValue := &wrapperUpTimeAccumulator{
+		acc: &accumulator{
+			Selected: int64(channelRating.UpTimeRating.TenDaysSuccess),
+			Total:    int64(channelRating.UpTimeRating.TenDaysTotal),
+		},
+		timestamp: channelRating.UpTimeRating.TenDaysTimestamp,
+	}
+	go calculateUpTimeRatingByPeriod(storage, itemKey, channelID, tenDaysValue, upTimes, 10*24*time.Hour, tenDaysChan)
+	thirtyDaysChan := make(chan *wrapperUpTimeAccumulator)
+	thirtyDaysValue := &wrapperUpTimeAccumulator{
+		acc: &accumulator{
+			Selected: int64(channelRating.UpTimeRating.ThirtyDaysSuccess),
+			Total:    int64(channelRating.UpTimeRating.ThirtyDaysTotal),
+		},
+		timestamp: channelRating.UpTimeRating.ThirtyDaysTimestamp,
+	}
+	go calculateUpTimeRatingByPeriod(storage, itemKey, channelID, thirtyDaysValue, upTimes, 30*24*time.Hour, thirtyDaysChan)
+	sixMonthsChan := make(chan *wrapperUpTimeAccumulator)
+	sixMonthsValue := &wrapperUpTimeAccumulator{
+		acc: &accumulator{
+			Selected: int64(channelRating.UpTimeRating.SixMonthsSuccess),
+			Total:    int64(channelRating.UpTimeRating.SixMonthsTotal),
+		},
+		timestamp: channelRating.UpTimeRating.SixMonthsTimestamp,
+	}
+	go calculateUpTimeRatingByPeriod(storage, itemKey, channelID, sixMonthsValue, upTimes, 6*30*24*time.Hour, sixMonthsChan)
+
+	actualValue := accumulateUpTimeForChannel(upTimes)
+
+	channelRating.UpTimeRating.FullSuccess += uint64(actualValue.acc.Selected)
+	channelRating.UpTimeRating.FullTotal += uint64(actualValue.acc.Total)
+
+	select {
+	case today := <-todayChan:
+		channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
+		channelRating.UpTimeRating.TodayTotal = uint64(today.acc.Total)
+		channelRating.UpTimeRating.TodayTimestamp = today.timestamp
+	case tenDays := <-tenDaysChan:
+		channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
+		channelRating.UpTimeRating.TenDaysTotal = uint64(tenDays.acc.Total)
+		channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
+	case thirtyDays := <-thirtyDaysChan:
+		channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
+		channelRating.UpTimeRating.ThirtyDaysTotal = uint64(thirtyDays.acc.Total)
+		channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
+	case sixMonths := <-sixMonthsChan:
+		channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
+		channelRating.UpTimeRating.SixMonthsTotal = uint64(sixMonths.acc.Total)
+		channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
+	}
+}
+
+// Function to abstract the function to calculate the up time in some period, in particular
+// this function takes in input the following parameters:
+//
+// - storage: Is one implementation of the db that implement the persistence.
+// - actualValues: Is the last Rating contained inside the recorded rating inside the db.
+// - acc: Is the channels where the communication happens between gorutine after the calculation will finish.
+// - period: Is the period where the check need to be performed
+func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, channelID string,
+	actualValues *wrapperUpTimeAccumulator, upTime []*model.ChannelStatus,
+	period time.Duration, acc chan<- *wrapperUpTimeAccumulator) {
+	internalAcc := accumulateUpTimeForChannel(upTime)
+
+	if utime.InRangeFromUnix(internalAcc.timestamp, actualValues.timestamp, period) {
+		internalAcc.acc.Selected += actualValues.acc.Selected
+		internalAcc.acc.Total += actualValues.acc.Total
+	} else {
+		startPeriod := time.Unix(internalAcc.timestamp, 0).Add(time.Duration(-1 * period)).Unix()
+		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
+		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp), "metric"}, "/")
+		localAcc := &accumulator{
+			Selected: 0,
+			Total:    0,
+		}
+		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+			if err := accumulateUpTimeForChannelFromDB(channelID, &itemValue, localAcc); err != nil {
+				log.GetInstance().Errorf("Error during counting: %s", err)
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			log.GetInstance().Errorf("During forwards rating calculation we received %s", err)
+		}
+
+		internalAcc.acc = localAcc
+		internalAcc.timestamp = startPeriod
+
+	}
+	acc <- internalAcc
+
+}
+
+// utils function to accumulat the UpTimeForChannels and return the accumulation value, and the last timestamp
+func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAccumulator {
+	wrapper := &wrapperUpTimeAccumulator{
+		acc: &accumulator{
+			Selected: 0,
+			Total:    0,
+		},
+		timestamp: int64(0),
+	}
+	for _, item := range upTime {
+		if item.Timestamp != 0 {
+			wrapper.acc.Selected++
+		}
+		wrapper.acc.Total++
+		if wrapper.timestamp < int64(item.Timestamp) {
+			wrapper.timestamp = int64(item.Timestamp)
+		}
+	}
+	return wrapper
+}
+
+func accumulateUpTimeForChannelFromDB(channelID string, payload *string, acc *accumulator) error {
+	var model model.NodeMetric
+	if err := json.Unmarshal([]byte(*payload), &model); err != nil {
+		return err
+	}
+
+	// TODO write a json unmarshal to bind the array in a map.
+	for _, channel := range model.ChannelsInfo {
+		if channel.ChannelID == channelID {
+			accumulateUpTime := accumulateUpTimeForChannel(channel.UpTime)
+			acc.Selected += accumulateUpTime.acc.Selected
+			acc.Total += accumulateUpTime.acc.Total
+		}
+	}
+
+	return nil
 }
