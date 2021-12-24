@@ -170,6 +170,7 @@ type ComplexityRoot struct {
 		FailureCode   func(childComplexity int) int
 		FailureReason func(childComplexity int) int
 		Status        func(childComplexity int) int
+		Timestamp     func(childComplexity int) int
 	}
 
 	PaymentsSummary struct {
@@ -780,6 +781,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PaymentInfo.Status(childComplexity), true
 
+	case "PaymentInfo.timestamp":
+		if e.complexity.PaymentInfo.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.PaymentInfo.Timestamp(childComplexity), true
+
 	case "PaymentsSummary.completed":
 		if e.complexity.PaymentsSummary.Completed == nil {
 			break
@@ -1102,15 +1110,16 @@ type StatusChannel {
 }
 
 type PaymentInfo {
-     direction: String! @goField(name: "Direction")
-     status: String! @goField(name: "Status")
-     failure_reason: String @goField(name: "FailureReason")
-     failure_code: Int @goField(name: "FailureCode")
+  direction: String! @goField(name: "Direction")
+  status: String! @goField(name: "Status")
+  failure_reason: String! @goField(name: "FailureReason")
+  failure_code: Int! @goField(name: "FailureCode")
+  timestamp: Int! @goField(name: "Timestamp")
 }
 
 type ChannelStatus {
-     timestamp: Int! @goField(name: "Timestamp")
-     status: String! @goField(name: "Status")
+  timestamp: Int! @goField(name: "Timestamp")
+  status: String! @goField(name: "Status")
 }
 
 # Information about the node implementation
@@ -4078,11 +4087,14 @@ func (ec *executionContext) _PaymentInfo_failure_reason(ctx context.Context, fie
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PaymentInfo_failure_code(ctx context.Context, field graphql.CollectedField, obj *model.PaymentInfo) (ret graphql.Marshaler) {
@@ -4110,11 +4122,49 @@ func (ec *executionContext) _PaymentInfo_failure_code(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PaymentInfo_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.PaymentInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PaymentInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PaymentsSummary_completed(ctx context.Context, field graphql.CollectedField, obj *model.PaymentsSummary) (ret graphql.Marshaler) {
@@ -7140,8 +7190,19 @@ func (ec *executionContext) _PaymentInfo(ctx context.Context, sel ast.SelectionS
 			}
 		case "failure_reason":
 			out.Values[i] = ec._PaymentInfo_failure_reason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "failure_code":
 			out.Values[i] = ec._PaymentInfo_failure_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timestamp":
+			out.Values[i] = ec._PaymentInfo_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

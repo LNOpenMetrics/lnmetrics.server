@@ -120,10 +120,11 @@ type OSInfo struct {
 }
 
 type PaymentInfo struct {
-	Direction     string  `json:"direction"`
-	Status        string  `json:"status"`
-	FailureReason *string `json:"failure_reason"`
-	FailureCode   *int    `json:"failure_code"`
+	Direction     string `json:"direction"`
+	Status        string `json:"status"`
+	FailureReason string `json:"failure_reason"`
+	FailureCode   int    `json:"failure_code"`
+	Timestamp     int    `json:"timestamp"`
 }
 
 type PaymentsSummary struct {

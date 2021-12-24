@@ -383,10 +383,10 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 func calculateRatingForChannel(storage db.MetricsDatabase, itemKey string, channelRating *RawChannelRating,
 	channelInfo *model.StatusChannel, comm chan *RawChannelRating) {
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go calculateUpTimeRatingChannel(storage, itemKey, channelInfo.ChannelID, channelRating, channelInfo.UpTime, &wg)
-	// TODO: calculate payment rating
+	go calculateForwardsPaymentsForChannel(storage, itemKey, channelInfo.ChannelID, channelRating.ForwardsRating, channelInfo.Forwards, &wg)
 
 	wg.Wait()
 }
@@ -541,5 +541,144 @@ func accumulateUpTimeForChannelFromDB(channelID string, payload *string, acc *ac
 		}
 	}
 
+	return nil
+}
+
+// Calculate the forwards payment rating of a channel
+//
+// storage: TODO
+// itemKey: TODO
+// channelID: TODO
+// forwardRating: TODO
+// forwards: TODO
+// wg: TODO
+func calculateForwardsPaymentsForChannel(storage db.MetricsDatabase, itemKey string, channelID string,
+	forwardsRating *RawForwardsRating, forwards []*model.PaymentInfo, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	accumulation := accumulateActualForwardRating(forwards)
+
+	todayChan := make(chan *wrapperRawForwardRating)
+	tenDaysChan := make(chan *wrapperRawForwardRating)
+	thirtyDaysChan := make(chan *wrapperRawForwardRating)
+	sixMonthsChan := make(chan *wrapperRawForwardRating)
+
+	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.TodayRating,
+		accumulation, forwardsRating.TodayTimestamp, 1*24*time.Hour, todayChan)
+
+	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.TenDaysRating,
+		accumulation, forwardsRating.TenDaysTimestamp, 10*24*time.Hour, tenDaysChan)
+
+	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.ThirtyDaysRating,
+		accumulation, forwardsRating.TenDaysTimestamp, 30*24*time.Hour, thirtyDaysChan)
+
+	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.SixMonthsRating, accumulation, forwardsRating.SixMonthsTimestamp, 6*30*24*time.Hour, sixMonthsChan)
+
+	forwardsRating.FullRating.Success += accumulation.Wrapper.Success
+	forwardsRating.FullRating.Failure += accumulation.Wrapper.Failure
+	forwardsRating.FullRating.InternalFailure += accumulation.Wrapper.InternalFailure
+
+	select {
+	case today := <-todayChan:
+		forwardsRating.TodayRating = today.Wrapper
+		forwardsRating.TodayTimestamp = today.Timestamp
+	case tenDays := <-tenDaysChan:
+		forwardsRating.TenDaysRating = tenDays.Wrapper
+		forwardsRating.TenDaysTimestamp = tenDays.Timestamp
+	case thirtyDays := <-thirtyDaysChan:
+		forwardsRating.ThirtyDaysRating = thirtyDays.Wrapper
+		forwardsRating.ThirtyDaysTimestamp = thirtyDays.Timestamp
+	case sixMonths := <-sixMonthsChan:
+		forwardsRating.SixMonthsRating = sixMonths.Wrapper
+		forwardsRating.SixMonthsTimestamp = sixMonths.Timestamp
+	}
+
+}
+
+func accumulateActualForwardRating(forwards []*model.PaymentInfo) *wrapperRawForwardRating {
+	acc := &wrapperRawForwardRating{
+		Wrapper:   NewRawForwardRating(),
+		Timestamp: int64(0),
+	}
+
+	for _, forward := range forwards {
+		if int64(forward.Timestamp) > acc.Timestamp {
+			acc.Timestamp = int64(forward.Timestamp)
+		}
+		switch forward.Status {
+		case "settled", "offered":
+			acc.Wrapper.Success++
+		case "failed":
+			acc.Wrapper.Failure++
+		case "local_failed":
+			acc.Wrapper.InternalFailure++
+		default:
+			log.GetInstance().Errorf("Forward payment status %s unsupported", forward.Status)
+		}
+	}
+	return acc
+}
+
+func accumulateForwardsRatingForChannel(storage db.MetricsDatabase, itemKey string, channelID string,
+	lastForwardRating *RawForwardRating, actualForwardRating *wrapperRawForwardRating, lastTimestamp int64,
+	period time.Duration, chann chan *wrapperRawForwardRating) {
+
+	result := &wrapperRawForwardRating{
+		Wrapper:   NewRawForwardRating(),
+		Timestamp: lastTimestamp,
+	}
+
+	if utime.InRangeFromUnix(lastTimestamp, actualForwardRating.Timestamp, period) {
+		result.Wrapper.Success = lastForwardRating.Success + actualForwardRating.Wrapper.Success
+		result.Wrapper.Failure = lastForwardRating.Failure + actualForwardRating.Wrapper.Failure
+		result.Wrapper.InternalFailure = lastForwardRating.InternalFailure + actualForwardRating.Wrapper.InternalFailure
+	} else {
+		startPeriod := time.Unix(actualForwardRating.Timestamp, 0).Add(time.Duration(-1 * period)).Unix()
+		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
+		endID := strings.Join([]string{itemKey, fmt.Sprint(actualForwardRating.Timestamp), "metric"}, "/")
+		localAcc := NewRawForwardRating()
+		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+			if err := accumulateForwardsRatingChannelFromDB(channelID, &itemValue, localAcc); err != nil {
+				log.GetInstance().Errorf("Error during counting: %s", err)
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			log.GetInstance().Errorf("During forwards rating calculation we received %s", err)
+		}
+		result.Wrapper.Success += localAcc.Success
+		result.Wrapper.Failure += localAcc.Failure
+		result.Wrapper.InternalFailure += localAcc.InternalFailure
+	}
+
+	chann <- result
+}
+
+func accumulateForwardsRatingChannelFromDB(channelID string, payload *string, localAcc *RawForwardRating) error {
+	var model model.NodeMetric
+	if err := json.Unmarshal([]byte(*payload), &model); err != nil {
+		log.GetInstance().Errorf("Error: %s", err)
+		return err
+	}
+
+	// TODO decode the list of channels info with a map to speed up the algorithm
+	for _, channel := range model.ChannelsInfo {
+		if channel.ChannelID != channelID {
+			continue
+		}
+		for _, forward := range channel.Forwards {
+			switch forward.Status {
+			case "settled", "offered":
+				localAcc.Success++
+			case "failed":
+				localAcc.Failure++
+			case "local_failed":
+				localAcc.InternalFailure++
+			}
+
+		}
+	}
 	return nil
 }

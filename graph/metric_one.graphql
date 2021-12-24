@@ -26,15 +26,16 @@ type StatusChannel {
 }
 
 type PaymentInfo {
-     direction: String! @goField(name: "Direction")
-     status: String! @goField(name: "Status")
-     failure_reason: String @goField(name: "FailureReason")
-     failure_code: Int @goField(name: "FailureCode")
+  direction: String! @goField(name: "Direction")
+  status: String! @goField(name: "Status")
+  failure_reason: String! @goField(name: "FailureReason")
+  failure_code: Int! @goField(name: "FailureCode")
+  timestamp: Int! @goField(name: "Timestamp")
 }
 
 type ChannelStatus {
-     timestamp: Int! @goField(name: "Timestamp")
-     status: String! @goField(name: "Status")
+  timestamp: Int! @goField(name: "Timestamp")
+  status: String! @goField(name: "Status")
 }
 
 # Information about the node implementation
