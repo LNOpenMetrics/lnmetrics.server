@@ -8,6 +8,7 @@ type ChannelFee struct {
 }
 
 type ChannelInfoOutput struct {
+	Age            int                    `json:"age"`
 	ChannelID      string                 `json:"channel_id"`
 	NodeID         string                 `json:"node_id"`
 	Capacity       int                    `json:"capacity"`
@@ -42,7 +43,7 @@ type ChannelsSummary struct {
 
 type ForwardsRating struct {
 	Success         int `json:"success"`
-	Faulure         int `json:"faulure"`
+	Failure         int `json:"failure"`
 	InternalFailure int `json:"internal_failure"`
 }
 
@@ -50,7 +51,7 @@ type ForwardsRatingSummary struct {
 	OneDay     *ForwardsRating `json:"one_day"`
 	TenDays    *ForwardsRating `json:"ten_days"`
 	ThirtyDays *ForwardsRating `json:"thirty_days"`
-	SixMonth   *ForwardsRating `json:"six_months"`
+	SixMonths  *ForwardsRating `json:"six_months"`
 	Full       *ForwardsRating `json:"full"`
 }
 
@@ -160,6 +161,6 @@ type UpTimeOutput struct {
 	OneDay     int `json:"one_day"`
 	TenDays    int `json:"ten_days"`
 	ThirtyDays int `json:"thirty_days"`
-	SixMonth   int `json:"six_months"`
+	SixMonths  int `json:"six_months"`
 	Full       int `json:"full"`
 }

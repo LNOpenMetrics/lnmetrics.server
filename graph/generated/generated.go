@@ -49,6 +49,7 @@ type ComplexityRoot struct {
 	}
 
 	ChannelInfoOutput struct {
+		Age            func(childComplexity int) int
 		Capacity       func(childComplexity int) int
 		ChannelID      func(childComplexity int) int
 		Fee            func(childComplexity int) int
@@ -82,7 +83,7 @@ type ComplexityRoot struct {
 	}
 
 	ForwardsRating struct {
-		Faulure         func(childComplexity int) int
+		Failure         func(childComplexity int) int
 		InternalFailure func(childComplexity int) int
 		Success         func(childComplexity int) int
 	}
@@ -90,7 +91,7 @@ type ComplexityRoot struct {
 	ForwardsRatingSummary struct {
 		Full       func(childComplexity int) int
 		OneDay     func(childComplexity int) int
-		SixMonth   func(childComplexity int) int
+		SixMonths  func(childComplexity int) int
 		TenDays    func(childComplexity int) int
 		ThirtyDays func(childComplexity int) int
 	}
@@ -213,7 +214,7 @@ type ComplexityRoot struct {
 	UpTimeOutput struct {
 		Full       func(childComplexity int) int
 		OneDay     func(childComplexity int) int
-		SixMonth   func(childComplexity int) int
+		SixMonths  func(childComplexity int) int
 		TenDays    func(childComplexity int) int
 		ThirtyDays func(childComplexity int) int
 	}
@@ -259,6 +260,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelFee.PerMSat(childComplexity), true
+
+	case "ChannelInfoOutput.age":
+		if e.complexity.ChannelInfoOutput.Age == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoOutput.Age(childComplexity), true
 
 	case "ChannelInfoOutput.capacity":
 		if e.complexity.ChannelInfoOutput.Capacity == nil {
@@ -386,12 +394,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelsSummary.TotChannels(childComplexity), true
 
-	case "ForwardsRating.faulure":
-		if e.complexity.ForwardsRating.Faulure == nil {
+	case "ForwardsRating.failure":
+		if e.complexity.ForwardsRating.Failure == nil {
 			break
 		}
 
-		return e.complexity.ForwardsRating.Faulure(childComplexity), true
+		return e.complexity.ForwardsRating.Failure(childComplexity), true
 
 	case "ForwardsRating.internal_failure":
 		if e.complexity.ForwardsRating.InternalFailure == nil {
@@ -422,11 +430,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.ForwardsRatingSummary.OneDay(childComplexity), true
 
 	case "ForwardsRatingSummary.six_months":
-		if e.complexity.ForwardsRatingSummary.SixMonth == nil {
+		if e.complexity.ForwardsRatingSummary.SixMonths == nil {
 			break
 		}
 
-		return e.complexity.ForwardsRatingSummary.SixMonth(childComplexity), true
+		return e.complexity.ForwardsRatingSummary.SixMonths(childComplexity), true
 
 	case "ForwardsRatingSummary.ten_days":
 		if e.complexity.ForwardsRatingSummary.TenDays == nil {
@@ -998,11 +1006,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.UpTimeOutput.OneDay(childComplexity), true
 
 	case "UpTimeOutput.six_months":
-		if e.complexity.UpTimeOutput.SixMonth == nil {
+		if e.complexity.UpTimeOutput.SixMonths == nil {
 			break
 		}
 
-		return e.complexity.UpTimeOutput.SixMonth(childComplexity), true
+		return e.complexity.UpTimeOutput.SixMonths(childComplexity), true
 
 	case "UpTimeOutput.ten_days":
 		if e.complexity.UpTimeOutput.TenDays == nil {
@@ -1215,7 +1223,7 @@ type NodeAddress {
 ## Type Used in the MetricOneResult
 type ForwardsRating {
   success: Int! @goField(name: "Success")
-  faulure: Int! @goField(name: "Faulure")
+  failure: Int! @goField(name: "Failure")
   internal_failure: Int! @goField(name: "InternalFailure")
 }
 
@@ -1223,7 +1231,7 @@ type ForwardsRatingSummary {
   one_day: ForwardsRating! @goField(name: "OneDay")
   ten_days: ForwardsRating! @goField(name: "TenDays")
   thirty_days: ForwardsRating! @goField(name: "ThirtyDays")
-  six_months: ForwardsRating! @goField(name: "SixMonth")
+  six_months: ForwardsRating! @goField(name: "SixMonths")
   full: ForwardsRating! @goField(name: "Full")
 }
 
@@ -1231,11 +1239,12 @@ type UpTimeOutput {
   one_day: Int! @goField(name: "OneDay")
   ten_days: Int! @goField(name: "TenDays")
   thirty_days: Int! @goField(name: "ThirtyDays")
-  six_months: Int! @goField(name: "SixMonth")
+  six_months: Int! @goField(name: "SixMonths")
   full: Int! @goField(name: "Full")
 }
 
 type ChannelInfoOutput {
+  age: Int! @goField(name: "Age")
   channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
@@ -1559,6 +1568,41 @@ func (ec *executionContext) _ChannelFee_per_msat(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.PerMSat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoOutput_age(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Age, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2240,7 +2284,7 @@ func (ec *executionContext) _ForwardsRating_success(ctx context.Context, field g
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ForwardsRating_faulure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+func (ec *executionContext) _ForwardsRating_failure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2258,7 +2302,7 @@ func (ec *executionContext) _ForwardsRating_faulure(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Faulure, nil
+		return obj.Failure, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2433,7 +2477,7 @@ func (ec *executionContext) _ForwardsRatingSummary_six_months(ctx context.Contex
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SixMonth, nil
+		return obj.SixMonths, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5264,7 +5308,7 @@ func (ec *executionContext) _UpTimeOutput_six_months(ctx context.Context, field 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SixMonth, nil
+		return obj.SixMonths, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6489,6 +6533,11 @@ func (ec *executionContext) _ChannelInfoOutput(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ChannelInfoOutput")
+		case "age":
+			out.Values[i] = ec._ChannelInfoOutput_age(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "channel_id":
 			out.Values[i] = ec._ChannelInfoOutput_channel_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -6694,8 +6743,8 @@ func (ec *executionContext) _ForwardsRating(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "faulure":
-			out.Values[i] = ec._ForwardsRating_faulure(ctx, field, obj)
+		case "failure":
+			out.Values[i] = ec._ForwardsRating_failure(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

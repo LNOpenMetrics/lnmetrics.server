@@ -52,7 +52,19 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	if err != nil {
 		return err
 	}
-	return storage.PutRawValue(metricKey, metricModelBytes)
+	log.GetInstance().Infof("Metric Calculated: %s", string(metricModelBytes))
+	if err := storage.PutRawValue(metricKey, metricModelBytes); err != nil {
+		return err
+	}
+	resKey := strings.Join([]string{metricModel.NodeID, config.MetricOneOutputSuffix}, "/")
+
+	result := CalculateMetricOneOutputFromRaw(rawMetricModel)
+
+	resultByte, err := json.Marshal(result)
+	if err != nil {
+		return err
+	}
+	return storage.PutRawValue(resKey, resultByte)
 }
 
 // Execute the uptime rating of the node

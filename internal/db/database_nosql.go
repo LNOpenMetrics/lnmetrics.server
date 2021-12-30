@@ -189,7 +189,7 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 }
 
 func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error) {
-	metricKey := strings.Join([]string{nodeID, config.RawMetricOnePrefix}, "/")
+	metricKey := strings.Join([]string{nodeID, config.MetricOneOutputSuffix}, "/")
 	rawOutput, err := instance.GetRawValue(metricKey)
 	if err != nil {
 		return nil, err
@@ -198,6 +198,7 @@ func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricO
 	if err := json.Unmarshal(rawOutput, &metricOneModel); err != nil {
 		return nil, err
 	}
+
 	return &metricOneModel, nil
 }
 

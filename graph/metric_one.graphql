@@ -131,7 +131,7 @@ type NodeAddress {
 ## Type Used in the MetricOneResult
 type ForwardsRating {
   success: Int! @goField(name: "Success")
-  faulure: Int! @goField(name: "Faulure")
+  failure: Int! @goField(name: "Failure")
   internal_failure: Int! @goField(name: "InternalFailure")
 }
 
@@ -139,7 +139,7 @@ type ForwardsRatingSummary {
   one_day: ForwardsRating! @goField(name: "OneDay")
   ten_days: ForwardsRating! @goField(name: "TenDays")
   thirty_days: ForwardsRating! @goField(name: "ThirtyDays")
-  six_months: ForwardsRating! @goField(name: "SixMonth")
+  six_months: ForwardsRating! @goField(name: "SixMonths")
   full: ForwardsRating! @goField(name: "Full")
 }
 
@@ -147,11 +147,12 @@ type UpTimeOutput {
   one_day: Int! @goField(name: "OneDay")
   ten_days: Int! @goField(name: "TenDays")
   thirty_days: Int! @goField(name: "ThirtyDays")
-  six_months: Int! @goField(name: "SixMonth")
+  six_months: Int! @goField(name: "SixMonths")
   full: Int! @goField(name: "Full")
 }
 
 type ChannelInfoOutput {
+  age: Int! @goField(name: "Age")
   channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
