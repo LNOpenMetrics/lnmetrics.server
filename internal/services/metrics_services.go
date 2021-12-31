@@ -117,6 +117,14 @@ func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata
 	return true
 }
 
+func calculateMetricOneOutput(metricsServices *MetricsService, metricModel *model.MetricOne, startTime int64) {
+	if err := metric.CalculateMetricOneOutput(metricsServices.Storage, metricModel); err != nil {
+		log.GetInstance().Errorf("Calculate metric one output return an error %s", err)
+	} else {
+		log.GetInstance().Debugf("Calculate metric one for node %s at %d", metricModel.NodeID, startTime)
+	}
+}
+
 func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error) {
 	ok, err := instance.Backend.VerifyMessage(payload, &signature, &nodeID)
 	if !ok || err != nil {
@@ -152,9 +160,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 
 	now := time.Now().Unix()
 	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
-	if err := metric.CalculateMetricOneOutput(instance.Storage, &metricModel); err != nil {
-		return nil, err
-	}
+	go calculateMetricOneOutput(instance, &metricModel, time.Now().Unix())
 	return &metricModel, nil
 }
 
@@ -195,10 +201,7 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	now := time.Now().Format(time.RFC850)
 	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", nodeID, now))
 
-	if err := metric.CalculateMetricOneOutput(instance.Storage, &metricModel); err != nil {
-		return err
-	}
-
+	go calculateMetricOneOutput(instance, &metricModel, time.Now().Unix())
 	return nil
 }
 

@@ -38,3 +38,7 @@ prod:
 update_utils:
 	$(CC) get -u github.com/LNOpenMetrics/lnmetrics.utils
 	$(CC) mod vendor
+
+trace:
+	GOTRACEBACK=system $(CC) run cmd/lnmetrics.server/main.go
+

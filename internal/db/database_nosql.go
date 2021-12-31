@@ -71,7 +71,6 @@ func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) e
 }
 
 // Init the metric in the database.
-// TODO: Migrate to the new data model.
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 
 	// we need to index the node in the nodes_index
@@ -82,7 +81,6 @@ func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 }
 
 // Adding new metric  for the node,
-//TODO: Support this operation
 func (instance NoSQLDatabase) UpdateMetricOne(toInsert *model.MetricOne) error {
 	//FIXME: I can run this operation in parallel
 	baseKey, err := instance.ItemID(toInsert)
@@ -121,7 +119,7 @@ func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, 
 			continue
 		}
 
-		log.GetInstance().Info(fmt.Sprintf("Finding node with id %s", nodeID))
+		log.GetInstance().Infof("Finding node with id %s", nodeID)
 
 		nodeMetadata, err := instance.GetNode(network, nodeID, "metric_one")
 		if err != nil {
@@ -370,7 +368,6 @@ func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 	log.GetInstance().Info("Get list of key in the db")
 	listNodes, err := db.GetInstance().ListOfKeys()
-	log.GetInstance().Info(fmt.Sprintf("Found %d keys in the db", len(listNodes)))
 	if err != nil {
 		return err
 	}
@@ -381,13 +378,13 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		return err
 	}
 	for _, nodeId := range listNodes {
-		log.GetInstance().Info(fmt.Sprintf("DB key under analysis is: %s", *nodeId))
+		log.GetInstance().Debugf("DB key under analysis is: %s", *nodeId)
 		if strings.Contains(*nodeId, "/") ||
 			strings.Contains(*nodeId, "node_index") ||
 			strings.Contains(*nodeId, "data_version") {
 			continue
 		}
-		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
+		log.GetInstance().Debug(fmt.Sprintf("Migrating Node %s", *nodeId))
 		if err := instance.indexingInDB(*nodeId); err != nil {
 			return err
 		}
@@ -479,7 +476,7 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 	if err := db.GetInstance().PutValue(metadataID, string(metaJson)); err != nil {
 		return err
 	}
-	log.GetInstance().Info(fmt.Sprintf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID))
+	log.GetInstance().Debug(fmt.Sprintf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID))
 	return nil
 }
 
@@ -594,7 +591,7 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 	for _, timestamp := range modelTimestamp {
 		if (startPeriod == -1 && endPeriod == -1) ||
 			(int(timestamp) >= startPeriod && int(timestamp) <= endPeriod) {
-			log.GetInstance().Info(fmt.Sprintf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp))
+			log.GetInstance().Debugf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp)
 			tmpModelMetric, err := instance.retreivalNodeMetric(nodeKey, timestamp, metricName)
 			if err != nil {
 				return nil, err

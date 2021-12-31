@@ -71,9 +71,9 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 // TODO: Refactoring this logic and use the channels
 func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercentageData, metricModel *model.MetricOne, lock *sync.WaitGroup) {
 	defer lock.Done()
-	totUpdate := uint64(0)
 	onlineUpdate := uint64(0)
-	lastTimestamp := int64(0)
+	lastTimestamp := int64(-1)
+	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, upTime := range metricModel.UpTime {
 		if upTime.Timestamp != 0 {
 			onlineUpdate++
@@ -81,8 +81,9 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 		if int64(upTime.Timestamp) > lastTimestamp {
 			lastTimestamp = int64(upTime.Timestamp)
 		}
-		totUpdate++
 	}
+
+	totUpdate := utime.OccurenceInUnixRange(listTimestamp, lastTimestamp, 30*time.Minute)
 
 	todayStored := nodeUpTime.TodayTimestamp
 	if utime.SameDayUnix(todayStored, lastTimestamp) {
@@ -183,12 +184,21 @@ func accumulateUpTime(payloadStr string, acc *accumulator) error {
 		return err
 	}
 
+	lastTimestamp := int64(-1)
+	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, upTimeItem := range nodeMetric.UpTime {
 		if upTimeItem.Timestamp > 0 {
 			acc.Selected++
 		}
-		acc.Total++
+		if lastTimestamp < int64(upTimeItem.Timestamp) {
+			lastTimestamp = int64(upTimeItem.Timestamp)
+		}
+
+		if listTimestamp > int64(upTimeItem.Timestamp) {
+			listTimestamp = int64(upTimeItem.Timestamp)
+		}
 	}
+	acc.Total = int64(utime.OccurenceInUnixRange(listTimestamp, lastTimestamp, 30*time.Hour))
 	return nil
 }
 
@@ -278,19 +288,21 @@ func calculateForwardsRatingByTimestamp(storage db.MetricsDatabase, metricModel 
 	forwardsRating.FullRating.Failure += acc.Failed
 	forwardsRating.FullRating.InternalFailure += acc.LocalFailed
 
-	select {
-	case today := <-todayChan:
-		forwardsRating.TodayRating = today.Wrapper
-		forwardsRating.TodayTimestamp = today.Timestamp
-	case tenDays := <-tenDaysChan:
-		forwardsRating.TenDaysRating = tenDays.Wrapper
-		forwardsRating.TenDaysTimestamp = tenDays.Timestamp
-	case thirtyDays := <-thirtyDaysChan:
-		forwardsRating.ThirtyDaysRating = thirtyDays.Wrapper
-		forwardsRating.ThirtyDaysTimestamp = thirtyDays.Timestamp
-	case sixMonths := <-sixMonthsChan:
-		forwardsRating.SixMonthsRating = sixMonths.Wrapper
-		forwardsRating.SixMonthsTimestamp = sixMonths.Timestamp
+	for i := 0; i < 4; i++ {
+		select {
+		case today := <-todayChan:
+			forwardsRating.TodayRating = today.Wrapper
+			forwardsRating.TodayTimestamp = today.Timestamp
+		case tenDays := <-tenDaysChan:
+			forwardsRating.TenDaysRating = tenDays.Wrapper
+			forwardsRating.TenDaysTimestamp = tenDays.Timestamp
+		case thirtyDays := <-thirtyDaysChan:
+			forwardsRating.ThirtyDaysRating = thirtyDays.Wrapper
+			forwardsRating.ThirtyDaysTimestamp = thirtyDays.Timestamp
+		case sixMonths := <-sixMonthsChan:
+			forwardsRating.SixMonthsRating = sixMonths.Wrapper
+			forwardsRating.SixMonthsTimestamp = sixMonths.Timestamp
+		}
 	}
 }
 
@@ -366,7 +378,8 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 	if len(channelsInfo) == 0 {
 		return
 	}
-	chanForChannels := make(chan *RawChannelRating, len(channelsInfo)-1)
+
+	chanForChannels := make(chan *RawChannelRating, len(channelsInfo))
 	for _, channelInfo := range channelsInfo {
 		rating, found := channelsRating[channelInfo.ChannelID]
 		if !found {
@@ -386,7 +399,8 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 		go calculateRatingForChannel(storage, itemKey, rating, channelInfo, chanForChannels)
 	}
 
-	for rating := range chanForChannels {
+	for i := 0; i < len(channelsInfo); i++ {
+		rating := <-chanForChannels
 		channelsRating[rating.ChannelID] = rating
 	}
 }
@@ -401,6 +415,7 @@ func calculateRatingForChannel(storage db.MetricsDatabase, itemKey string, chann
 	go calculateForwardsPaymentsForChannel(storage, itemKey, channelInfo.ChannelID, channelRating.ForwardsRating, channelInfo.Forwards, &wg)
 
 	wg.Wait()
+	comm <- channelRating
 }
 
 type wrapperUpTimeAccumulator struct {
@@ -454,23 +469,25 @@ func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string, ch
 	channelRating.UpTimeRating.FullSuccess += uint64(actualValue.acc.Selected)
 	channelRating.UpTimeRating.FullTotal += uint64(actualValue.acc.Total)
 
-	select {
-	case today := <-todayChan:
-		channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
-		channelRating.UpTimeRating.TodayTotal = uint64(today.acc.Total)
-		channelRating.UpTimeRating.TodayTimestamp = today.timestamp
-	case tenDays := <-tenDaysChan:
-		channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
-		channelRating.UpTimeRating.TenDaysTotal = uint64(tenDays.acc.Total)
-		channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
-	case thirtyDays := <-thirtyDaysChan:
-		channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
-		channelRating.UpTimeRating.ThirtyDaysTotal = uint64(thirtyDays.acc.Total)
-		channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
-	case sixMonths := <-sixMonthsChan:
-		channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
-		channelRating.UpTimeRating.SixMonthsTotal = uint64(sixMonths.acc.Total)
-		channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
+	for i := 0; i < 4; i++ {
+		select {
+		case today := <-todayChan:
+			channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
+			channelRating.UpTimeRating.TodayTotal = uint64(today.acc.Total)
+			channelRating.UpTimeRating.TodayTimestamp = today.timestamp
+		case tenDays := <-tenDaysChan:
+			channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
+			channelRating.UpTimeRating.TenDaysTotal = uint64(tenDays.acc.Total)
+			channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
+		case thirtyDays := <-thirtyDaysChan:
+			channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
+			channelRating.UpTimeRating.ThirtyDaysTotal = uint64(thirtyDays.acc.Total)
+			channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
+		case sixMonths := <-sixMonthsChan:
+			channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
+			channelRating.UpTimeRating.SixMonthsTotal = uint64(sixMonths.acc.Total)
+			channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
+		}
 	}
 }
 
@@ -495,7 +512,7 @@ func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, c
 		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp), "metric"}, "/")
 		localAcc := &accumulator{
 			Selected: 0,
-			Total:    0,
+			Total:    int64(utime.OccurenceInUnixRange(startPeriod, internalAcc.timestamp, 30*time.Minute)),
 		}
 		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
 			if err := accumulateUpTimeForChannelFromDB(channelID, &itemValue, localAcc); err != nil {
@@ -524,17 +541,24 @@ func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAcc
 			Selected: 0,
 			Total:    0,
 		},
-		timestamp: int64(0),
+		timestamp: int64(-1),
 	}
+	// get the lower timestamp in the object
+	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, item := range upTime {
 		if item.Timestamp != 0 {
 			wrapper.acc.Selected++
 		}
-		wrapper.acc.Total++
 		if wrapper.timestamp < int64(item.Timestamp) {
 			wrapper.timestamp = int64(item.Timestamp)
 		}
+
+		if listTimestamp > int64(item.Timestamp) {
+			listTimestamp = int64(item.Timestamp)
+		}
 	}
+
+	wrapper.acc.Total = int64(utime.OccurenceInUnixRange(listTimestamp, wrapper.timestamp, 30*time.Minute))
 	return wrapper
 }
 
@@ -584,25 +608,28 @@ func calculateForwardsPaymentsForChannel(storage db.MetricsDatabase, itemKey str
 	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.ThirtyDaysRating,
 		accumulation, forwardsRating.TenDaysTimestamp, 30*24*time.Hour, thirtyDaysChan)
 
-	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.SixMonthsRating, accumulation, forwardsRating.SixMonthsTimestamp, 6*30*24*time.Hour, sixMonthsChan)
+	go accumulateForwardsRatingForChannel(storage, itemKey, channelID, forwardsRating.SixMonthsRating,
+		accumulation, forwardsRating.SixMonthsTimestamp, 6*30*24*time.Hour, sixMonthsChan)
 
 	forwardsRating.FullRating.Success += accumulation.Wrapper.Success
 	forwardsRating.FullRating.Failure += accumulation.Wrapper.Failure
 	forwardsRating.FullRating.InternalFailure += accumulation.Wrapper.InternalFailure
 
-	select {
-	case today := <-todayChan:
-		forwardsRating.TodayRating = today.Wrapper
-		forwardsRating.TodayTimestamp = today.Timestamp
-	case tenDays := <-tenDaysChan:
-		forwardsRating.TenDaysRating = tenDays.Wrapper
-		forwardsRating.TenDaysTimestamp = tenDays.Timestamp
-	case thirtyDays := <-thirtyDaysChan:
-		forwardsRating.ThirtyDaysRating = thirtyDays.Wrapper
-		forwardsRating.ThirtyDaysTimestamp = thirtyDays.Timestamp
-	case sixMonths := <-sixMonthsChan:
-		forwardsRating.SixMonthsRating = sixMonths.Wrapper
-		forwardsRating.SixMonthsTimestamp = sixMonths.Timestamp
+	for i := 0; i < 4; i++ {
+		select {
+		case today := <-todayChan:
+			forwardsRating.TodayRating = today.Wrapper
+			forwardsRating.TodayTimestamp = today.Timestamp
+		case tenDays := <-tenDaysChan:
+			forwardsRating.TenDaysRating = tenDays.Wrapper
+			forwardsRating.TenDaysTimestamp = tenDays.Timestamp
+		case thirtyDays := <-thirtyDaysChan:
+			forwardsRating.ThirtyDaysRating = thirtyDays.Wrapper
+			forwardsRating.ThirtyDaysTimestamp = thirtyDays.Timestamp
+		case sixMonths := <-sixMonthsChan:
+			forwardsRating.SixMonthsRating = sixMonths.Wrapper
+			forwardsRating.SixMonthsTimestamp = sixMonths.Timestamp
+		}
 	}
 
 }
