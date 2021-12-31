@@ -16,6 +16,13 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 )
 
+// days constant
+
+var todayOccurence = returnOccurence(24*time.Hour, 30*time.Minute)
+var tenDaysOccurence = returnOccurence(10*24*time.Hour, 30*time.Minute)
+var thirtyDaysOccurence = returnOccurence(30*24*time.Hour, 30*time.Minute)
+var sixMonthsOccurence = returnOccurence(6*30*24*time.Hour, 30*time.Minute)
+
 type accumulator struct {
 	Selected int64
 	Total    int64
@@ -40,7 +47,7 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 
 	var lockGroup sync.WaitGroup
 	lockGroup.Add(3)
-	go calculateUptimeMetricOne(storage, rawMetricModel.UpTime, metricModel, &lockGroup)
+	go calculateUptimeMetricOne(storage, rawMetricModel, metricModel, &lockGroup)
 	go calculateForwardsRatingMetricOne(storage, rawMetricModel.ForwardsRating, metricModel, &lockGroup)
 	itemKey, _ := storage.ItemID(metricModel)
 	go calculateRationForChannels(storage, itemKey, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo, &lockGroup)
@@ -67,13 +74,19 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	return storage.PutRawValue(resKey, resultByte)
 }
 
+func returnOccurence(period time.Duration, step time.Duration) uint64 {
+	now := time.Now()
+	after := now.Add(period)
+	return utime.OccurenceInUnixRange(now.Unix(), after.Unix(), step)
+}
+
 // Execute the uptime rating of the node
 // TODO: Refactoring this logic and use the channels
-func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercentageData, metricModel *model.MetricOne, lock *sync.WaitGroup) {
+func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOneOutput,
+	metricModel *model.MetricOne, lock *sync.WaitGroup) {
 	defer lock.Done()
 	onlineUpdate := uint64(0)
 	lastTimestamp := int64(-1)
-	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, upTime := range metricModel.UpTime {
 		if upTime.Timestamp != 0 {
 			onlineUpdate++
@@ -81,28 +94,26 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 		if int64(upTime.Timestamp) > lastTimestamp {
 			lastTimestamp = int64(upTime.Timestamp)
 		}
+
 	}
 
-	totUpdate := utime.OccurenceInUnixRange(listTimestamp, lastTimestamp, 30*time.Minute)
-
+	nodeUpTime := rawMetric.UpTime
 	todayStored := nodeUpTime.TodayTimestamp
 	if utime.SameDayUnix(todayStored, lastTimestamp) {
 		//Accumulate
 		nodeUpTime.TodaySuccess += onlineUpdate
-		nodeUpTime.TodayTotal += totUpdate
 	} else {
 		// reset
 		// This is a correct assumtion? or I need to iterate inside the DB?
 		nodeUpTime.TodaySuccess = onlineUpdate
-		nodeUpTime.TodayTotal = totUpdate
 	}
+	nodeUpTime.TodayTotal = todayOccurence
 	nodeUpTime.TodayTimestamp = lastTimestamp
 
 	tenDaysStored := nodeUpTime.TenDaysTimestamp
 	if utime.InRangeFromUnix(tenDaysStored, lastTimestamp, 10*24*time.Hour) {
 		// accumulate
 		nodeUpTime.TenDaysSuccess += onlineUpdate
-		nodeUpTime.TenDaysTotal += totUpdate
 	} else {
 		// go back of 10 days
 		// FIXME: Add this logic inside the utils module.
@@ -115,15 +126,14 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 			log.GetInstance().Errorf("Error during uptime iteration: %s", err)
 		}
 		nodeUpTime.TenDaysSuccess = uint64(acc.Selected) + onlineUpdate
-		nodeUpTime.TenDaysTotal = uint64(acc.Total) + totUpdate
 		nodeUpTime.TenDaysTimestamp = firstDate
 	}
+	nodeUpTime.TenDaysTotal = tenDaysOccurence
 
 	// 30 days
 	thirtyDaysStored := nodeUpTime.ThirtyDaysTimestamp
 	if utime.InRangeFromUnix(thirtyDaysStored, lastTimestamp, 30*24*time.Hour) {
 		nodeUpTime.ThirtyDaysSuccess += onlineUpdate
-		nodeUpTime.ThirtyDaysTotal += totUpdate
 	} else {
 		// go back of 10 days
 		// FIXME: Add this logic inside the utils module.
@@ -136,15 +146,14 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 			log.GetInstance().Errorf("Error during uptime iteration: %s", err)
 		}
 		nodeUpTime.ThirtyDaysSuccess = uint64(acc.Selected) + onlineUpdate
-		nodeUpTime.ThirtyDaysTotal = uint64(acc.Total) + totUpdate
 		nodeUpTime.ThirtyDaysTimestamp = firstDate
 	}
+	nodeUpTime.ThirtyDaysTotal = thirtyDaysOccurence
 
 	// 6 month
 	sixMonthsStored := nodeUpTime.SixMonthsTimestamp
 	if utime.InRangeFromUnix(sixMonthsStored, lastTimestamp, 6*30*24*time.Hour) {
-		nodeUpTime.ThirtyDaysSuccess += onlineUpdate
-		nodeUpTime.ThirtyDaysTotal += totUpdate
+		nodeUpTime.SixMonthsSuccess += onlineUpdate
 	} else {
 		// go back of 10 days
 		// FIXME: Add this logic inside the utils module.
@@ -157,13 +166,13 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, nodeUpTime *RawPercent
 			log.GetInstance().Errorf("Error during uptime iteration: %s", err)
 		}
 		nodeUpTime.SixMonthsSuccess = uint64(acc.Selected) + onlineUpdate
-		nodeUpTime.SixMonthsTotal = uint64(acc.Total) + totUpdate
 		nodeUpTime.SixMonthsTimestamp = firstDate
 	}
+	nodeUpTime.SixMonthsTotal = sixMonthsOccurence
 
 	// full
 	nodeUpTime.FullSuccess += onlineUpdate
-	nodeUpTime.FullTotal += totUpdate
+	nodeUpTime.FullTotal = utime.OccurenceInUnixRange(rawMetric.Age, lastTimestamp, 30*time.Minute)
 }
 
 // Get last timestamp inside the uptime
@@ -185,7 +194,6 @@ func accumulateUpTime(payloadStr string, acc *accumulator) error {
 	}
 
 	lastTimestamp := int64(-1)
-	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, upTimeItem := range nodeMetric.UpTime {
 		if upTimeItem.Timestamp > 0 {
 			acc.Selected++
@@ -194,11 +202,7 @@ func accumulateUpTime(payloadStr string, acc *accumulator) error {
 			lastTimestamp = int64(upTimeItem.Timestamp)
 		}
 
-		if listTimestamp > int64(upTimeItem.Timestamp) {
-			listTimestamp = int64(upTimeItem.Timestamp)
-		}
 	}
-	acc.Total = int64(utime.OccurenceInUnixRange(listTimestamp, lastTimestamp, 30*time.Hour))
 	return nil
 }
 
@@ -467,25 +471,25 @@ func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string, ch
 	actualValue := accumulateUpTimeForChannel(upTimes)
 
 	channelRating.UpTimeRating.FullSuccess += uint64(actualValue.acc.Selected)
-	channelRating.UpTimeRating.FullTotal += uint64(actualValue.acc.Total)
+	channelRating.UpTimeRating.FullTotal = utime.OccurenceInUnixRange(channelRating.Age, todayValue.timestamp, 30*time.Minute)
 
 	for i := 0; i < 4; i++ {
 		select {
 		case today := <-todayChan:
 			channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
-			channelRating.UpTimeRating.TodayTotal = uint64(today.acc.Total)
+			channelRating.UpTimeRating.TodayTotal = todayOccurence
 			channelRating.UpTimeRating.TodayTimestamp = today.timestamp
 		case tenDays := <-tenDaysChan:
 			channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
-			channelRating.UpTimeRating.TenDaysTotal = uint64(tenDays.acc.Total)
+			channelRating.UpTimeRating.TenDaysTotal = tenDaysOccurence
 			channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
 		case thirtyDays := <-thirtyDaysChan:
 			channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
-			channelRating.UpTimeRating.ThirtyDaysTotal = uint64(thirtyDays.acc.Total)
+			channelRating.UpTimeRating.ThirtyDaysTotal = thirtyDaysOccurence
 			channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
 		case sixMonths := <-sixMonthsChan:
 			channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
-			channelRating.UpTimeRating.SixMonthsTotal = uint64(sixMonths.acc.Total)
+			channelRating.UpTimeRating.SixMonthsTotal = sixMonthsOccurence
 			channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
 		}
 	}
@@ -505,14 +509,13 @@ func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, c
 
 	if utime.InRangeFromUnix(internalAcc.timestamp, actualValues.timestamp, period) {
 		internalAcc.acc.Selected += actualValues.acc.Selected
-		internalAcc.acc.Total += actualValues.acc.Total
 	} else {
 		startPeriod := time.Unix(internalAcc.timestamp, 0).Add(time.Duration(-1 * period)).Unix()
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
 		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp), "metric"}, "/")
 		localAcc := &accumulator{
 			Selected: 0,
-			Total:    int64(utime.OccurenceInUnixRange(startPeriod, internalAcc.timestamp, 30*time.Minute)),
+			Total:    0,
 		}
 		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
 			if err := accumulateUpTimeForChannelFromDB(channelID, &itemValue, localAcc); err != nil {
@@ -543,8 +546,6 @@ func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAcc
 		},
 		timestamp: int64(-1),
 	}
-	// get the lower timestamp in the object
-	listTimestamp := time.Now().Add(100 * time.Hour).Unix()
 	for _, item := range upTime {
 		if item.Timestamp != 0 {
 			wrapper.acc.Selected++
@@ -553,12 +554,7 @@ func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAcc
 			wrapper.timestamp = int64(item.Timestamp)
 		}
 
-		if listTimestamp > int64(item.Timestamp) {
-			listTimestamp = int64(item.Timestamp)
-		}
 	}
-
-	wrapper.acc.Total = int64(utime.OccurenceInUnixRange(listTimestamp, wrapper.timestamp, 30*time.Minute))
 	return wrapper
 }
 
@@ -573,7 +569,6 @@ func accumulateUpTimeForChannelFromDB(channelID string, payload *string, acc *ac
 		if channel.ChannelID == channelID {
 			accumulateUpTime := accumulateUpTimeForChannel(channel.UpTime)
 			acc.Selected += accumulateUpTime.acc.Selected
-			acc.Total += accumulateUpTime.acc.Total
 		}
 	}
 
