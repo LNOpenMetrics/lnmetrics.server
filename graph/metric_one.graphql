@@ -34,6 +34,7 @@ type PaymentInfo {
 }
 
 type ChannelStatus {
+  event: String! @goField(name: "Event")
   timestamp: Int! @goField(name: "Timestamp")
   status: String! @goField(name: "Status")
 }

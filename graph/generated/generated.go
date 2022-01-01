@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 	}
 
 	ChannelStatus struct {
+		Event     func(childComplexity int) int
 		Status    func(childComplexity int) int
 		Timestamp func(childComplexity int) int
 	}
@@ -330,6 +331,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelLimits.Min(childComplexity), true
+
+	case "ChannelStatus.event":
+		if e.complexity.ChannelStatus.Event == nil {
+			break
+		}
+
+		return e.complexity.ChannelStatus.Event(childComplexity), true
 
 	case "ChannelStatus.status":
 		if e.complexity.ChannelStatus.Status == nil {
@@ -1126,6 +1134,7 @@ type PaymentInfo {
 }
 
 type ChannelStatus {
+  event: String! @goField(name: "Event")
   timestamp: Int! @goField(name: "Timestamp")
   status: String! @goField(name: "Status")
 }
@@ -1932,6 +1941,41 @@ func (ec *executionContext) _ChannelLimits_max(ctx context.Context, field graphq
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelStatus_event(ctx context.Context, field graphql.CollectedField, obj *model.ChannelStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Event, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ChannelStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.ChannelStatus) (ret graphql.Marshaler) {
@@ -6627,6 +6671,11 @@ func (ec *executionContext) _ChannelStatus(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ChannelStatus")
+		case "event":
+			out.Values[i] = ec._ChannelStatus_event(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "timestamp":
 			out.Values[i] = ec._ChannelStatus_timestamp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

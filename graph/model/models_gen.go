@@ -24,6 +24,7 @@ type ChannelLimits struct {
 }
 
 type ChannelStatus struct {
+	Event     string `json:"event"`
 	Timestamp int    `json:"timestamp"`
 	Status    string `json:"status"`
 }
