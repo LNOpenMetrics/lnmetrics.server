@@ -15,6 +15,7 @@ fmt:
 
 check-full:
 	richgo test ./tests -v
+	richgo test ./... -v
 
 check:
 	$(CC) test ./...

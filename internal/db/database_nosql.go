@@ -40,8 +40,8 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		metricsKey: map[uint]string{1: "metric_one"},
 		validCache: false,
 		indexCache: make(map[string][]uint),
-		lock: new(sync.Mutex),
-		dbVersion: 2,
+		lock:       new(sync.Mutex),
+		dbVersion:  2,
 	}
 	if err := instance.createIndexDBIfMissin(); err != nil {
 		return nil, err
