@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
+
 	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
@@ -34,31 +36,32 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 		return nil, err
 	}
 
-	//keys, _ := db.GetInstance().ListOfKeys()
-
 	instance := &NoSQLDatabase{
-		map[uint]string{1: "metric_one"},
-		false,
-		make(map[string][]uint),
-		new(sync.Mutex),
-		1,
+		metricsKey: map[uint]string{1: "metric_one"},
+		validCache: false,
+		indexCache: make(map[string][]uint),
+		lock: new(sync.Mutex),
+		dbVersion: 2,
 	}
 	if err := instance.createIndexDBIfMissin(); err != nil {
 		return nil, err
 	}
-	//FIXME: Create a debug procedure
-	/*
-		for _, key := range keys {
-			fmt.Println(*key)
-			tokens := strings.Split(*key, "/")
-			nodeId := tokens[0]
-			if strings.Contains(nodeId, "data_version") || strings.Contains(nodeId, "node_index") {
-				continue
-			}
-			_ = instance.indexingInDB(nodeId)
-		}
-	*/
 	return instance, nil
+}
+
+// Get access to the raw data contained with the specified key
+func (instance NoSQLDatabase) GetRawValue(key string) ([]byte, error) {
+	return db.GetInstance().GetValueInBytes(key)
+}
+
+// Put a raw value with the specified key in the db
+func (instance NoSQLDatabase) PutRawValue(key string, value []byte) error {
+	return db.GetInstance().PutValueInBytes(key, value)
+}
+
+func (instance NoSQLDatabase) RawIterateThrough(start string, end string, callback func(string) error) error {
+
+	return db.GetInstance().IterateThrough(start, end, callback)
 }
 
 // In the NO sql database, at list for the moment we don't need to
@@ -68,7 +71,6 @@ func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) e
 }
 
 // Init the metric in the database.
-// TODO: Migrate to the new data model.
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 
 	// we need to index the node in the nodes_index
@@ -79,7 +81,6 @@ func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 }
 
 // Adding new metric  for the node,
-//TODO: Support this operation
 func (instance NoSQLDatabase) UpdateMetricOne(toInsert *model.MetricOne) error {
 	//FIXME: I can run this operation in parallel
 	baseKey, err := instance.ItemID(toInsert)
@@ -118,7 +119,7 @@ func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, 
 			continue
 		}
 
-		log.GetInstance().Info(fmt.Sprintf("Finding node with id %s", nodeID))
+		log.GetInstance().Infof("Finding node with id %s", nodeID)
 
 		nodeMetadata, err := instance.GetNode(network, nodeID, "metric_one")
 		if err != nil {
@@ -183,6 +184,33 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 	modelMetricOne.ChannelsInfo = nodeMetric.ChannelsInfo
 
 	return modelMetricOne, nil
+}
+
+func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error) {
+	metricKey := strings.Join([]string{nodeID, config.MetricOneOutputSuffix}, "/")
+	rawOutput, err := instance.GetRawValue(metricKey)
+	if err != nil {
+		return nil, err
+	}
+	var metricOneModel model.MetricOneOutput
+	if err := json.Unmarshal(rawOutput, &metricOneModel); err != nil {
+		return nil, err
+	}
+
+	return &metricOneModel, nil
+}
+
+func (instance *NoSQLDatabase) GetMetricOneIndex(nodeID string) ([]int64, error) {
+	indexKey := strings.Join([]string{nodeID, "metric_one", "index"}, "/")
+	indexRaw, err := instance.GetRawValue(indexKey)
+	if err != nil {
+		return nil, err
+	}
+	var index []int64
+	if err := json.Unmarshal(indexRaw, &index); err != nil {
+		return nil, err
+	}
+	return index, nil
 }
 
 // close the connection with database
@@ -340,7 +368,6 @@ func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 	log.GetInstance().Info("Get list of key in the db")
 	listNodes, err := db.GetInstance().ListOfKeys()
-	log.GetInstance().Info(fmt.Sprintf("Found %d keys in the db", len(listNodes)))
 	if err != nil {
 		return err
 	}
@@ -351,13 +378,13 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp() error {
 		return err
 	}
 	for _, nodeId := range listNodes {
-		log.GetInstance().Info(fmt.Sprintf("DB key under analysis is: %s", *nodeId))
+		log.GetInstance().Debugf("DB key under analysis is: %s", *nodeId)
 		if strings.Contains(*nodeId, "/") ||
 			strings.Contains(*nodeId, "node_index") ||
 			strings.Contains(*nodeId, "data_version") {
 			continue
 		}
-		log.GetInstance().Info(fmt.Sprintf("Migrating Node %s", *nodeId))
+		log.GetInstance().Debug(fmt.Sprintf("Migrating Node %s", *nodeId))
 		if err := instance.indexingInDB(*nodeId); err != nil {
 			return err
 		}
@@ -449,7 +476,7 @@ func (instance *NoSQLDatabase) extractMetadata(itemID string, metricOne *model.M
 	if err := db.GetInstance().PutValue(metadataID, string(metaJson)); err != nil {
 		return err
 	}
-	log.GetInstance().Info(fmt.Sprintf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID))
+	log.GetInstance().Debug(fmt.Sprintf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID))
 	return nil
 }
 
@@ -559,10 +586,12 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 		ChannelsInfo: make([]*model.StatusChannel, 0),
 	}
 
+	channelsInfoMap := make(map[string]*model.StatusChannel)
+
 	for _, timestamp := range modelTimestamp {
 		if (startPeriod == -1 && endPeriod == -1) ||
 			(int(timestamp) >= startPeriod && int(timestamp) <= endPeriod) {
-			log.GetInstance().Info(fmt.Sprintf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp))
+			log.GetInstance().Debugf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp)
 			tmpModelMetric, err := instance.retreivalNodeMetric(nodeKey, timestamp, metricName)
 			if err != nil {
 				return nil, err
@@ -572,10 +601,29 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 			modelMetric.Timestamp = int(timestamp)
 			modelMetric.UpTime = append(modelMetric.UpTime,
 				tmpModelMetric.UpTime...)
-			modelMetric.ChannelsInfo = append(modelMetric.ChannelsInfo,
-				tmpModelMetric.ChannelsInfo...)
 
+			for _, channelInfo := range tmpModelMetric.ChannelsInfo {
+				value, found := channelsInfoMap[channelInfo.ChannelID]
+				if found {
+					value.NodeAlias = channelInfo.NodeAlias
+					value.Color = channelInfo.Color
+					value.Capacity = channelInfo.Capacity
+					value.Forwards = append(value.Forwards, channelInfo.Forwards...)
+					value.UpTime = append(value.UpTime, channelInfo.UpTime...)
+					value.Online = channelInfo.Online
+					value.LastUpdate = channelInfo.LastUpdate
+					value.Direction = channelInfo.Direction
+					value.Fee = channelInfo.Fee
+					value.Limits = channelInfo.Limits
+				} else {
+					channelsInfoMap[channelInfo.ChannelID] = channelInfo
+				}
+			}
 		}
+	}
+
+	for _, channel := range channelsInfoMap {
+		modelMetric.ChannelsInfo = append(modelMetric.ChannelsInfo, channel)
 	}
 
 	return modelMetric, nil

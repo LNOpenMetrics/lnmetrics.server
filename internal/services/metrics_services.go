@@ -3,33 +3,43 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/metric"
+
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
 type IMetricsService interface {
-	// Deprecated
-	AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error)
 	// Init method it is called only the first time from the node
 	// when it is not init in the server, but it has some metrics collected
 	InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error)
+
 	//  Append other metrics collected in a range of period by the node
 	UpdateMetricOne(nodeID string, payload *string, signature string) error
+
 	// Deprecated: Use GetNode isteand
 	// Return the list of node IF available on the server.
 	Nodes() ([]*string, error)
+
 	// Return the list of nodes available on the server
 	GetNodes(network string) ([]*model.NodeMetadata, error)
+
 	// Return the node metadata available on the server (utils for the init method)
 	GetNode(network string, nodeID string) (*model.NodeMetadata, error)
+
 	// Return the node metrics with a nodeID, and option range, from start to an end period
 	GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
-	// Return the node metric with a nodeID that contains the all period of the collected metric
-	GetFullMetricOne(nodeID string) (*model.MetricOne, error)
+
+	// Return the metric one output
+	GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error)
 }
 
 type MetricsService struct {
@@ -39,24 +49,80 @@ type MetricsService struct {
 
 // Constructor method.
 func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
-	return &MetricsService{Storage: db, Backend: lnBackend}
+	instance := &MetricsService{Storage: db, Backend: lnBackend}
+	if err := instance.initMetricOneOutput(); err != nil {
+		log.GetInstance().Infof("Error: %s", err)
+	}
+	return instance
 }
 
-func (instance *MetricsService) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
-	var metricModel model.MetricOne
-	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
-		return nil, err
+// Function to help to init the metric one output on the server
+// for the old data that have no metric one supported
+// This function it is used only for the server update
+func (instance *MetricsService) initMetricOneOutput() error {
+	nodes, err := instance.GetNodes("bitcoin")
+	if err != nil {
+		return err
 	}
-
-	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
-		return nil, fmt.Errorf("Unsupported network, or old client version")
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
+	for _, node := range nodes {
+		go instance.initMetricOneOuputOnNode(node, &wg)
 	}
+	wg.Wait()
+	return nil
+}
 
-	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
-		return nil, err
+func (instance *MetricsService) initMetricOneOuputOnNode(node *model.NodeMetadata, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if !instance.containsMetricOneOutput(node) {
+		// DONE 1. Get the index list of the node
+		// DONE 2. Iterate over the timestamp and load the metric model
+		// TODO 3. Skip the if the timestamp difference it is less of 20 minutes and
+		// it is made from the same event
+		log.GetInstance().Infof("Calculate Metric One Output for the node %s", node.NodeID)
+		timestampIndex, err := instance.Storage.GetMetricOneIndex(node.NodeID)
+		if err != nil {
+			log.GetInstance().Infof("Error: %s", err)
+			return
+		}
+		sort.Slice(timestampIndex, func(i, j int) bool { return timestampIndex[i] < timestampIndex[j] })
+		start := timestampIndex[0]
+		end := timestampIndex[len(timestampIndex)-1]
+		keyPrefix := strings.Join([]string{node.NodeID, "metric_one"}, "/")
+		startIndex := strings.Join([]string{keyPrefix, fmt.Sprint(start), "metric"}, "/")
+		endIndex := strings.Join([]string{keyPrefix, fmt.Sprint(end), "metric"}, "/")
+		err = instance.Storage.RawIterateThrough(startIndex, endIndex, func(metricOne string) error {
+			var model model.MetricOne
+			if err := json.Unmarshal([]byte(metricOne), &model); err != nil {
+				return err
+			}
+
+			return metric.CalculateMetricOneOutput(instance.Storage, &model)
+		})
+		if err != nil {
+			log.GetInstance().Infof("Error: %s", err)
+			return
+		}
 	}
+}
 
-	return &metricModel, nil
+func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata) bool {
+	metricKey := strings.Join([]string{node.NodeID, config.RawMetricOnePrefix}, "/")
+	_, err := instance.Storage.GetRawValue(metricKey)
+	if err != nil {
+		log.GetInstance().Errorf("Error: %s", err)
+		return false
+	}
+	return true
+}
+
+func calculateMetricOneOutput(metricsServices *MetricsService, metricModel *model.MetricOne, startTime int64) {
+	if err := metric.CalculateMetricOneOutput(metricsServices.Storage, metricModel); err != nil {
+		log.GetInstance().Errorf("Calculate metric one output return an error %s", err)
+	} else {
+		log.GetInstance().Debugf("Calculate metric one for node %s at %d", metricModel.NodeID, startTime)
+	}
 }
 
 func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error) {
@@ -84,13 +150,17 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 		return nil, fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
+	if metricModel.Version == nil || *metricModel.Version < 4 {
+		return nil, fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
+	}
+
 	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
 		return nil, err
 	}
 
 	now := time.Now().Unix()
 	log.GetInstance().Info(fmt.Sprintf("New node in the lnmetric services ad %d with node id %s", now, nodeID))
-
+	go calculateMetricOneOutput(instance, &metricModel, time.Now().Unix())
 	return &metricModel, nil
 }
 
@@ -120,6 +190,10 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 		return fmt.Errorf("Unsupported network, or an old client version is sending this data")
 	}
 
+	if metricModel.Version == nil || *metricModel.Version < 4 {
+		return fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
+	}
+
 	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {
 		return err
 	}
@@ -127,6 +201,7 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	now := time.Now().Format(time.RFC850)
 	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", nodeID, now))
 
+	go calculateMetricOneOutput(instance, &metricModel, time.Now().Unix())
 	return nil
 }
 
@@ -166,6 +241,6 @@ func (instance *MetricsService) GetMetricOne(nodeID string, startPeriod int, end
 	return metricNodeInfo, nil
 }
 
-func (instance *MetricsService) GetFullMetricOne(nodeID string) (*model.MetricOne, error) {
-	return nil, nil
+func (instance *MetricsService) GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error) {
+	return instance.Storage.GetMetricOneOutput(nodeID)
 }

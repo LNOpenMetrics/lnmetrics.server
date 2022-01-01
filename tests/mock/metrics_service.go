@@ -43,6 +43,12 @@ func (instance *MockMetricsServices) GetFullMetricOne(nodeID string) (*model.Met
 	return args.Get(0).(*model.MetricOne), nil
 }
 
+func (instance *MockMetricsServices) GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error) {
+	args := instance.Called(network, nodeID)
+	return args.Get(0).(*model.MetricOneOutput), nil
+
+}
+
 // all deprecated function
 func (instance *MockMetricsServices) Nodes() ([]*string, error) {
 	return make([]*string, 0), nil

@@ -5,15 +5,10 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
-
-func (r *mutationResolver) AddNodeMetrics(ctx context.Context, input model.NodeMetrics) (*model.MetricOne, error) {
-	return r.MetricsService.AddNodeMetrics(input.NodeID, &input.PayloadMetricOne)
-}
 
 func (r *mutationResolver) InitMetricOne(ctx context.Context, nodeID string, payload string, signature string) (*model.MetricOne, error) {
 	return r.MetricsService.InitMetricOne(nodeID, &payload, signature)
@@ -50,8 +45,8 @@ func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string, startPe
 	return r.MetricsService.GetMetricOne(nodeID, startPeriod, endPeriod)
 }
 
-func (r *queryResolver) GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneResult, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error) {
+	return r.MetricsService.GetMetricOneOutput(network, nodeID)
 }
 
 // Mutation returns generated.MutationResolver implementation.

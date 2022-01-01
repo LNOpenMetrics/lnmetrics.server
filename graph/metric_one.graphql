@@ -11,6 +11,7 @@ type ChannelLimits {
 }
 
 type StatusChannel {
+  channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeId")
   node_alias: String! @goField(name: "NodeAlias")
   color: String! @goField(name: "Color")
@@ -25,15 +26,17 @@ type StatusChannel {
 }
 
 type PaymentInfo {
-     direction: String! @goField(name: "Direction")
-     status: String! @goField(name: "Status")
-     failure_reason: String @goField(name: "FailureReason")
-     failure_code: Int @goField(name: "FailureCode")
+  direction: String! @goField(name: "Direction")
+  status: String! @goField(name: "Status")
+  failure_reason: String! @goField(name: "FailureReason")
+  failure_code: Int! @goField(name: "FailureCode")
+  timestamp: Int! @goField(name: "Timestamp")
 }
 
 type ChannelStatus {
-     timestamp: Int! @goField(name: "Timestamp")
-     status: String! @goField(name: "Status")
+  event: String! @goField(name: "Event")
+  timestamp: Int! @goField(name: "Timestamp")
+  status: String! @goField(name: "Status")
 }
 
 # Information about the node implementation
@@ -62,21 +65,23 @@ type MetricOne {
 }
 
 type NodeInfo {
-     node_id: String! @goField(name: "NodeId")
-     metric_one: MetricOne! @goField(name: "MetricOne")
+  node_id: String! @goField(name: "NodeId")
+  metric_one: MetricOne! @goField(name: "MetricOne")
 }
 
 type OSInfo {
-     os: String! @goField(name: "Os")
-     version: String! @goField(name: "Version")
-     architecture: String! @goField(name: "Architecture")
+  os: String! @goField(name: "Os")
+  version: String! @goField(name: "Version")
+  architecture: String! @goField(name: "Architecture")
 }
 
 type Status {
-     event: String! @goField(name: "Event")
-     channels: ChannelsSummary! @goField(name: "Channels")
-     forwards: PaymentsSummary! @goField(name: "Forwards")
-     timestamp: Int! @goField(name: "Timestamp")
+  event: String! @goField(name: "Event")
+  channels: ChannelsSummary! @goField(name: "Channels")
+  forwards: PaymentsSummary! @goField(name: "Forwards")
+  timestamp: Int! @goField(name: "Timestamp")
+  fee: ChannelFee! @goField(name: "Fee")
+  limits: ChannelLimits! @goField(name: "Limits")
 }
 
 type ChannelsSummary {
@@ -125,51 +130,48 @@ type NodeAddress {
 }
 
 ## Type Used in the MetricOneResult
-type PaymentRating {
+type ForwardsRating {
   success: Int! @goField(name: "Success")
-  faulure: Int! @goField(name: "Faulure")
+  failure: Int! @goField(name: "Failure")
   internal_failure: Int! @goField(name: "InternalFailure")
 }
 
-type PaymentRatingSummary {
-  one_day: PaymentRating! @goField(name: "OneDay")
-  ten_days: PaymentRating! @goField(name: "TenDays")
-  thirty_days: PaymentRating! @goField(name: "ThirtyDays")
-  six_months: PaymentRating! @goField(name: "SixMonth")
-  full: PaymentRating! @goField(name: "Full")
+type ForwardsRatingSummary {
+  one_day: ForwardsRating! @goField(name: "OneDay")
+  ten_days: ForwardsRating! @goField(name: "TenDays")
+  thirty_days: ForwardsRating! @goField(name: "ThirtyDays")
+  six_months: ForwardsRating! @goField(name: "SixMonths")
+  full: ForwardsRating! @goField(name: "Full")
 }
 
-type UpTimeResult {
+type UpTimeOutput {
   one_day: Int! @goField(name: "OneDay")
   ten_days: Int! @goField(name: "TenDays")
   thirty_days: Int! @goField(name: "ThirtyDays")
-  six_months: Int! @goField(name: "SixMonth")
+  six_months: Int! @goField(name: "SixMonths")
   full: Int! @goField(name: "Full")
 }
 
-type ChannelInfoResult {
+type ChannelInfoOutput {
+  age: Int! @goField(name: "Age")
   channel_id: String! @goField(name: "ChannelID")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
   fee: ChannelFee! @goField(name: "Fee")
   limits: ChannelLimits! @goField(name: "Limits")
-  up_time: UpTimeResult! @goField(name: "UpTime")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
 }
 
 # Implementation of the metric_one output
 # Defined in the spec
-type MetricOneResult {
+type MetricOneOutput {
   version: Int! @goField(name: "Version")
   age: Int! @goField(name: "Age")
-  payment_rating: PaymentRatingSummary! @goField(name: "PaymentRating")
-  up_time: UpTimeResult! @goField(name: "UpTime")
-  channes_info: [ChannelInfoResult!]! @goField(name: "ChannelsInfo")
-}
-
-# Deprecated, remove this when add node metrics will be removed
-input NodeMetrics {
-     node_id: String! @goField(name: "NodeID")
-     payload_metric_one: String! @goField(name: "PayloadMetricOne")
+  last_update: Int! @goField(name: "LastUpdate")
+  forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
+  up_time: UpTimeOutput! @goField(name: "UpTime")
+  channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
 }
 
 # Query definition
@@ -185,12 +187,10 @@ type Query {
   # the query return all the data collected from the entire period of metrics collection.
   getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
   # Get the metric one result
-  getMetricOneResult(network: String!, node_id: String!): MetricOneResult!
+  getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
 }
 
 type Mutation {
-  # backword compatibility with old client, for two version
-  addNodeMetrics(input: NodeMetrics!): MetricOne! @deprecated(reason: "This method not support the signature, please considered to used init and update metric one.")
   # Mutation query that it is called from client side when it is back
   # or it is the first time that it is on online on the network
   # in case we know already this metrics, and the client have a clean db, we

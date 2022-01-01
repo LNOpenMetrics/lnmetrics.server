@@ -7,13 +7,15 @@ type ChannelFee struct {
 	PerMSat int `json:"per_msat"`
 }
 
-type ChannelInfoResult struct {
-	ChannelID string         `json:"channel_id"`
-	NodeID    string         `json:"node_id"`
-	Capacity  int            `json:"capacity"`
-	Fee       *ChannelFee    `json:"fee"`
-	Limits    *ChannelLimits `json:"limits"`
-	UpTime    *UpTimeResult  `json:"up_time"`
+type ChannelInfoOutput struct {
+	Age            int                    `json:"age"`
+	ChannelID      string                 `json:"channel_id"`
+	NodeID         string                 `json:"node_id"`
+	Capacity       int                    `json:"capacity"`
+	Fee            *ChannelFee            `json:"fee"`
+	Limits         *ChannelLimits         `json:"limits"`
+	UpTime         *UpTimeOutput          `json:"up_time"`
+	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
 }
 
 type ChannelLimits struct {
@@ -22,6 +24,7 @@ type ChannelLimits struct {
 }
 
 type ChannelStatus struct {
+	Event     string `json:"event"`
 	Timestamp int    `json:"timestamp"`
 	Status    string `json:"status"`
 }
@@ -39,6 +42,20 @@ type ChannelsSummary struct {
 	Summary     []*ChannelSummary `json:"summary"`
 }
 
+type ForwardsRating struct {
+	Success         int `json:"success"`
+	Failure         int `json:"failure"`
+	InternalFailure int `json:"internal_failure"`
+}
+
+type ForwardsRatingSummary struct {
+	OneDay     *ForwardsRating `json:"one_day"`
+	TenDays    *ForwardsRating `json:"ten_days"`
+	ThirtyDays *ForwardsRating `json:"thirty_days"`
+	SixMonths  *ForwardsRating `json:"six_months"`
+	Full       *ForwardsRating `json:"full"`
+}
+
 type MetricOne struct {
 	Name         string           `json:"metric_name"`
 	NodeID       string           `json:"node_id"`
@@ -54,12 +71,13 @@ type MetricOne struct {
 	Version      *int             `json:"version"`
 }
 
-type MetricOneResult struct {
-	Version       int                   `json:"version"`
-	Age           int                   `json:"age"`
-	PaymentRating *PaymentRatingSummary `json:"payment_rating"`
-	UpTime        *UpTimeResult         `json:"up_time"`
-	ChannelsInfo  []*ChannelInfoResult  `json:"channes_info"`
+type MetricOneOutput struct {
+	Version        int                    `json:"version"`
+	Age            int                    `json:"age"`
+	LastUpdate     int                    `json:"last_update"`
+	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
+	UpTime         *UpTimeOutput          `json:"up_time"`
+	ChannelsInfo   []*ChannelInfoOutput   `json:"channes_info"`
 }
 
 type NodeAddress struct {
@@ -97,11 +115,6 @@ type NodeMetric struct {
 	ChannelsInfo []*StatusChannel `json:"channels_info"`
 }
 
-type NodeMetrics struct {
-	NodeID           string `json:"node_id"`
-	PayloadMetricOne string `json:"payload_metric_one"`
-}
-
 type OSInfo struct {
 	Os           string `json:"os"`
 	Version      string `json:"version"`
@@ -109,24 +122,11 @@ type OSInfo struct {
 }
 
 type PaymentInfo struct {
-	Direction     string  `json:"direction"`
-	Status        string  `json:"status"`
-	FailureReason *string `json:"failure_reason"`
-	FailureCode   *int    `json:"failure_code"`
-}
-
-type PaymentRating struct {
-	Success         int `json:"success"`
-	Faulure         int `json:"faulure"`
-	InternalFailure int `json:"internal_failure"`
-}
-
-type PaymentRatingSummary struct {
-	OneDay     *PaymentRating `json:"one_day"`
-	TenDays    *PaymentRating `json:"ten_days"`
-	ThirtyDays *PaymentRating `json:"thirty_days"`
-	SixMonth   *PaymentRating `json:"six_months"`
-	Full       *PaymentRating `json:"full"`
+	Direction     string `json:"direction"`
+	Status        string `json:"status"`
+	FailureReason string `json:"failure_reason"`
+	FailureCode   int    `json:"failure_code"`
+	Timestamp     int    `json:"timestamp"`
 }
 
 type PaymentsSummary struct {
@@ -139,9 +139,12 @@ type Status struct {
 	Channels  *ChannelsSummary `json:"channels"`
 	Forwards  *PaymentsSummary `json:"forwards"`
 	Timestamp int              `json:"timestamp"`
+	Fee       *ChannelFee      `json:"fee"`
+	Limits    *ChannelLimits   `json:"limits"`
 }
 
 type StatusChannel struct {
+	ChannelID  string           `json:"channel_id"`
 	NodeID     string           `json:"node_id"`
 	NodeAlias  string           `json:"node_alias"`
 	Color      string           `json:"color"`
@@ -155,10 +158,10 @@ type StatusChannel struct {
 	Limits     *ChannelLimits   `json:"limits"`
 }
 
-type UpTimeResult struct {
+type UpTimeOutput struct {
 	OneDay     int `json:"one_day"`
 	TenDays    int `json:"ten_days"`
 	ThirtyDays int `json:"thirty_days"`
-	SixMonth   int `json:"six_months"`
+	SixMonths  int `json:"six_months"`
 	Full       int `json:"full"`
 }

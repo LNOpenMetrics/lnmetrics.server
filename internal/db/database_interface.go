@@ -7,6 +7,13 @@ import (
 // Interface to abstract from an db implementation the
 // the logic to store and make analysis over the data.
 type MetricsDatabase interface {
+	// Get access to the raw data contained with the specified key
+	GetRawValue(key string) ([]byte, error)
+
+	// Put a raw value with the specified key in the db
+	PutRawValue(key string, value []byte) error
+
+	RawIterateThrough(start string, end string, callback func(string) error) error
 	// Prepare the database for the metric one data model
 	// Takes a interface, if the db implementation required some
 	// custom propieties
@@ -24,8 +31,12 @@ type MetricsDatabase interface {
 	// Get all the node data by id
 	GetMetricOne(withId string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 
+	GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error)
+
 	// Update the metric of the node, with new one.
 	UpdateMetricOne(toInser *model.MetricOne) error
+
+	GetMetricOneIndex(nodeID string) ([]int64, error)
 
 	// Close the connection with the database
 	CloseDatabase() error
