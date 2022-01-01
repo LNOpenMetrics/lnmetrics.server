@@ -9,7 +9,7 @@ func Percentage(selected uint64, total uint64) int {
 	if total == 0 {
 		return 0
 	}
-	return int((selected / total) * 100) % 100
+	return int((float64(selected)/float64(total))*100) % 100
 }
 
 func CalculateMetricOneOutputFromRaw(rawMetric *RawMetricOneOutput) *model.MetricOneOutput {
