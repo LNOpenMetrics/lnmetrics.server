@@ -37,11 +37,11 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	}
 
 	instance := &NoSQLDatabase{
-		map[uint]string{1: "metric_one"},
-		false,
-		make(map[string][]uint),
-		new(sync.Mutex),
-		1,
+		metricsKey: map[uint]string{1: "metric_one"},
+		validCache: false,
+		indexCache: make(map[string][]uint),
+		lock: new(sync.Mutex),
+		dbVersion: 2,
 	}
 	if err := instance.createIndexDBIfMissin(); err != nil {
 		return nil, err
