@@ -389,13 +389,18 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 
 	chanForChannels := make(chan *RawChannelRating, len(channelsInfo))
 	for _, channelInfo := range channelsInfo {
-		rating, found := channelsRating[channelInfo.ChannelID]
+		// TODO: We need to aggregate the channels only one, or we need to
+		// keep in and out channel? The second motivation sound good to method
+		key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "/")
+		rating, found := channelsRating[key]
 		if !found {
 			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
 			rating = &RawChannelRating{
 				Age:            int64(channelInfo.UpTime[0].Timestamp),
 				ChannelID:      channelInfo.ChannelID,
 				NodeID:         channelInfo.NodeID,
+				Alias:          channelInfo.NodeAlias,
+				Direction:      channelInfo.Direction,
 				Capacity:       channelInfo.Capacity,
 				UpTimeRating:   NewRawPercentageData(),
 				ForwardsRating: NewRawForwardsRating(),
@@ -403,13 +408,14 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 		}
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
-		rating.Capacity = channelInfo.Capacity
+		rating.Capacity += channelInfo.Capacity
 		go calculateRatingForChannel(storage, itemKey, rating, channelInfo, chanForChannels)
 	}
 
 	for i := 0; i < len(channelsInfo); i++ {
 		rating := <-chanForChannels
-		channelsRating[rating.ChannelID] = rating
+		key := strings.Join([]string{rating.ChannelID, rating.Direction}, "/")
+		channelsRating[key] = rating
 	}
 }
 

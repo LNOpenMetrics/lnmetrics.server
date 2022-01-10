@@ -589,6 +589,9 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 	channelsInfoMap := make(map[string]*model.StatusChannel)
 
 	for _, timestamp := range modelTimestamp {
+		// TODO: adding a function inside utils package
+		// utime.IsValidUnix(now)
+		// utime.IsBetweenUnix(now, start, end)
 		if (startPeriod == -1 && endPeriod == -1) ||
 			(int(timestamp) >= startPeriod && int(timestamp) <= endPeriod) {
 			log.GetInstance().Debugf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp)
@@ -603,7 +606,8 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 				tmpModelMetric.UpTime...)
 
 			for _, channelInfo := range tmpModelMetric.ChannelsInfo {
-				value, found := channelsInfoMap[channelInfo.ChannelID]
+				key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "_")
+				value, found := channelsInfoMap[key]
 				if found {
 					value.NodeAlias = channelInfo.NodeAlias
 					value.Color = channelInfo.Color
@@ -616,7 +620,7 @@ func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName s
 					value.Fee = channelInfo.Fee
 					value.Limits = channelInfo.Limits
 				} else {
-					channelsInfoMap[channelInfo.ChannelID] = channelInfo
+					channelsInfoMap[key] = channelInfo
 				}
 			}
 		}

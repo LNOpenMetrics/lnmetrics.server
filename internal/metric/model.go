@@ -67,6 +67,8 @@ type RawChannelRating struct {
 	Age            int64                `json:"age"`
 	ChannelID      string               `json:"channel_id"`
 	NodeID         string               `json:"node_id"`
+	Alias          string               `json:"alias"`
+	Direction      string               `json:"direction"`
 	Capacity       int                  `json:"capacity"`
 	Fee            *model.ChannelFee    `json:"fee"`
 	Limits         *model.ChannelLimits `json:"limits"`

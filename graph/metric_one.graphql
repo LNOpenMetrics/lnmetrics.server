@@ -155,6 +155,8 @@ type UpTimeOutput {
 type ChannelInfoOutput {
   age: Int! @goField(name: "Age")
   channel_id: String! @goField(name: "ChannelID")
+  alias: String! @goField(name: "Alias")
+  direction: String! @goField(name: "Direction")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
   fee: ChannelFee! @goField(name: "Fee")

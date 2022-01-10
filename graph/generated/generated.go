@@ -50,8 +50,10 @@ type ComplexityRoot struct {
 
 	ChannelInfoOutput struct {
 		Age            func(childComplexity int) int
+		Alias          func(childComplexity int) int
 		Capacity       func(childComplexity int) int
 		ChannelID      func(childComplexity int) int
+		Direction      func(childComplexity int) int
 		Fee            func(childComplexity int) int
 		ForwardsRating func(childComplexity int) int
 		Limits         func(childComplexity int) int
@@ -269,6 +271,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ChannelInfoOutput.Age(childComplexity), true
 
+	case "ChannelInfoOutput.alias":
+		if e.complexity.ChannelInfoOutput.Alias == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoOutput.Alias(childComplexity), true
+
 	case "ChannelInfoOutput.capacity":
 		if e.complexity.ChannelInfoOutput.Capacity == nil {
 			break
@@ -282,6 +291,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ChannelInfoOutput.ChannelID(childComplexity), true
+
+	case "ChannelInfoOutput.direction":
+		if e.complexity.ChannelInfoOutput.Direction == nil {
+			break
+		}
+
+		return e.complexity.ChannelInfoOutput.Direction(childComplexity), true
 
 	case "ChannelInfoOutput.fee":
 		if e.complexity.ChannelInfoOutput.Fee == nil {
@@ -1255,6 +1271,8 @@ type UpTimeOutput {
 type ChannelInfoOutput {
   age: Int! @goField(name: "Age")
   channel_id: String! @goField(name: "ChannelID")
+  alias: String! @goField(name: "Alias")
+  direction: String! @goField(name: "Direction")
   node_id: String! @goField(name: "NodeID")
   capacity: Int! @goField(name: "Capacity")
   fee: ChannelFee! @goField(name: "Fee")
@@ -1647,6 +1665,76 @@ func (ec *executionContext) _ChannelInfoOutput_channel_id(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoOutput_alias(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Alias, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ChannelInfoOutput_direction(ctx context.Context, field graphql.CollectedField, obj *model.ChannelInfoOutput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ChannelInfoOutput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Direction, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6584,6 +6672,16 @@ func (ec *executionContext) _ChannelInfoOutput(ctx context.Context, sel ast.Sele
 			}
 		case "channel_id":
 			out.Values[i] = ec._ChannelInfoOutput_channel_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "alias":
+			out.Values[i] = ec._ChannelInfoOutput_alias(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "direction":
+			out.Values[i] = ec._ChannelInfoOutput_direction(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
