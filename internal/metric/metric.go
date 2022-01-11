@@ -205,6 +205,7 @@ func accumulateUpTime(payloadStr string, acc *accumulator) error {
 		if lastTimestamp < int64(upTimeItem.Timestamp) {
 			lastTimestamp = int64(upTimeItem.Timestamp)
 		}
+		acc.Total++
 
 	}
 	return nil
