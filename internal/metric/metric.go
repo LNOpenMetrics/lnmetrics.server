@@ -409,7 +409,7 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 		}
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
-		rating.Capacity += channelInfo.Capacity
+		rating.Capacity = channelInfo.Capacity
 		go calculateRatingForChannel(storage, itemKey, rating, channelInfo, chanForChannels)
 	}
 
@@ -554,7 +554,7 @@ func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAcc
 	wrapper := &wrapperUpTimeAccumulator{
 		acc: &accumulator{
 			Selected: 0,
-			Total:    0,
+			Total:    int64(len(upTime)),
 		},
 		timestamp: int64(-1),
 	}
@@ -586,6 +586,7 @@ func accumulateUpTimeForChannelFromDB(channelID string, payload *string, acc *ac
 		if channel.ChannelID == channelID {
 			accumulateUpTime := accumulateUpTimeForChannel(channel.UpTime)
 			acc.Selected += accumulateUpTime.acc.Selected
+			acc.Total += accumulateUpTime.acc.Total
 		}
 	}
 
