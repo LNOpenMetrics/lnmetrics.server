@@ -28,6 +28,24 @@ type accumulator struct {
 	Total    int64
 }
 
+// Make intersection between channels information.
+//
+// This operation make sure that we us not outdate channels in the raw metrics
+// but only channels that are open right now on the node.
+//
+// updateState: The new State received from the node
+// oldState: the State of the metric that it is stored in the database
+func intersectionChannelsInfo(updateState *model.MetricOne, oldState *RawMetricOneOutput) error {
+	for _, channel := range updateState.ChannelsInfo {
+		key := strings.Join([]string{channel.ChannelID, channel.Direction}, "/")
+		_, found := oldState.ChannelsRating[key]
+		if !found {
+			delete(oldState.ChannelsRating, key)
+		}
+	}
+	return nil
+}
+
 // Method to calculate the metric one output and store the result
 // on the server
 func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.MetricOne) error {
@@ -45,6 +63,12 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 		}
 	}
 
+	// Make intersection between channels info
+	if err := intersectionChannelsInfo(metricModel, rawMetricModel); err != nil {
+		log.GetInstance().Errorf("Error: %s", err)
+		return nil
+	}
+
 	var lockGroup sync.WaitGroup
 	lockGroup.Add(3)
 	go calculateUptimeMetricOne(storage, rawMetricModel, metricModel, &lockGroup)
@@ -59,7 +83,7 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	if err != nil {
 		return err
 	}
-	log.GetInstance().Infof("Metric Calculated: %s", string(metricModelBytes))
+	log.GetInstance().Debugf("Metric Calculated: %s", string(metricModelBytes))
 	if err := storage.PutRawValue(metricKey, metricModelBytes); err != nil {
 		return err
 	}
@@ -388,16 +412,29 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 		return
 	}
 
-	chanForChannels := make(chan *RawChannelRating, len(channelsInfo))
+	chanForChannels := make(chan *RawChannelRating, len(channelsInfo)-1)
 	for _, channelInfo := range channelsInfo {
+		if channelInfo.ChannelID == "" ||
+			channelInfo.Direction == "" {
+			log.GetInstance().Errorf("Invalid Channels with id %s and direction %s", channelInfo.ChannelID, channelInfo.Direction)
+			continue
+		}
 		// TODO: We need to aggregate the channels only one, or we need to
 		// keep in and out channel? The second motivation sound good to method
 		key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "/")
 		rating, found := channelsRating[key]
 		if !found {
 			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
+			validTimestamp := channelInfo.UpTime[0].Timestamp
+			if validTimestamp <= 0 {
+				for _, upTime := range channelInfo.UpTime {
+					if upTime.Timestamp > 0 {
+						validTimestamp = upTime.Timestamp
+					}
+				}
+			}
 			rating = &RawChannelRating{
-				Age:            int64(channelInfo.UpTime[0].Timestamp),
+				Age:            int64(validTimestamp),
 				ChannelID:      channelInfo.ChannelID,
 				NodeID:         channelInfo.NodeID,
 				Alias:          channelInfo.NodeAlias,
@@ -407,6 +444,19 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 				ForwardsRating: NewRawForwardsRating(),
 			}
 		}
+		// FIXME(vincenzopalazzo): This resolve a bug with the API
+		// We will remove it in the next week
+		sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
+		validTimestamp := channelInfo.UpTime[0].Timestamp
+		if validTimestamp <= 0 {
+			for _, upTime := range channelInfo.UpTime {
+				if upTime.Timestamp > 0 {
+					validTimestamp = upTime.Timestamp
+				}
+			}
+		}
+		// -------
+		rating.Age = int64(validTimestamp)
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
 		rating.Capacity = channelInfo.Capacity
