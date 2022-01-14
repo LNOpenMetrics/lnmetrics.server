@@ -205,6 +205,7 @@ func accumulateUpTime(payloadStr string, acc *accumulator) error {
 		if lastTimestamp < int64(upTimeItem.Timestamp) {
 			lastTimestamp = int64(upTimeItem.Timestamp)
 		}
+		acc.Total++
 
 	}
 	return nil
@@ -389,13 +390,18 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 
 	chanForChannels := make(chan *RawChannelRating, len(channelsInfo))
 	for _, channelInfo := range channelsInfo {
-		rating, found := channelsRating[channelInfo.ChannelID]
+		// TODO: We need to aggregate the channels only one, or we need to
+		// keep in and out channel? The second motivation sound good to method
+		key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "/")
+		rating, found := channelsRating[key]
 		if !found {
 			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
 			rating = &RawChannelRating{
 				Age:            int64(channelInfo.UpTime[0].Timestamp),
 				ChannelID:      channelInfo.ChannelID,
 				NodeID:         channelInfo.NodeID,
+				Alias:          channelInfo.NodeAlias,
+				Direction:      channelInfo.Direction,
 				Capacity:       channelInfo.Capacity,
 				UpTimeRating:   NewRawPercentageData(),
 				ForwardsRating: NewRawForwardsRating(),
@@ -409,7 +415,8 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 
 	for i := 0; i < len(channelsInfo); i++ {
 		rating := <-chanForChannels
-		channelsRating[rating.ChannelID] = rating
+		key := strings.Join([]string{rating.ChannelID, rating.Direction}, "/")
+		channelsRating[key] = rating
 	}
 }
 
@@ -547,7 +554,7 @@ func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAcc
 	wrapper := &wrapperUpTimeAccumulator{
 		acc: &accumulator{
 			Selected: 0,
-			Total:    0,
+			Total:    int64(len(upTime)),
 		},
 		timestamp: int64(-1),
 	}
@@ -579,6 +586,7 @@ func accumulateUpTimeForChannelFromDB(channelID string, payload *string, acc *ac
 		if channel.ChannelID == channelID {
 			accumulateUpTime := accumulateUpTimeForChannel(channel.UpTime)
 			acc.Selected += accumulateUpTime.acc.Selected
+			acc.Total += accumulateUpTime.acc.Total
 		}
 	}
 

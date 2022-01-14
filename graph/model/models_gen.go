@@ -10,6 +10,8 @@ type ChannelFee struct {
 type ChannelInfoOutput struct {
 	Age            int                    `json:"age"`
 	ChannelID      string                 `json:"channel_id"`
+	Alias          string                 `json:"alias"`
+	Direction      string                 `json:"direction"`
 	NodeID         string                 `json:"node_id"`
 	Capacity       int                    `json:"capacity"`
 	Fee            *ChannelFee            `json:"fee"`

@@ -69,6 +69,8 @@ func MappingChannelInfoFromRaw(raw *RawChannelRating) *model.ChannelInfoOutput {
 		Age:            int(raw.Age),
 		ChannelID:      raw.ChannelID,
 		NodeID:         raw.NodeID,
+		Alias:          raw.Alias,
+		Direction:      raw.Direction,
 		Capacity:       raw.Capacity,
 		Fee:            raw.Fee,
 		Limits:         raw.Limits,
