@@ -339,6 +339,16 @@ func calculateForwardsRatingByTimestamp(storage db.MetricsDatabase, metricModel 
 	}
 }
 
+// Function to calculate the forward rating by period of the node that are pushing the data
+//
+// - storage: a instance of db.MetricsDatabase that contains the wrapping around the database
+// - metricModel: the metric model portion received from the node regarding the update
+// - actualRating: is the actual raw rating calculate by the service
+// - acc: the instance of accumulator where to make the count
+// - actualTimestamp: Timestamp where the update is generated, so it is the timestamp of the MetricModel
+// - lastTimestamp: Timestamp where the last metrics calculation happens, recorded in the RawModel
+// - period: It is the range of period where the calculate is ran
+// - channel: Is the communication channels where the communication happens
 func calculateForwardRatingByPeriod(storage db.MetricsDatabase, metricModel *model.MetricOne,
 	actualRating *RawForwardRating, acc *forwardsAccumulator, actualTimestamp int64,
 	lastTimestamp int64, period time.Duration, channel chan *wrapperRawForwardRating) {
@@ -354,7 +364,7 @@ func calculateForwardRatingByPeriod(storage db.MetricsDatabase, metricModel *mod
 		timestamp = startPeriod
 		baseID, _ := storage.ItemID(metricModel)
 		startID := strings.Join([]string{baseID, fmt.Sprint(startPeriod), "metric"}, "/")
-		endID := strings.Join([]string{baseID, fmt.Sprint(lastTimestamp), "metric"}, "/")
+		endID := strings.Join([]string{baseID, fmt.Sprint(actualTimestamp), "metric"}, "/")
 		localAcc := &forwardsAccumulator{
 			Success:     0,
 			Failed:      0,
