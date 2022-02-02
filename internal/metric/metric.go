@@ -39,9 +39,13 @@ type accumulator struct {
 func intersectionChannelsInfo(updateState *model.MetricOne, oldState *RawMetricOneOutput) error {
 	for _, channel := range updateState.ChannelsInfo {
 		key := strings.Join([]string{channel.ChannelID, channel.Direction}, "/")
-		_, found := oldState.ChannelsRating[key]
+		ratingChannel, found := oldState.ChannelsRating[key]
 		if !found {
 			delete(oldState.ChannelsRating, key)
+		} else {
+			if ratingChannel.Alias == "" && ratingChannel.Direction == "" {
+				delete(oldState.ChannelsRating, key)
+			}
 		}
 	}
 	return nil
@@ -529,9 +533,15 @@ func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string,
 		upTimes, 6*30*24*time.Hour, sixMonthsChan)
 
 	actualValue := accumulateUpTimeForChannel(upTimes)
+	lastTimestamp := int64(0)
+	for _, upTime := range upTimes {
+		if int64(upTime.Timestamp) > lastTimestamp {
+			lastTimestamp = int64(upTime.Timestamp)
+		}
+	}
 
 	channelRating.UpTimeRating.FullSuccess += uint64(actualValue.acc.Selected)
-	channelRating.UpTimeRating.FullTotal = utime.OccurenceInUnixRange(channelRating.Age, todayValue.timestamp, 30*time.Minute)
+	channelRating.UpTimeRating.FullTotal = utime.OccurenceInUnixRange(channelRating.Age, lastTimestamp, 30*time.Minute)
 
 	for i := 0; i < 4; i++ {
 		select {
