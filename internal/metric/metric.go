@@ -569,10 +569,11 @@ func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, c
 
 	if utime.InRangeFromUnix(internalAcc.timestamp, actualValues.timestamp, period) {
 		internalAcc.acc.Selected += actualValues.acc.Selected
+		internalAcc.acc.Total += actualValues.acc.Total
 	} else {
 		startPeriod := utime.SubToTimestamp(internalAcc.timestamp, period)
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
-		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp), "metric"}, "/")
+		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp + 1), "metric"}, "/")
 		localAcc := &accumulator{
 			Selected: internalAcc.acc.Selected,
 			Total:    internalAcc.acc.Total,
@@ -594,7 +595,6 @@ func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, c
 
 	}
 	acc <- internalAcc
-
 }
 
 // utils function to accumulat the UpTimeForChannels and return the accumulation value, and the last timestamp
