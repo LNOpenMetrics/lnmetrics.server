@@ -90,7 +90,7 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	if err != nil {
 		return err
 	}
-	log.GetInstance().Debugf("Metric Calculated: %s", string(metricModelBytes))
+
 	if err := storage.PutRawValue(metricKey, metricModelBytes); err != nil {
 		return err
 	}
