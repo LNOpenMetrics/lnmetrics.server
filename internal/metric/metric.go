@@ -146,7 +146,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 	nodeUpTime.TodayTimestamp = lastTimestamp
 
 	tenDaysStored := nodeUpTime.TenDaysTimestamp
-	if utime.InRangeFromUnix(tenDaysStored, lastTimestamp, 10*24*time.Hour) {
+	if utime.InRangeFromUnix(lastTimestamp, tenDaysStored, 10*24*time.Hour) {
 		// accumulate
 		nodeUpTime.TenDaysSuccess += onlineUpdate
 	} else {
@@ -165,7 +165,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 
 	// 30 days
 	thirtyDaysStored := nodeUpTime.ThirtyDaysTimestamp
-	if utime.InRangeFromUnix(thirtyDaysStored, lastTimestamp, 30*24*time.Hour) {
+	if utime.InRangeFromUnix(lastTimestamp, thirtyDaysStored, 30*24*time.Hour) {
 		nodeUpTime.ThirtyDaysSuccess += onlineUpdate
 	} else {
 		firstDate := utime.SubToTimestamp(lastTimestamp, 30*24*time.Hour)
@@ -183,7 +183,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 
 	// 6 month
 	sixMonthsStored := nodeUpTime.SixMonthsTimestamp
-	if utime.InRangeFromUnix(sixMonthsStored, lastTimestamp, 6*30*24*time.Hour) {
+	if utime.InRangeFromUnix(lastTimestamp, sixMonthsStored, 6*30*24*time.Hour) {
 		nodeUpTime.SixMonthsSuccess += onlineUpdate
 	} else {
 		firstDate := utime.SubToTimestamp(lastTimestamp, 6*30*24*time.Hour)
@@ -249,6 +249,7 @@ func walkThroughUpTime(storage db.MetricsDatabase, modelMetric *model.MetricOne,
 	return err
 }
 
+// Function wrapper to accumulate the forwards payments counter
 type forwardsAccumulator struct {
 	Success     uint64
 	Failed      uint64
@@ -734,7 +735,7 @@ func accumulateForwardsRatingForChannel(storage db.MetricsDatabase, itemKey stri
 
 	result := accumulateActualForwardRating(forwards)
 
-	if utime.InRangeFromUnix(lastTimestamp, result.Timestamp, period) {
+	if utime.InRangeFromUnix(result.Timestamp, lastTimestamp, period) {
 		result.Wrapper.Success += lastForwardRating.Success
 		result.Wrapper.Failure += lastForwardRating.Failure
 		result.Wrapper.InternalFailure += lastForwardRating.InternalFailure
