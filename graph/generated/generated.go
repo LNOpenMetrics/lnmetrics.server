@@ -114,6 +114,11 @@ type ComplexityRoot struct {
 		Version      func(childComplexity int) int
 	}
 
+	MetricOneInfo struct {
+		Metric   func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
 	MetricOneOutput struct {
 		Age            func(childComplexity int) int
 		ChannelsInfo   func(childComplexity int) int
@@ -169,6 +174,12 @@ type ComplexityRoot struct {
 		Version      func(childComplexity int) int
 	}
 
+	PageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+		StartCursor func(childComplexity int) int
+	}
+
 	PaymentInfo struct {
 		Direction     func(childComplexity int) int
 		FailureCode   func(childComplexity int) int
@@ -187,6 +198,7 @@ type ComplexityRoot struct {
 		GetMetricOneResult func(childComplexity int, network string, nodeID string) int
 		GetNode            func(childComplexity int, network string, nodeID string) int
 		GetNodes           func(childComplexity int, network string) int
+		MetricsOne         func(childComplexity int, nodeID string, first int, last *int) int
 		Nodes              func(childComplexity int) int
 	}
 
@@ -233,6 +245,7 @@ type QueryResolver interface {
 	GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error)
 	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 	GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error)
+	MetricsOne(ctx context.Context, nodeID string, first int, last *int) (*model.MetricOneInfo, error)
 }
 
 type executableSchema struct {
@@ -558,6 +571,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOne.Version(childComplexity), true
 
+	case "MetricOneInfo.metric":
+		if e.complexity.MetricOneInfo.Metric == nil {
+			break
+		}
+
+		return e.complexity.MetricOneInfo.Metric(childComplexity), true
+
+	case "MetricOneInfo.pageInfo":
+		if e.complexity.MetricOneInfo.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.MetricOneInfo.PageInfo(childComplexity), true
+
 	case "MetricOneOutput.age":
 		if e.complexity.MetricOneOutput.Age == nil {
 			break
@@ -565,7 +592,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOneOutput.Age(childComplexity), true
 
-	case "MetricOneOutput.channes_info":
+	case "MetricOneOutput.channels_info":
 		if e.complexity.MetricOneOutput.ChannelsInfo == nil {
 			break
 		}
@@ -785,6 +812,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OSInfo.Version(childComplexity), true
 
+	case "PageInfo.endCursor":
+		if e.complexity.PageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.EndCursor(childComplexity), true
+
+	case "PageInfo.hasNextPage":
+		if e.complexity.PageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.HasNextPage(childComplexity), true
+
+	case "PageInfo.startCursor":
+		if e.complexity.PageInfo.StartCursor == nil {
+			break
+		}
+
+		return e.complexity.PageInfo.StartCursor(childComplexity), true
+
 	case "PaymentInfo.direction":
 		if e.complexity.PaymentInfo.Direction == nil {
 			break
@@ -881,6 +929,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetNodes(childComplexity, args["network"].(string)), true
+
+	case "Query.metricsOne":
+		if e.complexity.Query.MetricsOne == nil {
+			break
+		}
+
+		args, err := ec.field_Query_metricsOne_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MetricsOne(childComplexity, args["node_id"].(string), args["first"].(int), args["last"].(*int)), true
 
 	case "Query.nodes":
 		if e.complexity.Query.Nodes == nil {
@@ -1232,6 +1292,8 @@ type NodeMetadata {
   last_update: Int! @goField(name: "LastUpdate")
 }
 
+# Type that contains only the snapshot information of the
+# metrics without the metadata
 type NodeMetric {
   timestamp: Int! @goField(name: "Timestamp")
   up_time: [Status!]! @goField(name: "UpTime")
@@ -1289,12 +1351,25 @@ type MetricOneOutput {
   last_update: Int! @goField(name: "LastUpdate")
   forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeOutput! @goField(name: "UpTime")
-  channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
+  channels_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
+}
+
+# PageInfo type to implement the paginator pattern.
+type PageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean
+}
+
+# MetricOneInfo type to implement the paginator type
+type MetricOneInfo {
+  metric: NodeMetadata!
+  pageInfo: PageInfo!
 }
 
 # Query definition
 type Query {
-  # backword compatibility with old client, for two version
+  # backward compatibility with old client, for two version
   nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
 
   # Get the list of nodes that are contributing in metric collection
@@ -1303,9 +1378,11 @@ type Query {
   getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
-  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
+  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
   # Get the metric one result
   getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
+  # Use the paginator patter to get all the metrics about a specific node!
+  metricsOne(node_id: String!, first: Int!, last: Int): MetricOneInfo!
 }
 
 type Mutation {
@@ -1500,6 +1577,39 @@ func (ec *executionContext) field_Query_getNodes_args(ctx context.Context, rawAr
 		}
 	}
 	args["network"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_metricsOne_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["node_id"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["last"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["last"] = arg2
 	return args, nil
 }
 
@@ -3072,6 +3182,76 @@ func (ec *executionContext) _MetricOne_version(ctx context.Context, field graphq
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MetricOneInfo_metric(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metric, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.NodeMetadata)
+	fc.Result = res
+	return ec.marshalNNodeMetadata2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐNodeMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MetricOneInfo_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "MetricOneInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _MetricOneOutput_version(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3247,7 +3427,7 @@ func (ec *executionContext) _MetricOneOutput_up_time(ctx context.Context, field 
 	return ec.marshalNUpTimeOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeOutput(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MetricOneOutput_channes_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOneOutput_channels_info(ctx context.Context, field graphql.CollectedField, obj *model.MetricOneOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4168,6 +4348,108 @@ func (ec *executionContext) _OSInfo_architecture(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PageInfo",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasNextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PaymentInfo_direction(ctx context.Context, field graphql.CollectedField, obj *model.PaymentInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4614,6 +4896,48 @@ func (ec *executionContext) _Query_getMetricOneResult(ctx context.Context, field
 	res := resTmp.(*model.MetricOneOutput)
 	fc.Result = res
 	return ec.marshalNMetricOneOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneOutput(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_metricsOne(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_metricsOne_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MetricsOne(rctx, args["node_id"].(string), args["first"].(int), args["last"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MetricOneInfo)
+	fc.Result = res
+	return ec.marshalNMetricOneInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7031,6 +7355,38 @@ func (ec *executionContext) _MetricOne(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var metricOneInfoImplementors = []string{"MetricOneInfo"}
+
+func (ec *executionContext) _MetricOneInfo(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOneInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metricOneInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MetricOneInfo")
+		case "metric":
+			out.Values[i] = ec._MetricOneInfo_metric(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._MetricOneInfo_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var metricOneOutputImplementors = []string{"MetricOneOutput"}
 
 func (ec *executionContext) _MetricOneOutput(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOneOutput) graphql.Marshaler {
@@ -7067,8 +7423,8 @@ func (ec *executionContext) _MetricOneOutput(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "channes_info":
-			out.Values[i] = ec._MetricOneOutput_channes_info(ctx, field, obj)
+		case "channels_info":
+			out.Values[i] = ec._MetricOneOutput_channels_info(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -7363,6 +7719,40 @@ func (ec *executionContext) _OSInfo(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var pageInfoImplementors = []string{"PageInfo"}
+
+func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PageInfo")
+		case "startCursor":
+			out.Values[i] = ec._PageInfo_startCursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endCursor":
+			out.Values[i] = ec._PageInfo_endCursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasNextPage":
+			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var paymentInfoImplementors = []string{"PaymentInfo"}
 
 func (ec *executionContext) _PaymentInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PaymentInfo) graphql.Marshaler {
@@ -7522,6 +7912,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getMetricOneResult(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "metricsOne":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_metricsOne(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -8200,6 +8604,21 @@ func (ec *executionContext) marshalNForwardsRatingSummary2ᚖgithubᚗcomᚋLNOp
 	return ec._ForwardsRatingSummary(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8227,6 +8646,20 @@ func (ec *executionContext) marshalNMetricOne2ᚖgithubᚗcomᚋLNOpenMetricsᚋ
 		return graphql.Null
 	}
 	return ec._MetricOne(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMetricOneInfo2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneInfo(ctx context.Context, sel ast.SelectionSet, v model.MetricOneInfo) graphql.Marshaler {
+	return ec._MetricOneInfo(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMetricOneInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneInfo(ctx context.Context, sel ast.SelectionSet, v *model.MetricOneInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MetricOneInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMetricOneOutput2githubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐMetricOneOutput(ctx context.Context, sel ast.SelectionSet, v model.MetricOneOutput) graphql.Marshaler {
@@ -8373,6 +8806,16 @@ func (ec *executionContext) marshalNOSInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnm
 		return graphql.Null
 	}
 	return ec._OSInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PageInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPaymentInfo2ᚕᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐPaymentInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PaymentInfo) graphql.Marshaler {
