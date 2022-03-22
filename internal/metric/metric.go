@@ -420,7 +420,7 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 		return
 	}
 
-	chanForChannels := make(chan *RawChannelRating, len(channelsInfo)-1)
+	chanForChannels := make(chan *RawChannelRating, len(channelsInfo))
 	for _, channelInfo := range channelsInfo {
 		if channelInfo.ChannelID == "" ||
 			channelInfo.Direction == "" {
@@ -453,14 +453,20 @@ func calculateRationForChannels(storage db.MetricsDatabase, itemKey string, chan
 			}
 		}
 
+		rating.Alias = channelInfo.NodeAlias
+		rating.Direction = channelInfo.Direction
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
 		rating.Capacity = channelInfo.Capacity
 		go calculateRatingForChannel(storage, itemKey, rating, channelInfo, chanForChannels)
 	}
 
-	for i := 0; i < len(channelsInfo); i++ {
+	for range channelsInfo {
 		rating := <-chanForChannels
+		if rating.ChannelID == "" || rating.Direction == "" {
+			log.GetInstance().Errorf("There is node with empty id %s and/or empty direction %s", rating.ChannelID, rating.Direction)
+			continue
+		}
 		key := strings.Join([]string{rating.ChannelID, rating.Direction}, "/")
 		channelsRating[key] = rating
 	}
