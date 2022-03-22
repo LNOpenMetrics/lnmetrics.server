@@ -21,7 +21,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 )
 
-const DEFAULT_PORT = "8080"
+const DefaultPort = "8080"
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -35,12 +35,12 @@ func isHttpUrl(path string) bool {
 }
 
 func main() {
-	port := DEFAULT_PORT
+	port := DefaultPort
 	if envPort := os.Getenv("SERVER_PORT"); envPort != "" {
 		port = envPort
 	}
 
-	// Server option that can pass throw the interface
+	// Server options that can pass throw the interface
 	// to configure all the type of interface that we need
 	options := make(map[string]interface{})
 
