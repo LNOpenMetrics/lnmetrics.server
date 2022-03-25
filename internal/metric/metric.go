@@ -3,6 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/LNOpenMetrics/lnmetrics.server/pkg/utils"
 	"sort"
 	"strings"
 	"sync"
@@ -17,11 +18,10 @@ import (
 )
 
 // days constant
-
-var todayOccurence = returnOccurence(24*time.Hour, 30*time.Minute)
-var tenDaysOccurence = returnOccurence(10*24*time.Hour, 30*time.Minute)
-var thirtyDaysOccurence = returnOccurence(30*24*time.Hour, 30*time.Minute)
-var sixMonthsOccurence = returnOccurence(6*30*24*time.Hour, 30*time.Minute)
+var todayOccurrence = utils.ReturnOccurrence(24*time.Hour, 30*time.Minute)
+var tenDaysOccurrence = utils.ReturnOccurrence(10*24*time.Hour, 30*time.Minute)
+var thirtyDaysOccurrence = utils.ReturnOccurrence(30*24*time.Hour, 30*time.Minute)
+var sixMonthsOccurrence = utils.ReturnOccurrence(6*30*24*time.Hour, 30*time.Minute)
 
 // accumulator wrapper data structure
 type accumulator struct {
@@ -105,12 +105,6 @@ func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.Met
 	return storage.PutRawValue(resKey, resultByte)
 }
 
-func returnOccurence(period time.Duration, step time.Duration) uint64 {
-	now := time.Now()
-	after := now.Add(period)
-	return utime.OccurenceInUnixRange(now.Unix(), after.Unix(), step)
-}
-
 // Execute the uptime rating of the node
 // TODO: Refactoring this logic and use the channels
 func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOneOutput,
@@ -142,7 +136,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		// This is a correct assumtion? or I need to iterate inside the DB?
 		nodeUpTime.TodaySuccess = onlineUpdate
 	}
-	nodeUpTime.TodayTotal = todayOccurence
+	nodeUpTime.TodayTotal = todayOccurrence
 	nodeUpTime.TodayTimestamp = lastTimestamp
 
 	tenDaysStored := nodeUpTime.TenDaysTimestamp
@@ -161,7 +155,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.TenDaysSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.TenDaysTimestamp = firstDate
 	}
-	nodeUpTime.TenDaysTotal = tenDaysOccurence
+	nodeUpTime.TenDaysTotal = tenDaysOccurrence
 
 	// 30 days
 	thirtyDaysStored := nodeUpTime.ThirtyDaysTimestamp
@@ -179,7 +173,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.ThirtyDaysSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.ThirtyDaysTimestamp = firstDate
 	}
-	nodeUpTime.ThirtyDaysTotal = thirtyDaysOccurence
+	nodeUpTime.ThirtyDaysTotal = thirtyDaysOccurrence
 
 	// 6 month
 	sixMonthsStored := nodeUpTime.SixMonthsTimestamp
@@ -197,7 +191,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.SixMonthsSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.SixMonthsTimestamp = firstDate
 	}
-	nodeUpTime.SixMonthsTotal = sixMonthsOccurence
+	nodeUpTime.SixMonthsTotal = sixMonthsOccurrence
 
 	// full
 	nodeUpTime.FullSuccess += onlineUpdate
@@ -554,19 +548,19 @@ func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string,
 		select {
 		case today := <-todayChan:
 			channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
-			channelRating.UpTimeRating.TodayTotal = todayOccurence
+			channelRating.UpTimeRating.TodayTotal = todayOccurrence
 			channelRating.UpTimeRating.TodayTimestamp = today.timestamp
 		case tenDays := <-tenDaysChan:
 			channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
-			channelRating.UpTimeRating.TenDaysTotal = tenDaysOccurence
+			channelRating.UpTimeRating.TenDaysTotal = tenDaysOccurrence
 			channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
 		case thirtyDays := <-thirtyDaysChan:
 			channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
-			channelRating.UpTimeRating.ThirtyDaysTotal = thirtyDaysOccurence
+			channelRating.UpTimeRating.ThirtyDaysTotal = thirtyDaysOccurrence
 			channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
 		case sixMonths := <-sixMonthsChan:
 			channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
-			channelRating.UpTimeRating.SixMonthsTotal = sixMonthsOccurence
+			channelRating.UpTimeRating.SixMonthsTotal = sixMonthsOccurrence
 			channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
 		}
 	}

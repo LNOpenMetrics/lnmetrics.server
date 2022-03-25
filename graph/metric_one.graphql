@@ -116,6 +116,8 @@ type NodeMetadata {
   last_update: Int! @goField(name: "LastUpdate")
 }
 
+# Type that contains only the snapshot information of the
+# metrics without the metadata
 type NodeMetric {
   timestamp: Int! @goField(name: "Timestamp")
   up_time: [Status!]! @goField(name: "UpTime")
@@ -173,12 +175,27 @@ type MetricOneOutput {
   last_update: Int! @goField(name: "LastUpdate")
   forwards_rating: ForwardsRatingSummary! @goField(name: "ForwardsRating")
   up_time: UpTimeOutput! @goField(name: "UpTime")
-  channes_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
+  channels_info: [ChannelInfoOutput!]! @goField(name: "ChannelsInfo")
+}
+
+# PageInfo type to implement the paginator pattern.
+# Based on https://medium.com/@chris.czurylo/implementing-pagination-in-graphql-and-go-using-gqlgen-2ea3786a71dc
+type PageInfo {
+  start: Int! @goField(name: "StartCursor")
+  end: Int! @goField(name: "EndCursor")
+  hash_next_page: Boolean! @goField(name: "hasNextPage")
+}
+
+# MetricOneInfo type to implement the paginator type
+type MetricOneInfo {
+  up_time: [Status!]! @goField(name: "UpTime")
+  channels_info: [StatusChannel!]! @goField(name: "ChannelsInfo")
+  page_info: PageInfo! @goField(name: "PageInfo")
 }
 
 # Query definition
 type Query {
-  # backword compatibility with old client, for two version
+  # backward compatibility with old client, for two version
   nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
 
   # Get the list of nodes that are contributing in metric collection
@@ -187,9 +204,11 @@ type Query {
   getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
-  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!
+  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
   # Get the metric one result
   getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
+  # Use the paginator patter to get all the metrics about a specific node!
+  metricOne(node_id: String!, first: Int!, last: Int): MetricOneInfo!
 }
 
 type Mutation {

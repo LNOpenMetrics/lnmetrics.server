@@ -73,13 +73,19 @@ type MetricOne struct {
 	Version      *int             `json:"version"`
 }
 
+type MetricOneInfo struct {
+	UpTime       []*Status        `json:"up_time"`
+	ChannelsInfo []*StatusChannel `json:"channels_info"`
+	PageInfo     *PageInfo        `json:"page_info"`
+}
+
 type MetricOneOutput struct {
 	Version        int                    `json:"version"`
 	Age            int                    `json:"age"`
 	LastUpdate     int                    `json:"last_update"`
 	ForwardsRating *ForwardsRatingSummary `json:"forwards_rating"`
 	UpTime         *UpTimeOutput          `json:"up_time"`
-	ChannelsInfo   []*ChannelInfoOutput   `json:"channes_info"`
+	ChannelsInfo   []*ChannelInfoOutput   `json:"channels_info"`
 }
 
 type NodeAddress struct {
@@ -121,6 +127,12 @@ type OSInfo struct {
 	Os           string `json:"os"`
 	Version      string `json:"version"`
 	Architecture string `json:"architecture"`
+}
+
+type PageInfo struct {
+	StartCursor int  `json:"start"`
+	EndCursor   int  `json:"end"`
+	HasNextPage bool `json:"hash_next_page"`
 }
 
 type PaymentInfo struct {

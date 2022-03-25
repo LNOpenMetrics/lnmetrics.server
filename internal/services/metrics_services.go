@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 	"sort"
 	"strings"
 	"sync"
@@ -18,28 +19,31 @@ import (
 )
 
 type IMetricsService interface {
-	// Init method it is called only the first time from the node
+	// InitMetricOne Init method it is called only the first time from the node
 	// when it is not init in the server, but it has some metrics collected
 	InitMetricOne(nodeID string, payload *string, signature string) (*model.MetricOne, error)
 
-	//  Append other metrics collected in a range of period by the node
+	// UpdateMetricOne Append other metrics collected in a range of period by the node
 	UpdateMetricOne(nodeID string, payload *string, signature string) error
 
-	// Deprecated: Use GetNode isteand
+	// Deprecated: Use GetNode instead
 	// Return the list of node IF available on the server.
 	Nodes() ([]*string, error)
 
-	// Return the list of nodes available on the server
+	// GetNodes Return the list of nodes available on the server
 	GetNodes(network string) ([]*model.NodeMetadata, error)
 
-	// Return the node metadata available on the server (utils for the init method)
+	// GetNode Return the node metadata available on the server (utils for the init method)
 	GetNode(network string, nodeID string) (*model.NodeMetadata, error)
 
-	// Return the node metrics with a nodeID, and option range, from start to an end period
+	// GetMetricOne Return the node metrics with a nodeID, and option range, from start to an end period
 	GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 
-	// Return the metric one output
+	// GetMetricOneOutput Return the metric one output
 	GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error)
+
+	// GetMetricOnePaginator / use the paginator patter to return the metric one, and the paginator info
+	GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error)
 }
 
 type MetricsService struct {
@@ -47,7 +51,7 @@ type MetricsService struct {
 	Backend backend.Backend
 }
 
-// Constructor method.
+// NewMetricsService Constructor method
 func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
 	instance := &MetricsService{Storage: db, Backend: lnBackend}
 	if err := instance.initMetricOneOutput(); err != nil {
@@ -67,13 +71,13 @@ func (instance *MetricsService) initMetricOneOutput() error {
 	var wg sync.WaitGroup
 	wg.Add(len(nodes))
 	for _, node := range nodes {
-		go instance.initMetricOneOuputOnNode(node, &wg)
+		go instance.initMetricOneOutputOnNode(node, &wg)
 	}
 	wg.Wait()
 	return nil
 }
 
-func (instance *MetricsService) initMetricOneOuputOnNode(node *model.NodeMetadata, wg *sync.WaitGroup) {
+func (instance *MetricsService) initMetricOneOutputOnNode(node *model.NodeMetadata, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if !instance.containsMetricOneOutput(node) {
 		// DONE 1. Get the index list of the node
@@ -138,7 +142,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
 	if instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		return nil, fmt.Errorf("Metrics Already initialized, please call get metric one API to get your last update here")
+		return nil, fmt.Errorf("metrics Already initialized, please call get metric one API to get your last update here")
 	}
 
 	var metricModel model.MetricOne
@@ -147,11 +151,11 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 	}
 
 	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
-		return nil, fmt.Errorf("Unsupported network, or an old client version is sending this data")
+		return nil, fmt.Errorf("unsupported network, or an old client version is sending this data")
 	}
 
 	if metricModel.Version == nil || *metricModel.Version < 4 {
-		return nil, fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
+		return nil, fmt.Errorf("the commit payload it is made from an old client, please considered to update the client (plugin)")
 	}
 
 	if err := instance.Storage.InsertMetricOne(&metricModel); err != nil {
@@ -167,7 +171,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, signature string) error {
 
 	if !instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		return fmt.Errorf("Metrics One not initialized, please call initialize the metric.")
+		return fmt.Errorf("metrics One not initialized, please call initialize the metric")
 	}
 
 	ok, err := instance.Backend.VerifyMessage(payload, &signature, &nodeID)
@@ -187,11 +191,11 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	}
 
 	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
-		return fmt.Errorf("Unsupported network, or an old client version is sending this data")
+		return fmt.Errorf("unsupported network, or an old client version is sending this data")
 	}
 
 	if metricModel.Version == nil || *metricModel.Version < 4 {
-		return fmt.Errorf("The commit payload it is made from an old client, please considered to update the client (plugin)")
+		return fmt.Errorf("the commit payload it is made from an old client, please considered to update the client (plugin)")
 	}
 
 	if err := instance.Storage.UpdateMetricOne(&metricModel); err != nil {
@@ -217,7 +221,7 @@ func (instance *MetricsService) Nodes() ([]*string, error) {
 	return nodesList, nil
 }
 
-// Return all the node information that are pushing the data.
+// GetNodes Return all the node information that are pushing the data.
 func (instance *MetricsService) GetNodes(network string) ([]*model.NodeMetadata, error) {
 	if network != "bitcoin" {
 		return nil, fmt.Errorf("network %s unsupported", network)
@@ -232,7 +236,26 @@ func (instance *MetricsService) GetNode(network string, nodeID string) (*model.N
 	return instance.Storage.GetNode(network, nodeID, "metric_one")
 }
 
-// Get the metric one of one node and add a filtering option by period
+// GetMetricOnePaginator Return the metrics one without metadata of the node,
+// and with the information to implement the paginator
+func (instance *MetricsService) GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
+	if last == nil {
+		val := int(utime.AddToTimestamp(int64(first), 6*30*time.Minute))
+		last = &val
+	} else {
+		// we check if the last - first is under a limit like 6 hours
+		if utime.OccurenceInUnixRange(int64(first), int64(*last), 30*time.Minute) > 12 {
+			return nil, fmt.Errorf("distance between the timestamp it is grater than 6 hour")
+		}
+	}
+	metricsInfo, err := instance.Storage.GetMetricOneInfo(nodeID, first, *last)
+	if err != nil {
+		log.GetInstance().Errorf("Error during the call to GetMetricOnePaginator: %s", err)
+	}
+	return metricsInfo, err
+}
+
+// GetMetricOne Get the metric one of one node and add a filtering option by period
 func (instance *MetricsService) GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
 	metricNodeInfo, err := instance.Storage.GetMetricOne(nodeID, startPeriod, endPeriod)
 	if err != nil {

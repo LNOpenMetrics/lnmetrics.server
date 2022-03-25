@@ -54,6 +54,12 @@ func (instance *MockMetricsServices) Nodes() ([]*string, error) {
 	return make([]*string, 0), nil
 }
 
+// FIXME: implementing integration test
 func (instance *MockMetricsServices) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
+	return nil, nil
+}
+
+// FIXME: implementing integration test
+func (instance *MockMetricsServices) GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
 	return nil, nil
 }

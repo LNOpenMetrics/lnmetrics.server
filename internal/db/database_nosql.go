@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 	"strconv"
 	"strings"
 	"sync"
@@ -11,7 +12,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
 
-	"github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
+	db "github.com/LNOpenMetrics/lnmetrics.utils/db/leveldb"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
@@ -25,7 +26,7 @@ type NoSQLDatabase struct {
 	dbVersion  int
 }
 
-// Create a new instance of the NOSql database
+// NewNoSQLDB Create a new instance of the NOSql database
 func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	path, found := options["path"]
 	if !found {
@@ -49,30 +50,28 @@ func NewNoSQLDB(options map[string]interface{}) (*NoSQLDatabase, error) {
 	return instance, nil
 }
 
-// Get access to the raw data contained with the specified key
+// GetRawValue Get access to the raw data contained with the specified key
 func (instance NoSQLDatabase) GetRawValue(key string) ([]byte, error) {
 	return db.GetInstance().GetValueInBytes(key)
 }
 
-// Put a raw value with the specified key in the db
+// PutRawValue Put a raw value with the specified key in the db
 func (instance NoSQLDatabase) PutRawValue(key string, value []byte) error {
 	return db.GetInstance().PutValueInBytes(key, value)
 }
 
 func (instance NoSQLDatabase) RawIterateThrough(start string, end string, callback func(string) error) error {
-
 	return db.GetInstance().IterateThrough(start, end, callback)
 }
 
-// In the NO sql database, at list for the moment we don't need to
+// CreateMetricOne In the NO sql database, at list for the moment we don't need to
 // make a schema. The data are the schema it self.
 func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) error {
 	return nil
 }
 
-// Init the metric in the database.
+// InsertMetricOne Init the metric in the database.
 func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
-
 	// we need to index the node in the nodes_index
 	if err := instance.indexingInDB(toInsert.NodeID); err != nil {
 		return err
@@ -80,7 +79,7 @@ func (instance NoSQLDatabase) InsertMetricOne(toInsert *model.MetricOne) error {
 	return instance.UpdateMetricOne(toInsert)
 }
 
-// Adding new metric  for the node,
+// UpdateMetricOne Adding new metric  for the node,
 func (instance NoSQLDatabase) UpdateMetricOne(toInsert *model.MetricOne) error {
 	//FIXME: I can run this operation in parallel
 	baseKey, err := instance.ItemID(toInsert)
@@ -102,7 +101,7 @@ func (instance NoSQLDatabase) UpdateMetricOne(toInsert *model.MetricOne) error {
 	return nil
 }
 
-// get the metrics metadata
+// GetNodes get the metrics metadata
 func (instance *NoSQLDatabase) GetNodes(network string) ([]*model.NodeMetadata, error) {
 	//TODO: Ignoring the network for now, different network stay
 	// in different db
@@ -147,7 +146,7 @@ func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metricName
 	return &modelMetadata, nil
 }
 
-// Get all the metric of the node with a specified id
+// GetMetricOne Get all the metric of the node with a specified id
 func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
 
 	// 1. Take the medatata
@@ -184,6 +183,40 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 	modelMetricOne.ChannelsInfo = nodeMetric.ChannelsInfo
 
 	return modelMetricOne, nil
+}
+
+func (instance *NoSQLDatabase) GetMetricOneInfo(nodeID string, first int, last int) (*model.MetricOneInfo, error) {
+	// 1. take the node index of timestamp, and filter by period
+	// 1.1 check the period used
+	// 2. fill the metric model and return it
+	baseKey := strings.Join([]string{nodeID, "metric_one"}, "/")
+	// TODO check the bound
+	nodeMetric, err := instance.retreivalNodesMetric(baseKey, "metric_one", first, last)
+	if err != nil {
+		return nil, err
+	}
+	// FIXME: the paginator is fill randomly in some case
+	// because we don't know some necessary information from
+	// the db side.
+	modelMetricOne := model.MetricOneInfo{
+		UpTime:       nodeMetric.UpTime,
+		ChannelsInfo: nodeMetric.ChannelsInfo,
+		PageInfo: &model.PageInfo{
+			// The last is the database is included, so we advance by one minute
+			StartCursor: int(utime.AddToTimestamp(int64(last), 1*time.Minute)),
+			// TODO: make the period to work with timestamp fixed by some config
+			EndCursor: int(utime.AddToTimestamp(int64(last), 6*30*time.Minute)),
+			// if we found something's we can continue!
+			HasNextPage: len(nodeMetric.UpTime) != 0,
+		},
+	}
+	jsonStr, err := json.Marshal(modelMetricOne)
+	if err != nil {
+		log.GetInstance().Errorf("Error during debug operation %s", err)
+	} else {
+		log.GetInstance().Infof("Metric Info generated is %s", string(jsonStr))
+	}
+	return &modelMetricOne, nil
 }
 
 func (instance *NoSQLDatabase) GetMetricOneOutput(nodeID string) (*model.MetricOneOutput, error) {
