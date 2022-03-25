@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 	"sort"
 	"strings"
 	"sync"
@@ -40,6 +41,9 @@ type IMetricsService interface {
 
 	// GetMetricOneOutput Return the metric one output
 	GetMetricOneOutput(network string, nodeID string) (*model.MetricOneOutput, error)
+
+	// GetMetricOnePaginator / use the paginator patter to return the metric one, and the paginator info
+	GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error)
 }
 
 type MetricsService struct {
@@ -230,6 +234,25 @@ func (instance *MetricsService) GetNode(network string, nodeID string) (*model.N
 		return nil, fmt.Errorf("network %s unsupported", network)
 	}
 	return instance.Storage.GetNode(network, nodeID, "metric_one")
+}
+
+// GetMetricOnePaginator Return the metrics one without metadata of the node,
+// and with the information to implement the paginator
+func (instance *MetricsService) GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
+	if last == nil {
+		val := int(utime.AddToTimestamp(int64(first), 6*30*time.Minute))
+		last = &val
+	} else {
+		// we check if the last - first is under a limit like 6 hours
+		if utime.OccurenceInUnixRange(int64(first), int64(*last), 30*time.Minute) > 12 {
+			return nil, fmt.Errorf("distance between the timestamp it is grater than 6 hour")
+		}
+	}
+	metricsInfo, err := instance.Storage.GetMetricOneInfo(nodeID, first, *last)
+	if err != nil {
+		log.GetInstance().Errorf("Error during the call to GetMetricOnePaginator: %s", err)
+	}
+	return metricsInfo, err
 }
 
 // GetMetricOne Get the metric one of one node and add a filtering option by period

@@ -27,7 +27,7 @@ gen:
 	$(CC) generate ./...
 
 mod:
-	$(CC) get -u github.com/kyoh86/richgo
+	$(CC) get -d github.com/kyoh86/richgo
 	$(CC) mod vendor
 
 release:
@@ -37,7 +37,7 @@ prod:
 	$(CC) build -ldflags '-s -w' -o $(NAME) cmd/lnmetrics.server/main.go
 
 update_utils:
-	$(CC) get -u github.com/LNOpenMetrics/lnmetrics.utils
+	$(CC) get -d github.com/LNOpenMetrics/lnmetrics.utils
 	$(CC) mod vendor
 
 trace:

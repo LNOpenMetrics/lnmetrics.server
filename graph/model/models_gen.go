@@ -74,8 +74,9 @@ type MetricOne struct {
 }
 
 type MetricOneInfo struct {
-	Metric   *NodeMetadata `json:"metric"`
-	PageInfo *PageInfo     `json:"pageInfo"`
+	UpTime       []*Status        `json:"up_time"`
+	ChannelsInfo []*StatusChannel `json:"channels_info"`
+	PageInfo     *PageInfo        `json:"page_info"`
 }
 
 type MetricOneOutput struct {
@@ -129,9 +130,9 @@ type OSInfo struct {
 }
 
 type PageInfo struct {
-	StartCursor string `json:"startCursor"`
-	EndCursor   string `json:"endCursor"`
-	HasNextPage *bool  `json:"hasNextPage"`
+	StartCursor int  `json:"start"`
+	EndCursor   int  `json:"end"`
+	HasNextPage bool `json:"hash_next_page"`
 }
 
 type PaymentInfo struct {
