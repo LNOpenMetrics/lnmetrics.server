@@ -2,15 +2,8 @@ package metric
 
 import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
+	"github.com/LNOpenMetrics/lnmetrics.server/pkg/utils"
 )
-
-// TODO move inside the utils function
-func Percentage(selected uint64, total uint64) int {
-	if total == 0 {
-		return 0
-	}
-	return int((float64(selected)/float64(total))*100) % 100
-}
 
 func CalculateMetricOneOutputFromRaw(rawMetric *RawMetricOneOutput) *model.MetricOneOutput {
 	result := &model.MetricOneOutput{}
@@ -39,19 +32,19 @@ func MappingForwardsRatingFromRaw(raw *RawForwardsRating) *model.ForwardsRatingS
 func MappingForwardsRatingByDayFromRaw(raw *RawForwardRating) *model.ForwardsRating {
 	tot := raw.Success + raw.Failure + raw.InternalFailure
 	return &model.ForwardsRating{
-		Success:         Percentage(raw.Success, tot),
-		Failure:         Percentage(raw.Failure, tot),
-		InternalFailure: Percentage(raw.InternalFailure, tot),
+		Success:         utils.Percentage(raw.Success, tot),
+		Failure:         utils.Percentage(raw.Failure, tot),
+		InternalFailure: utils.Percentage(raw.InternalFailure, tot),
 	}
 }
 
 func MappingUpTimeRatingFromRaw(raw *RawPercentageData) *model.UpTimeOutput {
 	return &model.UpTimeOutput{
-		OneDay:     Percentage(raw.TodaySuccess, raw.TodayTotal),
-		TenDays:    Percentage(raw.TenDaysSuccess, raw.TenDaysTotal),
-		ThirtyDays: Percentage(raw.ThirtyDaysSuccess, raw.ThirtyDaysTotal),
-		SixMonths:  Percentage(raw.SixMonthsSuccess, raw.SixMonthsTotal),
-		Full:       Percentage(raw.FullSuccess, raw.FullTotal),
+		OneDay:     utils.Percentage(raw.TodaySuccess, raw.TodayTotal),
+		TenDays:    utils.Percentage(raw.TenDaysSuccess, raw.TenDaysTotal),
+		ThirtyDays: utils.Percentage(raw.ThirtyDaysSuccess, raw.ThirtyDaysTotal),
+		SixMonths:  utils.Percentage(raw.SixMonthsSuccess, raw.SixMonthsTotal),
+		Full:       utils.Percentage(raw.FullSuccess, raw.FullTotal),
 	}
 }
 
