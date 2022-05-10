@@ -174,7 +174,7 @@ func (instance NoSQLDatabase) GetMetricOne(nodeID string, startPeriod int, endPe
 		ChannelsInfo: make([]*model.StatusChannel, 0),
 	}
 
-	nodeMetric, err := instance.retreivalNodesMetric(baseKey, "metric_one", startPeriod, endPeriod)
+	nodeMetric, err := instance.retrievalNodesMetric(baseKey, "metric_one", startPeriod, endPeriod)
 	if err != nil {
 		return nil, err
 	}
@@ -191,23 +191,35 @@ func (instance *NoSQLDatabase) GetMetricOneInfo(nodeID string, first int, last i
 	// 2. fill the metric model and return it
 	baseKey := strings.Join([]string{nodeID, "metric_one"}, "/")
 	// TODO check the bound
-	nodeMetric, err := instance.retreivalNodesMetric(baseKey, "metric_one", first, last)
+	nodeMetric, err := instance.retrievalNodesMetric(baseKey, "metric_one", first, last)
 	if err != nil {
 		return nil, err
 	}
 	// FIXME: the paginator is fill randomly in some case
 	// because we don't know some necessary information from
 	// the db side.
+
+	// check if the array of uptime is empty because there are no more
+	// uptime or the node was added later to the lnmetrics system.
+	isInPast := false
+	nextTimestamp := int64(last)
+	if len(nodeMetric.UpTime) == 0 {
+		dbIndex, _ := instance.GetMetricOneIndex(nodeID)
+		if dbIndex[0] > nextTimestamp {
+			isInPast = true
+			nextTimestamp = dbIndex[0]
+		}
+	}
 	modelMetricOne := model.MetricOneInfo{
 		UpTime:       nodeMetric.UpTime,
 		ChannelsInfo: nodeMetric.ChannelsInfo,
 		PageInfo: &model.PageInfo{
 			// The last is the database is included, so we advance by one minute
-			StartCursor: int(utime.AddToTimestamp(int64(last), 1*time.Minute)),
+			StartCursor: int(utime.AddToTimestamp(nextTimestamp, 1*time.Minute)),
 			// TODO: make the period to work with timestamp fixed by some config
-			EndCursor: int(utime.AddToTimestamp(int64(last), 6*30*time.Minute)),
+			EndCursor: int(utime.AddToTimestamp(nextTimestamp, 6*30*time.Minute)),
 			// if we found something's we can continue!
-			HasNextPage: len(nodeMetric.UpTime) != 0,
+			HasNextPage: len(nodeMetric.UpTime) != 0 || isInPast,
 		},
 	}
 	jsonStr, err := json.Marshal(modelMetricOne)
@@ -246,17 +258,17 @@ func (instance *NoSQLDatabase) GetMetricOneIndex(nodeID string) ([]int64, error)
 	return index, nil
 }
 
-// close the connection with database
+// CloseDatabase close the connection with database
 func (instance NoSQLDatabase) CloseDatabase() error {
 	return db.GetInstance().CloseDatabase()
 }
 
-// Erase database
+// EraseDatabase Erase database
 func (instance NoSQLDatabase) EraseDatabase() error {
 	return db.GetInstance().EraseDatabase()
 }
 
-// Close and aftert erase the connection with the database
+// EraseAfterCloseDatabase Close and aftert erase the connection with the database
 func (instance NoSQLDatabase) EraseAfterCloseDatabase() error {
 	return db.GetInstance().EraseAfterCloseDatabse()
 }
@@ -276,7 +288,7 @@ func (instance *NoSQLDatabase) Migrate() error {
 	return err
 }
 
-// Get the version of data stored in the db
+// GetVersionData Get the version of data stored in the db
 func (instance *NoSQLDatabase) GetVersionData() (uint, error) {
 	versionStr, err := db.GetInstance().GetValue("data_version")
 	if err != nil {
@@ -293,7 +305,7 @@ func (instance *NoSQLDatabase) SetVersionData() error {
 	return nil
 }
 
-// Generate the id of an item from a Metrics Model
+// ItemID Generate the id of an item from a Metrics Model
 func (instance *NoSQLDatabase) ItemID(toInsert *model.MetricOne) (string, error) {
 	nodeIdentifier := strings.Join([]string{
 		toInsert.NodeID,
@@ -327,7 +339,7 @@ func (instance *NoSQLDatabase) createIndexDBIfMissin() error {
 	return nil
 }
 
-// Adding the nodeid to the node_index.
+// Adding the node GetMetricOneInfoid to the node_index.
 // TODO: We need to lock this method to avoid concurrency
 func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 	// TODO: use cache
@@ -369,7 +381,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 func (instance *NoSQLDatabase) getIndexDB() ([]string, error) {
 	nodesIndex := make([]string, 0)
 	// TODO: use cache
-	// TODO: during the megrationg create the index too.
+	// TODO: during the migration create the index too.
 	dbIndex, err := db.GetInstance().GetValue("node_index")
 	if err != nil {
 		return nil, err
@@ -600,7 +612,7 @@ func (instance *NoSQLDatabase) retreivalNodeMetric(nodeKey string, timestamp uin
 
 // Private function that it is able to get the collection of metric in a period
 // expressed in unix time.
-func (instance *NoSQLDatabase) retreivalNodesMetric(nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
+func (instance *NoSQLDatabase) retrievalNodesMetric(nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
 	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
 	timestampJson, err := db.GetInstance().GetValue(timestampsKey)
 	log.GetInstance().Debug(fmt.Sprintf("index of timestamp: %s", timestampJson))
