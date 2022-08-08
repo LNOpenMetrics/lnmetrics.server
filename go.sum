@@ -3,6 +3,8 @@ github.com/99designs/gqlgen v0.14.0/go.mod h1:S7z4boV+Nx4VvzMUpVrY/YuHjFX4n7rDyu
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/LNOpenMetrics/lnmetrics.utils v0.0.6 h1:fO6nTbMsLzJDEHRRfyS+QUSEzmyXHCaOWOpmttlYGrE=
 github.com/LNOpenMetrics/lnmetrics.utils v0.0.6/go.mod h1:6PC0XEUljl08AHdHdMQtR2tGJ1o9Jzg8yt7nioTnlE4=
+github.com/LNOpenMetrics/lnmetrics.utils v0.0.7 h1:iLorvC+QIkkiXztqwGe6lcNws3wiRhx38i/9y4Erf68=
+github.com/LNOpenMetrics/lnmetrics.utils v0.0.7/go.mod h1:6PC0XEUljl08AHdHdMQtR2tGJ1o9Jzg8yt7nioTnlE4=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/agnivade/levenshtein v1.1.0/go.mod h1:veldBMzWxcCG2ZvUTKD2kJNRdCk5hVbJomOvKkmgYbo=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
