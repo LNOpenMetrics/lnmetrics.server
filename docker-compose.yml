@@ -5,10 +5,9 @@ services:
     build: .
     volumes:
       - ./data:/lnmetrics/.lnmetrics
-    ports:
-      - "8081:8080"
+    network_mode: "host"
     environment:
-      - SERVER_PORT=8080
+      - SERVER_PORT=8081
       - DB_PATH=/lnmetrics/.lnmetrics
-      - BACKEND_PATH=https://bruce.lnmetrics.info
+      - BACKEND_PATH=https://127.0.0.1:7000
       - METRICS_LOG=/lnmetrics/.lnmetrics

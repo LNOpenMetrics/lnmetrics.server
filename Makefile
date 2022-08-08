@@ -36,7 +36,7 @@ release:
 prod:
 	$(CC) build -ldflags '-s -w' -o $(NAME) cmd/lnmetrics.server/main.go
 
-update_utils:
+dep:
 	$(CC) get -d github.com/LNOpenMetrics/lnmetrics.utils
 	$(CC) mod vendor
 

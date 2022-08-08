@@ -37,7 +37,7 @@ func (instance *RestBackend) VerifyMessage(message *string, signature *string, p
 	data.Set("pubkey", *pubkey)
 
 	postData := data.Encode()
-	url := strings.Join([]string{*instance.BaseUrl, restMethodName}, "/")
+	url := strings.Join([]string{*instance.BaseUrl, "utility", restMethodName}, "/")
 
 	log.GetInstance().Debug(fmt.Sprintf("rest backend url: %s", url))
 	log.GetInstance().Debug(fmt.Sprintf("verify message request: %s", string(postData)))
@@ -59,11 +59,13 @@ func (instance *RestBackend) VerifyMessage(message *string, signature *string, p
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.GetInstance().Errorf("Error from backend: %s", err)
 		return false, err
 	}
 
 	var response CheckMessageResponse
 	if err := json.Unmarshal(body, &response); err != nil {
+		log.GetInstance().Errorf("error during decoding json response: %s", err)
 		return false, err
 	}
 
