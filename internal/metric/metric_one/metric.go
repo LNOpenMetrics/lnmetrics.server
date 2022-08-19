@@ -1,4 +1,4 @@
-package metric
+package metric_one
 
 import (
 	"encoding/json"
@@ -18,10 +18,10 @@ import (
 )
 
 // days constant
-var todayOccurrence = utils.ReturnOccurrence(24*time.Hour, 30*time.Minute)
-var tenDaysOccurrence = utils.ReturnOccurrence(10*24*time.Hour, 30*time.Minute)
-var thirtyDaysOccurrence = utils.ReturnOccurrence(30*24*time.Hour, 30*time.Minute)
-var sixMonthsOccurrence = utils.ReturnOccurrence(6*30*24*time.Hour, 30*time.Minute)
+var TodayOccurrence = utils.ReturnOccurrence(24*time.Hour, 30*time.Minute)
+var RenDaysOccurrence = utils.ReturnOccurrence(10*24*time.Hour, 30*time.Minute)
+var ThirtyDaysOccurrence = utils.ReturnOccurrence(30*24*time.Hour, 30*time.Minute)
+var SixMonthsOccurrence = utils.ReturnOccurrence(6*30*24*time.Hour, 30*time.Minute)
 
 // accumulator wrapper data structure
 type accumulator struct {
@@ -51,7 +51,7 @@ func intersectionChannelsInfo(updateState *model.MetricOne, oldState *RawMetricO
 	return nil
 }
 
-// Method to calculate the metric one output and store the result
+// CalculateMetricOneOutput Method to calculate the metric one output and store the result
 // on the server
 func CalculateMetricOneOutput(storage db.MetricsDatabase, metricModel *model.MetricOne) error {
 	metricKey := strings.Join([]string{metricModel.NodeID, config.RawMetricOnePrefix}, "/")
@@ -136,7 +136,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		// This is a correct assumtion? or I need to iterate inside the DB?
 		nodeUpTime.TodaySuccess = onlineUpdate
 	}
-	nodeUpTime.TodayTotal = todayOccurrence
+	nodeUpTime.TodayTotal = TodayOccurrence
 	nodeUpTime.TodayTimestamp = lastTimestamp
 
 	tenDaysStored := nodeUpTime.TenDaysTimestamp
@@ -155,7 +155,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.TenDaysSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.TenDaysTimestamp = firstDate
 	}
-	nodeUpTime.TenDaysTotal = tenDaysOccurrence
+	nodeUpTime.TenDaysTotal = RenDaysOccurrence
 
 	// 30 days
 	thirtyDaysStored := nodeUpTime.ThirtyDaysTimestamp
@@ -173,7 +173,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.ThirtyDaysSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.ThirtyDaysTimestamp = firstDate
 	}
-	nodeUpTime.ThirtyDaysTotal = thirtyDaysOccurrence
+	nodeUpTime.ThirtyDaysTotal = ThirtyDaysOccurrence
 
 	// 6 month
 	sixMonthsStored := nodeUpTime.SixMonthsTimestamp
@@ -191,7 +191,7 @@ func calculateUptimeMetricOne(storage db.MetricsDatabase, rawMetric *RawMetricOn
 		nodeUpTime.SixMonthsSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.SixMonthsTimestamp = firstDate
 	}
-	nodeUpTime.SixMonthsTotal = sixMonthsOccurrence
+	nodeUpTime.SixMonthsTotal = SixMonthsOccurrence
 
 	// full
 	nodeUpTime.FullSuccess += onlineUpdate
@@ -548,19 +548,19 @@ func calculateUpTimeRatingChannel(storage db.MetricsDatabase, itemKey string,
 		select {
 		case today := <-todayChan:
 			channelRating.UpTimeRating.TodaySuccess = uint64(today.acc.Selected)
-			channelRating.UpTimeRating.TodayTotal = todayOccurrence
+			channelRating.UpTimeRating.TodayTotal = TodayOccurrence
 			channelRating.UpTimeRating.TodayTimestamp = today.timestamp
 		case tenDays := <-tenDaysChan:
 			channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDays.acc.Selected)
-			channelRating.UpTimeRating.TenDaysTotal = tenDaysOccurrence
+			channelRating.UpTimeRating.TenDaysTotal = RenDaysOccurrence
 			channelRating.UpTimeRating.TenDaysTimestamp = tenDays.timestamp
 		case thirtyDays := <-thirtyDaysChan:
 			channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDays.acc.Selected)
-			channelRating.UpTimeRating.ThirtyDaysTotal = thirtyDaysOccurrence
+			channelRating.UpTimeRating.ThirtyDaysTotal = ThirtyDaysOccurrence
 			channelRating.UpTimeRating.ThirtyDaysTimestamp = thirtyDays.timestamp
 		case sixMonths := <-sixMonthsChan:
 			channelRating.UpTimeRating.SixMonthsSuccess = uint64(sixMonths.acc.Selected)
-			channelRating.UpTimeRating.SixMonthsTotal = sixMonthsOccurrence
+			channelRating.UpTimeRating.SixMonthsTotal = SixMonthsOccurrence
 			channelRating.UpTimeRating.SixMonthsTimestamp = sixMonths.timestamp
 		}
 	}
@@ -608,7 +608,7 @@ func calculateUpTimeRatingByPeriod(storage db.MetricsDatabase, itemKey string, c
 	acc <- internalAcc
 }
 
-// utils function to accumulat the UpTimeForChannels and return the accumulation value, and the last timestamp
+// utils function to accumulate the UpTimeForChannels and return the accumulation value, and the last timestamp
 func accumulateUpTimeForChannel(upTime []*model.ChannelStatus) *wrapperUpTimeAccumulator {
 	wrapper := &wrapperUpTimeAccumulator{
 		acc: &accumulator{

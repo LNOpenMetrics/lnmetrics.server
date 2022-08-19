@@ -1,4 +1,4 @@
-package metric
+package metric_one
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
-// Wrapper struct that contains the information
+// RawMetricOneOutput Wrapper struct that contains the information
 // to calculate the metric one output in a incremental way
 // we need to store a raw metric output with all the
 // metadata attached.
@@ -26,7 +26,7 @@ type RawMetricOneOutput struct {
 	ChannelsRating map[string]*RawChannelRating `json:"channels_rating"`
 }
 
-// Wrapper struct that contains all the information to
+// RawPercentageData Wrapper struct that contains all the information to
 // calculate the percentage
 type RawPercentageData struct {
 	// Number of operation with success in the last day
@@ -60,7 +60,7 @@ type RawPercentageData struct {
 	FullTotal uint64 `json:"full_tot"`
 }
 
-// Wrapper struct that contains all the information about the metric one output
+// RawChannelRating Wrapper struct that contains all the information about the metric one output
 type RawChannelRating struct {
 	// Age of the channels, it is the first time that the node
 	// is catch from the channel
@@ -76,7 +76,7 @@ type RawChannelRating struct {
 	ForwardsRating *RawForwardsRating   `json:"forwards_rating"`
 }
 
-// Wrapper struct around the forwards rating
+// RawForwardsRating Wrapper struct around the forwards rating
 type RawForwardsRating struct {
 	// Forwards Rating in the current day
 	TodayRating *RawForwardRating `json:"one_day"`
@@ -98,7 +98,7 @@ type RawForwardsRating struct {
 	FullRating *RawForwardRating `json:"full"`
 }
 
-// Wrapper struct around the forward rating
+// RawForwardRating Wrapper struct around the forward rating
 // that contains information about the number
 // of success, failure and internal failure
 type RawForwardRating struct {
@@ -107,7 +107,7 @@ type RawForwardRating struct {
 	InternalFailure uint64 `json:"internal_failure"`
 }
 
-// Create a new Raw Metric One Output with all the default value
+// NewRawMetricOneOutput Create a new Raw Metric One Output with all the default value
 func NewRawMetricOneOutput(timestamp int64) *RawMetricOneOutput {
 	return &RawMetricOneOutput{
 		Version:        0,
@@ -152,7 +152,7 @@ func NewRawForwardsRating() *RawForwardsRating {
 	}
 }
 
-// Create a new item that contains information about the forwards status.
+// NewRawForwardRating Create a new item that contains information about the forwards status.
 func NewRawForwardRating() *RawForwardRating {
 	return &RawForwardRating{
 		Success:         0,

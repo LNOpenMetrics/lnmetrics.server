@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/LNOpenMetrics/lnmetrics.server/internal/metric/metric_one"
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
 	"sort"
 	"strings"
@@ -13,8 +14,6 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/config"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
-	"github.com/LNOpenMetrics/lnmetrics.server/internal/metric"
-
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
@@ -102,7 +101,7 @@ func (instance *MetricsService) initMetricOneOutputOnNode(node *model.NodeMetada
 				return err
 			}
 
-			return metric.CalculateMetricOneOutput(instance.Storage, &model)
+			return metric_one.CalculateMetricOneOutput(instance.Storage, &model)
 		})
 		if err != nil {
 			log.GetInstance().Infof("Error: %s", err)
@@ -122,7 +121,7 @@ func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata
 }
 
 func calculateMetricOneOutput(metricsServices *MetricsService, metricModel *model.MetricOne, startTime int64) {
-	if err := metric.CalculateMetricOneOutput(metricsServices.Storage, metricModel); err != nil {
+	if err := metric_one.CalculateMetricOneOutputSync(metricsServices.Storage, metricModel); err != nil {
 		log.GetInstance().Errorf("Calculate metric one output return an error %s", err)
 	} else {
 		log.GetInstance().Debugf("Calculate metric one for node %s at %d", metricModel.NodeID, startTime)

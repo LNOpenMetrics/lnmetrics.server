@@ -1,4 +1,4 @@
-package metric
+package metric_one
 
 import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
