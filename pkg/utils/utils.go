@@ -1,5 +1,5 @@
 // Package utils / Simple utils function used int he application
-/// with scope only inside the application
+// / with scope only inside the application
 // BTW, we make this public if can be useful for someone else.
 package utils
 

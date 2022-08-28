@@ -15,7 +15,7 @@ type RawMetricOneOutput struct {
 	Version uint `json:"version"`
 	// First time that the node it is shows from the server
 	Age int64 `json:"age"`
-	// The last time that this raw was update
+	// The last time that this raw was updated
 	LastUpdate int64 `json:"last_update"`
 	//forwards rating with all the information attached
 	ForwardsRating *RawForwardsRating `json:"forwards_rating"`
