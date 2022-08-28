@@ -25,18 +25,20 @@ func CalculateRationForChannelsSync(storage db.MetricsDatabase, itemKey string, 
 	}
 
 	for _, channelInfo := range channelsInfo {
+		// Sanity check to avoid to store trash
 		if channelInfo.ChannelID == "" ||
 			channelInfo.Direction == "" {
 			log.GetInstance().Errorf("Invalid Channels with id %s and direction %s", channelInfo.ChannelID, channelInfo.Direction)
 			continue
 		}
-		// TODO: We need to aggregate the channels only one, or we need to
-		// keep in and out channel? The second motivation sound good to method
+
 		key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "/")
 		rating, found := channelsRating[key]
 		if !found {
 			sort.Slice(channelInfo.UpTime, func(i int, j int) bool { return channelInfo.UpTime[i].Timestamp < channelInfo.UpTime[j].Timestamp })
 			validTimestamp := channelInfo.UpTime[0].Timestamp
+
+			// FIXME: this do not make more sense?
 			if validTimestamp <= 0 {
 				for _, upTime := range channelInfo.UpTime {
 					if upTime.Timestamp > 0 {
@@ -227,6 +229,7 @@ func CalculateForwardsPaymentsForChannelSync(storage db.MetricsDatabase, itemKey
 	forwardsRating.FullRating.Success += accumulation.Wrapper.Success
 	forwardsRating.FullRating.Failure += accumulation.Wrapper.Failure
 	forwardsRating.FullRating.InternalFailure += accumulation.Wrapper.InternalFailure
+	forwardsRating.FullRating.LocalFailure += accumulation.Wrapper.LocalFailure
 }
 
 func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey string, channelID string,
@@ -239,13 +242,13 @@ func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey 
 		result.Wrapper.Success += lastForwardRating.Success
 		result.Wrapper.Failure += lastForwardRating.Failure
 		result.Wrapper.InternalFailure += lastForwardRating.InternalFailure
+		result.Wrapper.LocalFailure += lastForwardRating.LocalFailure
 	} else {
 		startPeriod := utime.SubToTimestamp(result.Timestamp, period)
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
 		endID := strings.Join([]string{itemKey, fmt.Sprint(result.Timestamp + 1), "metric"}, "/")
-		acc := result.Wrapper
 		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
-			if err := accumulateForwardsRatingChannelFromDB(channelID, &itemValue, acc); err != nil {
+			if err := accumulateForwardsRatingChannelFromDB(channelID, &itemValue, result.Wrapper); err != nil {
 				log.GetInstance().Errorf("Error during counting: %s", err)
 				return err
 			}

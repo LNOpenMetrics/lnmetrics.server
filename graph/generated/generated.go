@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 	ForwardsRating struct {
 		Failure         func(childComplexity int) int
 		InternalFailure func(childComplexity int) int
+		LocalFailure    func(childComplexity int) int
 		Success         func(childComplexity int) int
 	}
 
@@ -177,7 +178,7 @@ type ComplexityRoot struct {
 
 	PageInfo struct {
 		EndCursor   func(childComplexity int) int
-		HasNextPage func(childComplexity int) int
+		HasNext     func(childComplexity int) int
 		StartCursor func(childComplexity int) int
 	}
 
@@ -445,6 +446,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ForwardsRating.InternalFailure(childComplexity), true
+
+	case "ForwardsRating.local_failure":
+		if e.complexity.ForwardsRating.LocalFailure == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRating.LocalFailure(childComplexity), true
 
 	case "ForwardsRating.success":
 		if e.complexity.ForwardsRating.Success == nil {
@@ -827,12 +835,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageInfo.EndCursor(childComplexity), true
 
-	case "PageInfo.hash_next_page":
-		if e.complexity.PageInfo.HasNextPage == nil {
+	case "PageInfo.has_next":
+		if e.complexity.PageInfo.HasNext == nil {
 			break
 		}
 
-		return e.complexity.PageInfo.HasNextPage(childComplexity), true
+		return e.complexity.PageInfo.HasNext(childComplexity), true
 
 	case "PageInfo.start":
 		if e.complexity.PageInfo.StartCursor == nil {
@@ -1319,7 +1327,8 @@ type NodeAddress {
 type ForwardsRating {
   success: Int! @goField(name: "Success")
   failure: Int! @goField(name: "Failure")
-  internal_failure: Int! @goField(name: "InternalFailure")
+  internal_failure: Int! @goField(name: "InternalFailure") @deprecated(reason: "Use instead local_failure, this will be removed in 6 month")
+  local_failure: Int! @goField(name: "LocalFailure")
 }
 
 type ForwardsRatingSummary {
@@ -1367,7 +1376,7 @@ type MetricOneOutput {
 type PageInfo {
   start: Int! @goField(name: "StartCursor")
   end: Int! @goField(name: "EndCursor")
-  hash_next_page: Boolean! @goField(name: "hasNextPage")
+  has_next: Boolean! @goField(name: "hasNext")
 }
 
 # MetricOneInfo type to implement the paginator type
@@ -2590,6 +2599,41 @@ func (ec *executionContext) _ForwardsRating_internal_failure(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.InternalFailure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRating_local_failure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LocalFailure, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4463,7 +4507,7 @@ func (ec *executionContext) _PageInfo_end(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PageInfo_hash_next_page(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _PageInfo_has_next(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4481,7 +4525,7 @@ func (ec *executionContext) _PageInfo_hash_next_page(ctx context.Context, field 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.HasNextPage, nil
+		return obj.HasNext, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7272,6 +7316,11 @@ func (ec *executionContext) _ForwardsRating(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "local_failure":
+			out.Values[i] = ec._ForwardsRating_local_failure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7793,8 +7842,8 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "hash_next_page":
-			out.Values[i] = ec._PageInfo_hash_next_page(ctx, field, obj)
+		case "has_next":
+			out.Values[i] = ec._PageInfo_has_next(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

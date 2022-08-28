@@ -135,7 +135,8 @@ type NodeAddress {
 type ForwardsRating {
   success: Int! @goField(name: "Success")
   failure: Int! @goField(name: "Failure")
-  internal_failure: Int! @goField(name: "InternalFailure")
+  internal_failure: Int! @goField(name: "InternalFailure") @deprecated(reason: "Use instead local_failure, this will be removed in 6 month")
+  local_failure: Int! @goField(name: "LocalFailure")
 }
 
 type ForwardsRatingSummary {
@@ -183,7 +184,7 @@ type MetricOneOutput {
 type PageInfo {
   start: Int! @goField(name: "StartCursor")
   end: Int! @goField(name: "EndCursor")
-  hash_next_page: Boolean! @goField(name: "hasNextPage")
+  has_next: Boolean! @goField(name: "hasNext")
 }
 
 # MetricOneInfo type to implement the paginator type

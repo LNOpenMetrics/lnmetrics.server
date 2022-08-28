@@ -24,7 +24,7 @@ lint:
 	golangci-lint run
 
 gen:
-	$(CC) generate ./...
+	$(CC) run ./scripts/gqlgen.go --verbose
 
 mod:
 	$(CC) get -d github.com/kyoh86/richgo

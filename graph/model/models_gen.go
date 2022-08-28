@@ -45,9 +45,11 @@ type ChannelsSummary struct {
 }
 
 type ForwardsRating struct {
-	Success         int `json:"success"`
-	Failure         int `json:"failure"`
+	Success int `json:"success"`
+	Failure int `json:"failure"`
+	// Deprecated
 	InternalFailure int `json:"internal_failure"`
+	LocalFailure    int `json:"local_failure"`
 }
 
 type ForwardsRatingSummary struct {
@@ -132,7 +134,7 @@ type OSInfo struct {
 type PageInfo struct {
 	StartCursor int  `json:"start"`
 	EndCursor   int  `json:"end"`
-	HasNextPage bool `json:"hash_next_page"`
+	HasNext     bool `json:"has_next"`
 }
 
 type PaymentInfo struct {

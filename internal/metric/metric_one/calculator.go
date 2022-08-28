@@ -30,11 +30,13 @@ func MappingForwardsRatingFromRaw(raw *RawForwardsRating) *model.ForwardsRatingS
 }
 
 func MappingForwardsRatingByDayFromRaw(raw *RawForwardRating) *model.ForwardsRating {
+	// FIXME: move this to local failure
 	tot := raw.Success + raw.Failure + raw.InternalFailure
 	return &model.ForwardsRating{
 		Success:         utils.Percentage(raw.Success, tot),
 		Failure:         utils.Percentage(raw.Failure, tot),
 		InternalFailure: utils.Percentage(raw.InternalFailure, tot),
+		LocalFailure:    utils.Percentage(raw.LocalFailure, tot),
 	}
 }
 

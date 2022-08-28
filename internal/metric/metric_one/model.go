@@ -15,7 +15,7 @@ type RawMetricOneOutput struct {
 	Version uint `json:"version"`
 	// First time that the node it is shows from the server
 	Age int64 `json:"age"`
-	// The last time that this raw was update
+	// The last time that this raw was updated
 	LastUpdate int64 `json:"last_update"`
 	//forwards rating with all the information attached
 	ForwardsRating *RawForwardsRating `json:"forwards_rating"`
@@ -102,8 +102,10 @@ type RawForwardsRating struct {
 // that contains information about the number
 // of success, failure and internal failure
 type RawForwardRating struct {
-	Success         uint64 `json:"success"`
-	Failure         uint64 `json:"failure"`
+	Success      uint64 `json:"success"`
+	Failure      uint64 `json:"failure"`
+	LocalFailure uint64 `json:"local_failure"`
+	// Deprecated
 	InternalFailure uint64 `json:"internal_failure"`
 }
 
