@@ -177,7 +177,7 @@ type ComplexityRoot struct {
 
 	PageInfo struct {
 		EndCursor   func(childComplexity int) int
-		HasNextPage func(childComplexity int) int
+		HasNext     func(childComplexity int) int
 		StartCursor func(childComplexity int) int
 	}
 
@@ -827,12 +827,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageInfo.EndCursor(childComplexity), true
 
-	case "PageInfo.hash_next_page":
-		if e.complexity.PageInfo.HasNextPage == nil {
+	case "PageInfo.has_next":
+		if e.complexity.PageInfo.HasNext == nil {
 			break
 		}
 
-		return e.complexity.PageInfo.HasNextPage(childComplexity), true
+		return e.complexity.PageInfo.HasNext(childComplexity), true
 
 	case "PageInfo.start":
 		if e.complexity.PageInfo.StartCursor == nil {
@@ -1367,7 +1367,7 @@ type MetricOneOutput {
 type PageInfo {
   start: Int! @goField(name: "StartCursor")
   end: Int! @goField(name: "EndCursor")
-  hash_next_page: Boolean! @goField(name: "hasNextPage")
+  has_next: Boolean! @goField(name: "hasNext")
 }
 
 # MetricOneInfo type to implement the paginator type
@@ -4463,7 +4463,7 @@ func (ec *executionContext) _PageInfo_end(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PageInfo_hash_next_page(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _PageInfo_has_next(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4481,7 +4481,7 @@ func (ec *executionContext) _PageInfo_hash_next_page(ctx context.Context, field 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.HasNextPage, nil
+		return obj.HasNext, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7793,8 +7793,8 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "hash_next_page":
-			out.Values[i] = ec._PageInfo_hash_next_page(ctx, field, obj)
+		case "has_next":
+			out.Values[i] = ec._PageInfo_has_next(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

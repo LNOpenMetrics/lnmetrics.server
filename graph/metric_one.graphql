@@ -183,7 +183,7 @@ type MetricOneOutput {
 type PageInfo {
   start: Int! @goField(name: "StartCursor")
   end: Int! @goField(name: "EndCursor")
-  hash_next_page: Boolean! @goField(name: "hasNextPage")
+  has_next: Boolean! @goField(name: "hasNext")
 }
 
 # MetricOneInfo type to implement the paginator type

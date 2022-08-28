@@ -219,7 +219,7 @@ func (instance *NoSQLDatabase) GetMetricOneInfo(nodeID string, first int, last i
 			// TODO: make the period to work with timestamp fixed by some config
 			EndCursor: int(utime.AddToTimestamp(nextTimestamp, 6*30*time.Minute)),
 			// if we found something's we can continue!
-			HasNextPage: len(nodeMetric.UpTime) != 0 || isInPast,
+			HasNext: len(nodeMetric.UpTime) != 0 || isInPast,
 		},
 	}
 	jsonStr, err := json.Marshal(modelMetricOne)
@@ -377,6 +377,7 @@ func (instance *NoSQLDatabase) indexingInDB(nodeID string) error {
 
 // Return the list of node that are stored in the index
 // the leveldb index is stored with the key node_index
+//
 //nolint:golint,unused
 func (instance *NoSQLDatabase) getIndexDB() ([]string, error) {
 	nodesIndex := make([]string, 0)
@@ -402,6 +403,7 @@ func (instance *NoSQLDatabase) getIndexDB() ([]string, error) {
 }
 
 // called each time that we need a fresh cache
+//
 //nolint:golint,unused
 func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 	instance.validCache = false

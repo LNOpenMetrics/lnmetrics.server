@@ -132,7 +132,7 @@ type OSInfo struct {
 type PageInfo struct {
 	StartCursor int  `json:"start"`
 	EndCursor   int  `json:"end"`
-	HasNextPage bool `json:"hash_next_page"`
+	HasNext     bool `json:"has_next"`
 }
 
 type PaymentInfo struct {
