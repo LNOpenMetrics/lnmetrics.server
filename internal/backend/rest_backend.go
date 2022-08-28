@@ -18,12 +18,12 @@ type RestBackend struct {
 	//token   *string
 }
 
-// create a new instance of rest backend
+// NewRestBackend create a new instance of rest backend
 func NewRestBackend(baseUrl string) Backend {
 	return &RestBackend{BaseUrl: &baseUrl}
 }
 
-// verify the message with a c-lightning node over the rest API.
+// VerifyMessage verify the message with a c-lightning node over the rest API.
 func (instance *RestBackend) VerifyMessage(message *string, signature *string, pubkey *string) (bool, error) {
 	restMethodName := "checkmessage"
 	toVerify := sha256.SHA256(message)
@@ -72,7 +72,7 @@ func (instance *RestBackend) VerifyMessage(message *string, signature *string, p
 	return response.Verified, nil
 }
 
-// Rest response wrapper
+// CheckMessageResponse Rest response wrapper
 type CheckMessageResponse struct {
 	Verified bool `json:"verified"`
 }

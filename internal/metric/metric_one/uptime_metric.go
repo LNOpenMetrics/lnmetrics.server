@@ -38,7 +38,6 @@ func CalculateUptimeMetricOneSync(storage db.MetricsDatabase, rawMetric *RawMetr
 		//Accumulate
 		nodeUpTime.TodaySuccess += onlineUpdate
 	} else {
-		// reset
 		// FIXME: This is a correct assumption? or I need to iterate inside the DB?
 		nodeUpTime.TodaySuccess = onlineUpdate
 	}

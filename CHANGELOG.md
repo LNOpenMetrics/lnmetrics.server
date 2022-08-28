@@ -1,3 +1,13 @@
+# v0.11.1-rc4
+
+## Fixed
+- clean up async code for better time ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/9fadf94167662bf074d0f78ae418bfc5b7c44150)). @vincenzopalazzo 28-08-2022
+- typo in the paginator pattern hash_next_page instead of has_next ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/99fc9927d3dd191b784af5516a365431b1e2a98c)). @vincenzopalazzo 28-08-2022
+
+## Added
+- upgrade dependeces ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/dd2e0f43b30c5cdb6cefa90df2c7fee8cb30e815)). @vincenzopalazzo 28-08-2022
+
+
 # v0.11.1-rc3
 
 ## Fixed
