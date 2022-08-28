@@ -85,6 +85,7 @@ func CalculateForwardsRatingByTimestampSync(storage db.MetricsDatabase, metricMo
 	forwardsRating.FullRating.Success += acc.Success
 	forwardsRating.FullRating.Failure += acc.Failed
 	forwardsRating.FullRating.InternalFailure += acc.LocalFailed
+	forwardsRating.FullRating.LocalFailure += acc.LocalFailed
 }
 
 // CalculateForwardRatingByPeriodSync Function to calculate the forward rating by period of the node that are pushing the data
@@ -107,6 +108,7 @@ func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel 
 		result.Success = actualRating.Success + acc.Success
 		result.Failure = actualRating.Failure + acc.Failed
 		result.InternalFailure = actualRating.InternalFailure + acc.LocalFailed
+		result.LocalFailure = actualRating.LocalFailure + actualRating.LocalFailure
 	} else {
 		startPeriod := utime.SubToTimestamp(actualTimestamp, period)
 		baseID, _ := storage.ItemID(metricModel)
@@ -133,6 +135,7 @@ func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel 
 		result.Success = acc.Success + localAcc.Success
 		result.Failure = acc.Failed + localAcc.Failed
 		result.InternalFailure = acc.LocalFailed + localAcc.LocalFailed
+		result.LocalFailure = acc.LocalFailed + localAcc.LocalFailed
 	}
 
 	wrapper.Wrapper = result

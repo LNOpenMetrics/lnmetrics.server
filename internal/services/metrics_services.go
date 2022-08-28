@@ -101,7 +101,7 @@ func (instance *MetricsService) initMetricOneOutputOnNode(node *model.NodeMetada
 				return err
 			}
 
-			return metric_one.CalculateMetricOneOutput(instance.Storage, &model)
+			return metric_one.CalculateMetricOneOutputSync(instance.Storage, &model)
 		})
 		if err != nil {
 			log.GetInstance().Infof("Error: %s", err)

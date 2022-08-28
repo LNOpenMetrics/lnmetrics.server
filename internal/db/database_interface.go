@@ -4,8 +4,8 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 )
 
-// Interface to abstract from an db implementation the
-// the logic to store and make analysis over the data.
+// MetricsDatabase Interface to abstract from a db implementation the
+// logic to store and make analysis over the data.
 type MetricsDatabase interface {
 	// GetRawValue Get access to the raw data contained with the specified key
 	GetRawValue(key string) ([]byte, error)

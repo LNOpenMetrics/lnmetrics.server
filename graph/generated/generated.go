@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 	ForwardsRating struct {
 		Failure         func(childComplexity int) int
 		InternalFailure func(childComplexity int) int
+		LocalFailure    func(childComplexity int) int
 		Success         func(childComplexity int) int
 	}
 
@@ -445,6 +446,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ForwardsRating.InternalFailure(childComplexity), true
+
+	case "ForwardsRating.local_failure":
+		if e.complexity.ForwardsRating.LocalFailure == nil {
+			break
+		}
+
+		return e.complexity.ForwardsRating.LocalFailure(childComplexity), true
 
 	case "ForwardsRating.success":
 		if e.complexity.ForwardsRating.Success == nil {
@@ -1319,7 +1327,8 @@ type NodeAddress {
 type ForwardsRating {
   success: Int! @goField(name: "Success")
   failure: Int! @goField(name: "Failure")
-  internal_failure: Int! @goField(name: "InternalFailure")
+  internal_failure: Int! @goField(name: "InternalFailure") @deprecated(reason: "Use instead local_failure, this will be removed in 6 month")
+  local_failure: Int! @goField(name: "LocalFailure")
 }
 
 type ForwardsRatingSummary {
@@ -2590,6 +2599,41 @@ func (ec *executionContext) _ForwardsRating_internal_failure(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.InternalFailure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ForwardsRating_local_failure(ctx context.Context, field graphql.CollectedField, obj *model.ForwardsRating) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ForwardsRating",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LocalFailure, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7269,6 +7313,11 @@ func (ec *executionContext) _ForwardsRating(ctx context.Context, sel ast.Selecti
 			}
 		case "internal_failure":
 			out.Values[i] = ec._ForwardsRating_internal_failure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "local_failure":
+			out.Values[i] = ec._ForwardsRating_local_failure(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

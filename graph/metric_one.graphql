@@ -135,7 +135,8 @@ type NodeAddress {
 type ForwardsRating {
   success: Int! @goField(name: "Success")
   failure: Int! @goField(name: "Failure")
-  internal_failure: Int! @goField(name: "InternalFailure")
+  internal_failure: Int! @goField(name: "InternalFailure") @deprecated(reason: "Use instead local_failure, this will be removed in 6 month")
+  local_failure: Int! @goField(name: "LocalFailure")
 }
 
 type ForwardsRatingSummary {

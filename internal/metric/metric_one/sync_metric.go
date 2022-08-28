@@ -27,6 +27,9 @@ func CalculateMetricOneOutputSync(storage db.MetricsDatabase, metricModel *model
 		}
 	}
 
+	// FIXME: split also the metrics inside different metrics, calculated by
+	// timestamp!
+	//
 	// Make intersection between channels info
 	// this give the possibility to remove from the raw metrics
 	// channels that are no longer available

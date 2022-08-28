@@ -102,8 +102,10 @@ type RawForwardsRating struct {
 // that contains information about the number
 // of success, failure and internal failure
 type RawForwardRating struct {
-	Success         uint64 `json:"success"`
-	Failure         uint64 `json:"failure"`
+	Success      uint64 `json:"success"`
+	Failure      uint64 `json:"failure"`
+	LocalFailure uint64 `json:"local_failure"`
+	// Deprecated
 	InternalFailure uint64 `json:"internal_failure"`
 }
 

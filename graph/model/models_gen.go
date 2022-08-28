@@ -45,9 +45,11 @@ type ChannelsSummary struct {
 }
 
 type ForwardsRating struct {
-	Success         int `json:"success"`
-	Failure         int `json:"failure"`
+	Success int `json:"success"`
+	Failure int `json:"failure"`
+	// Deprecated
 	InternalFailure int `json:"internal_failure"`
+	LocalFailure    int `json:"local_failure"`
 }
 
 type ForwardsRatingSummary struct {

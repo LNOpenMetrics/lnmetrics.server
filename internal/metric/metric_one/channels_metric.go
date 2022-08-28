@@ -229,6 +229,7 @@ func CalculateForwardsPaymentsForChannelSync(storage db.MetricsDatabase, itemKey
 	forwardsRating.FullRating.Success += accumulation.Wrapper.Success
 	forwardsRating.FullRating.Failure += accumulation.Wrapper.Failure
 	forwardsRating.FullRating.InternalFailure += accumulation.Wrapper.InternalFailure
+	forwardsRating.FullRating.LocalFailure += accumulation.Wrapper.LocalFailure
 }
 
 func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey string, channelID string,
@@ -241,6 +242,7 @@ func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey 
 		result.Wrapper.Success += lastForwardRating.Success
 		result.Wrapper.Failure += lastForwardRating.Failure
 		result.Wrapper.InternalFailure += lastForwardRating.InternalFailure
+		result.Wrapper.LocalFailure += lastForwardRating.LocalFailure
 	} else {
 		startPeriod := utime.SubToTimestamp(result.Timestamp, period)
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
