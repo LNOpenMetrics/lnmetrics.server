@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"github.com/LNOpenMetrics/lnmetrics.utils/hash/sha256"
 	"github.com/LNOpenMetrics/lnmetrics.utils/sign/ln"
 )
 
@@ -15,5 +16,6 @@ func NewNativeBackend() *NativeBackend {
 }
 
 func (self *NativeBackend) VerifyMessage(message *string, signature *string, pubkey *string) (bool, error) {
-	return self.signer.VerifyMsg(pubkey, signature, message)
+	toVerify := sha256.SHA256(message)
+	return self.signer.VerifyMsg(pubkey, signature, &toVerify)
 }
