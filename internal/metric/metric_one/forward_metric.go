@@ -13,8 +13,11 @@ import (
 func CalculateForwardsRatingMetricOneSync(storage db.MetricsDatabase, forwardsRating *RawForwardsRating,
 	metricModel *model.MetricOne) {
 	acc := CountForwardsSync(metricModel.ChannelsInfo)
-	lastTimestamp := getLatestTimestamp(metricModel.UpTime)
-	CalculateForwardsRatingByTimestampSync(storage, metricModel, forwardsRating, acc, lastTimestamp)
+	// Timestamp where the metrics is calculated
+	// we use the server timestamp because the metrics timestamp can be
+	// not reliable (can be 0).
+	actualTimestamp := time.Now().Unix()
+	CalculateForwardsRatingByTimestampSync(storage, metricModel, forwardsRating, acc, actualTimestamp)
 }
 
 func CountForwardsSync(channelsInfo []*model.StatusChannel) *forwardsAccumulator {
@@ -46,32 +49,24 @@ type WrapperRawForwardRating struct {
 	Timestamp int64
 }
 
-func NewWrapperRawForwardRating() *WrapperRawForwardRating {
-	return &WrapperRawForwardRating{}
-}
-
 func CalculateForwardsRatingByTimestampSync(storage db.MetricsDatabase, metricModel *model.MetricOne,
 	forwardsRating *RawForwardsRating, acc *forwardsAccumulator, actualTimestamp int64) {
-	today := NewWrapperRawForwardRating()
-	tenDays := NewWrapperRawForwardRating()
-	thirtyDays := NewWrapperRawForwardRating()
-	sixMonths := NewWrapperRawForwardRating()
 
 	// call for today rating
-	CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.TodayRating, acc,
-		actualTimestamp, forwardsRating.TodayTimestamp, 1*24*time.Hour, today)
+	today := CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.TodayRating, acc,
+		actualTimestamp, forwardsRating.TodayTimestamp, 1*24*time.Hour)
 
 	// call for last 10 days rating
-	CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.TenDaysRating, acc,
-		actualTimestamp, forwardsRating.TenDaysTimestamp, 10*24*time.Hour, tenDays)
+	tenDays := CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.TenDaysRating, acc,
+		actualTimestamp, forwardsRating.TenDaysTimestamp, 10*24*time.Hour)
 
 	// call for the last 30 days
-	CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.ThirtyDaysRating, acc,
-		actualTimestamp, forwardsRating.ThirtyDaysTimestamp, 30*24*time.Hour, thirtyDays)
+	thirtyDays := CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.ThirtyDaysRating, acc,
+		actualTimestamp, forwardsRating.ThirtyDaysTimestamp, 30*24*time.Hour)
 
 	// call for the last 6 months
-	CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.ThirtyDaysRating, acc,
-		actualTimestamp, forwardsRating.SixMonthsTimestamp, 6*utime.Month, sixMonths)
+	sixMonths := CalculateForwardRatingByPeriodSync(storage, metricModel, forwardsRating.ThirtyDaysRating, acc,
+		actualTimestamp, forwardsRating.SixMonthsTimestamp, 6*utime.Month)
 
 	forwardsRating.TodayRating = today.Wrapper
 	forwardsRating.TodayTimestamp = today.Timestamp
@@ -100,7 +95,7 @@ func CalculateForwardsRatingByTimestampSync(storage db.MetricsDatabase, metricMo
 // - channel: Is the communication channels where the communication happens
 func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel *model.MetricOne,
 	actualRating *RawForwardRating, acc *forwardsAccumulator, actualTimestamp int64,
-	lastTimestamp int64, period time.Duration, wrapper *WrapperRawForwardRating) {
+	lastTimestamp int64, period time.Duration) *WrapperRawForwardRating {
 
 	result := NewRawForwardRating()
 	timestamp := lastTimestamp
@@ -110,9 +105,9 @@ func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel 
 		result.InternalFailure = actualRating.InternalFailure + acc.LocalFailed
 		result.LocalFailure = actualRating.LocalFailure + actualRating.LocalFailure
 	} else {
-		startPeriod := utime.SubToTimestamp(actualTimestamp, period)
+		timestamp = utime.SubToTimestamp(actualTimestamp, period)
 		baseID, _ := storage.ItemID(metricModel)
-		startID := strings.Join([]string{baseID, fmt.Sprint(startPeriod), "metric"}, "/")
+		startID := strings.Join([]string{baseID, fmt.Sprint(timestamp), "metric"}, "/")
 		endID := strings.Join([]string{baseID, fmt.Sprint(actualTimestamp + 1), "metric"}, "/")
 		localAcc := &forwardsAccumulator{
 			Success:     0,
@@ -137,7 +132,8 @@ func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel 
 		result.InternalFailure = acc.LocalFailed + localAcc.LocalFailed
 		result.LocalFailure = acc.LocalFailed + localAcc.LocalFailed
 	}
-
-	wrapper.Wrapper = result
-	wrapper.Timestamp = timestamp
+	return &WrapperRawForwardRating{
+		Wrapper:   result,
+		Timestamp: timestamp,
+	}
 }

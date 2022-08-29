@@ -47,17 +47,6 @@ func intersectionChannelsInfo(updateState *model.MetricOne, oldState *RawMetricO
 	return nil
 }
 
-// Get last timestamp inside the uptime
-func getLatestTimestamp(nodeUpTime []*model.Status) int64 {
-	lastTimestamp := int64(0)
-	for _, upTime := range nodeUpTime {
-		if int64(upTime.Timestamp) > lastTimestamp {
-			lastTimestamp = int64(upTime.Timestamp)
-		}
-	}
-	return lastTimestamp
-}
-
 // Util function to iterate through the database item and accumulate the value
 func accumulateUpTime(payloadStr string, acc *accumulator) error {
 	var nodeMetric model.NodeMetric
