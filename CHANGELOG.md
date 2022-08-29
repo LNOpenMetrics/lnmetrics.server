@@ -1,3 +1,9 @@
+# v0.11.1-rc5
+
+## Fixed
+- calculate the channel metrics based on the server timestamp ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/e43f86f289cc3fb01dac24e1d01812d2f71b2ba5)). @vincenzopalazzo 29-08-2022
+
+
 # v0.11.1-rc4
 
 ## Fixed
