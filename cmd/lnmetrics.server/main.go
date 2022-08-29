@@ -54,11 +54,11 @@ func main() {
 			log.GetInstance().Infof("Backend configuration with rest backend")
 			lnBackend = backend.NewRestBackend(path)
 		} else {
-			log.GetInstance().Infof("Configuration with native backend")
-			lnBackend = backend.NewNativeBackend()
+			panic("BACKEND_PATH env prop need to be a valid http url")
 		}
 	} else {
-		panic("BACKEND_PATH env prop it is not set")
+		log.GetInstance().Infof("Configuration with native backend")
+		lnBackend = backend.NewNativeBackend()
 	}
 
 	dbVal, err := db.NewNoSQLDB(options)
