@@ -13,6 +13,7 @@ import (
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
+// RestBackend Deprecated
 type RestBackend struct {
 	BaseUrl *string
 	//token   *string

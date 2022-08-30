@@ -27,7 +27,7 @@ type accumulator struct {
 
 // Make intersection between channels information.
 //
-// This operation make sure that we us not outdate channels in the raw metrics
+// This operation make sure that we us not outdated channels in the raw metrics
 // but only channels that are open right now on the node.
 //
 // updateState: The new State received from the node
