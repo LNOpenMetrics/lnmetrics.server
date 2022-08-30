@@ -237,8 +237,12 @@ func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey 
 	period time.Duration) *wrapperRawForwardRating {
 
 	result := accumulateActualForwardRating(forwards)
-
-	if utime.InRangeFromUnix(result.Timestamp, lastTimestamp, period) {
+	skipInRange := false
+	if result.Timestamp <= 0 {
+		skipInRange = true
+		result.Timestamp = lastTimestamp
+	}
+	if !skipInRange && utime.InRangeFromUnix(result.Timestamp, lastTimestamp, period) {
 		result.Wrapper.Success += lastForwardRating.Success
 		result.Wrapper.Failure += lastForwardRating.Failure
 		result.Wrapper.InternalFailure += lastForwardRating.InternalFailure
