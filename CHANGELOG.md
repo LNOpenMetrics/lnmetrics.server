@@ -1,3 +1,14 @@
+# v0.0.1-rc6
+
+## Fixed
+- add check if the timestamp is invalid set the actual timestamp o… ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/ad3c2199d7ab1c3e858bdd806a1adc1dafc459ef)). @vincenzopalazzo 30-08-2022
+- error handling inside the lnmetrics.utils ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/3c52ab6d3758ee7df2d339faa3b2040788faa04d)). @vincenzopalazzo 30-08-2022
+- hash the message to verify ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/97e8fdd877bfe287efaacbd2db705e244a5e4a2c)). @vincenzopalazzo 29-08-2022
+
+## Added
+- remove the rest backend is the url is not specified in favor of… ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/f9caa204e63c3e78aae3ce6b1bf96d3128bd3695)). @vincenzopalazzo 29-08-2022
+
+
 # v0.0.1-rc5
 
 ## Fixed
