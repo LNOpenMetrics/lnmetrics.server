@@ -15,7 +15,7 @@ import (
 func CalculateMetricOneOutputSync(storage db.MetricsDatabase, metricModel *model.MetricOne) error {
 	metricKey := strings.Join([]string{metricModel.NodeID, config.RawMetricOnePrefix}, "/")
 	log.GetInstance().Infof("Raw metric for node %s key output is: %s", metricModel.NodeID, metricKey)
-	rawMetric, err := storage.GetRawValue(metricKey)
+	rawMetric, err := storage.GetRawValue(*metricModel.Network, metricKey)
 	var rawMetricModel *RawMetricOneOutput
 	if err != nil {
 		// If the metrics it is not found, create a new one
@@ -41,7 +41,7 @@ func CalculateMetricOneOutputSync(storage db.MetricsDatabase, metricModel *model
 	CalculateUptimeMetricOneSync(storage, rawMetricModel, metricModel)
 	CalculateForwardsRatingMetricOneSync(storage, rawMetricModel.ForwardsRating, metricModel)
 	itemKey, _ := storage.ItemID(metricModel)
-	CalculateRationForChannelsSync(storage, itemKey, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo)
+	CalculateRationForChannelsSync(*metricModel.Network, storage, itemKey, rawMetricModel.ChannelsRating, metricModel.ChannelsInfo)
 
 	rawMetricModel.LastUpdate = time.Now().Unix()
 	// As result, we store the value on the db
@@ -50,7 +50,7 @@ func CalculateMetricOneOutputSync(storage db.MetricsDatabase, metricModel *model
 		return err
 	}
 
-	if err := storage.PutRawValue(metricKey, metricModelBytes); err != nil {
+	if err := storage.PutRawValue(*metricModel.Network, metricKey, metricModelBytes); err != nil {
 		return err
 	}
 	resKey := strings.Join([]string{metricModel.NodeID, config.MetricOneOutputSuffix}, "/")
@@ -61,5 +61,5 @@ func CalculateMetricOneOutputSync(storage db.MetricsDatabase, metricModel *model
 	if err != nil {
 		return err
 	}
-	return storage.PutRawValue(resKey, resultByte)
+	return storage.PutRawValue(*metricModel.Network, resKey, resultByte)
 }

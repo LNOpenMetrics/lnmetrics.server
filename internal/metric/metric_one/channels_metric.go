@@ -17,7 +17,7 @@ import (
 // itemKey: TODO
 // channelsRating: TODO
 // channelsInfo: TODO
-func CalculateRationForChannelsSync(storage db.MetricsDatabase, itemKey string, channelsRating map[string]*RawChannelRating,
+func CalculateRationForChannelsSync(network string, storage db.MetricsDatabase, itemKey string, channelsRating map[string]*RawChannelRating,
 	channelsInfo []*model.StatusChannel) {
 	if len(channelsInfo) == 0 {
 		log.GetInstance().Infof("No channel information for key: %s", itemKey)
@@ -63,7 +63,7 @@ func CalculateRationForChannelsSync(storage db.MetricsDatabase, itemKey string, 
 		rating.Fee = channelInfo.Fee
 		rating.Limits = channelInfo.Limits
 		rating.Capacity = channelInfo.Capacity
-		CalculateRatingForChannelSync(storage, itemKey, rating, channelInfo)
+		CalculateRatingForChannelSync(network, storage, itemKey, rating, channelInfo)
 
 		scoreKey := strings.Join([]string{rating.ChannelID, rating.Direction}, "/")
 		channelsRating[scoreKey] = rating
@@ -71,13 +71,13 @@ func CalculateRationForChannelsSync(storage db.MetricsDatabase, itemKey string, 
 }
 
 // CalculateRatingForChannelSync calculate the ration of one single channels
-func CalculateRatingForChannelSync(storage db.MetricsDatabase, itemKey string, channelRating *RawChannelRating,
+func CalculateRatingForChannelSync(network string, storage db.MetricsDatabase, itemKey string, channelRating *RawChannelRating,
 	channelInfo *model.StatusChannel) {
-	CalculateUpTimeRatingChannelSync(storage, itemKey, channelInfo.ChannelID, channelRating, channelInfo.UpTime)
-	CalculateForwardsPaymentsForChannelSync(storage, itemKey, channelInfo.ChannelID, channelRating.ForwardsRating, channelInfo.Forwards)
+	CalculateUpTimeRatingChannelSync(network, storage, itemKey, channelInfo.ChannelID, channelRating, channelInfo.UpTime)
+	CalculateForwardsPaymentsForChannelSync(network, storage, itemKey, channelInfo.ChannelID, channelRating.ForwardsRating, channelInfo.Forwards)
 }
 
-func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string,
+func CalculateUpTimeRatingChannelSync(network string, storage db.MetricsDatabase, itemKey string,
 	channelID string, channelRating *RawChannelRating, upTimes []*model.ChannelStatus) {
 
 	todayValue := &wrapperUpTimeAccumulator{
@@ -88,7 +88,7 @@ func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string
 		timestamp: channelRating.UpTimeRating.TodayTimestamp,
 	}
 
-	CalculateUpTimeRatingByPeriodSync(storage, itemKey, channelID, todayValue,
+	CalculateUpTimeRatingByPeriodSync(network, storage, itemKey, channelID, todayValue,
 		upTimes, 24*time.Hour)
 
 	tenDaysValue := &wrapperUpTimeAccumulator{
@@ -98,7 +98,7 @@ func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string
 		},
 		timestamp: channelRating.UpTimeRating.TenDaysTimestamp,
 	}
-	CalculateUpTimeRatingByPeriodSync(storage, itemKey, channelID, tenDaysValue,
+	CalculateUpTimeRatingByPeriodSync(network, storage, itemKey, channelID, tenDaysValue,
 		upTimes, 10*24*time.Hour)
 
 	thirtyDaysValue := &wrapperUpTimeAccumulator{
@@ -108,7 +108,7 @@ func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string
 		},
 		timestamp: channelRating.UpTimeRating.ThirtyDaysTimestamp,
 	}
-	CalculateUpTimeRatingByPeriodSync(storage, itemKey, channelID, thirtyDaysValue,
+	CalculateUpTimeRatingByPeriodSync(network, storage, itemKey, channelID, thirtyDaysValue,
 		upTimes, 30*24*time.Hour)
 
 	sixMonthsValue := &wrapperUpTimeAccumulator{
@@ -118,7 +118,7 @@ func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string
 		},
 		timestamp: channelRating.UpTimeRating.SixMonthsTimestamp,
 	}
-	CalculateUpTimeRatingByPeriodSync(storage, itemKey, channelID, sixMonthsValue,
+	CalculateUpTimeRatingByPeriodSync(network, storage, itemKey, channelID, sixMonthsValue,
 		upTimes, 6*30*24*time.Hour)
 
 	actualValue := accumulateUpTimeForChannel(upTimes)
@@ -156,7 +156,7 @@ func CalculateUpTimeRatingChannelSync(storage db.MetricsDatabase, itemKey string
 // - actualValues: Is the last Rating contained inside the recorded rating inside the db.
 // - acc: Is the channels where the communication happens between gorutine after the calculation will finish.
 // - period: Is the period where the check need to be performed
-func CalculateUpTimeRatingByPeriodSync(storage db.MetricsDatabase, itemKey string, channelID string,
+func CalculateUpTimeRatingByPeriodSync(network string, storage db.MetricsDatabase, itemKey string, channelID string,
 	actualValues *wrapperUpTimeAccumulator, upTime []*model.ChannelStatus,
 	period time.Duration) {
 	internalAcc := accumulateUpTimeForChannel(upTime)
@@ -172,7 +172,7 @@ func CalculateUpTimeRatingByPeriodSync(storage db.MetricsDatabase, itemKey strin
 			Selected: internalAcc.acc.Selected,
 			Total:    internalAcc.acc.Total,
 		}
-		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+		err := storage.RawIterateThrough(network, startID, endID, func(itemValue string) error {
 			if err := accumulateUpTimeForChannelFromDB(channelID, &itemValue, localAcc); err != nil {
 				log.GetInstance().Errorf("Error during counting: %s", err)
 				return err
@@ -186,7 +186,6 @@ func CalculateUpTimeRatingByPeriodSync(storage db.MetricsDatabase, itemKey strin
 
 		internalAcc.acc = localAcc
 		internalAcc.timestamp = startPeriod
-
 	}
 }
 
@@ -198,19 +197,19 @@ func CalculateUpTimeRatingByPeriodSync(storage db.MetricsDatabase, itemKey strin
 // forwardRating: TODO
 // forwards: TODO
 // wg: TODO
-func CalculateForwardsPaymentsForChannelSync(storage db.MetricsDatabase, itemKey string, channelID string,
+func CalculateForwardsPaymentsForChannelSync(network string, storage db.MetricsDatabase, itemKey string, channelID string,
 	forwardsRating *RawForwardsRating, forwards []*model.PaymentInfo) {
 
-	today := accumulateForwardsRatingForChannelSync(storage, itemKey, channelID, forwardsRating.TodayRating,
+	today := accumulateForwardsRatingForChannelSync(network, storage, itemKey, channelID, forwardsRating.TodayRating,
 		forwards, forwardsRating.TodayTimestamp, 1*24*time.Hour)
 
-	tenDays := accumulateForwardsRatingForChannelSync(storage, itemKey, channelID, forwardsRating.TenDaysRating,
+	tenDays := accumulateForwardsRatingForChannelSync(network, storage, itemKey, channelID, forwardsRating.TenDaysRating,
 		forwards, forwardsRating.TenDaysTimestamp, 10*24*time.Hour)
 
-	thirtyDays := accumulateForwardsRatingForChannelSync(storage, itemKey, channelID, forwardsRating.ThirtyDaysRating,
+	thirtyDays := accumulateForwardsRatingForChannelSync(network, storage, itemKey, channelID, forwardsRating.ThirtyDaysRating,
 		forwards, forwardsRating.ThirtyDaysTimestamp, 30*24*time.Hour)
 
-	sixMonths := accumulateForwardsRatingForChannelSync(storage, itemKey, channelID, forwardsRating.SixMonthsRating,
+	sixMonths := accumulateForwardsRatingForChannelSync(network, storage, itemKey, channelID, forwardsRating.SixMonthsRating,
 		forwards, forwardsRating.SixMonthsTimestamp, 6*30*24*time.Hour)
 
 	forwardsRating.TodayRating = today.Wrapper
@@ -232,7 +231,7 @@ func CalculateForwardsPaymentsForChannelSync(storage db.MetricsDatabase, itemKey
 	forwardsRating.FullRating.LocalFailure += accumulation.Wrapper.LocalFailure
 }
 
-func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey string, channelID string,
+func accumulateForwardsRatingForChannelSync(network string, storage db.MetricsDatabase, itemKey string, channelID string,
 	lastForwardRating *RawForwardRating, forwards []*model.PaymentInfo, lastTimestamp int64,
 	period time.Duration) *wrapperRawForwardRating {
 
@@ -251,7 +250,7 @@ func accumulateForwardsRatingForChannelSync(storage db.MetricsDatabase, itemKey 
 		startPeriod := utime.SubToTimestamp(result.Timestamp, period)
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
 		endID := strings.Join([]string{itemKey, fmt.Sprint(result.Timestamp + 1), "metric"}, "/")
-		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+		err := storage.RawIterateThrough(network, startID, endID, func(itemValue string) error {
 			if err := accumulateForwardsRatingChannelFromDB(channelID, &itemValue, result.Wrapper); err != nil {
 				log.GetInstance().Errorf("Error during counting: %s", err)
 				return err

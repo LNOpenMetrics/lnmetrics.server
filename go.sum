@@ -7,6 +7,8 @@ github.com/LNOpenMetrics/lnmetrics.utils v0.0.8 h1:Fjdj7IDHE9b+UHjnWYBZIK4IxVA4I
 github.com/LNOpenMetrics/lnmetrics.utils v0.0.8/go.mod h1:oAoVWZLOyx78lI3rQihZ+QZpGwlZEJvwoVXyt4vcmoA=
 github.com/LNOpenMetrics/lnmetrics.utils v0.0.9 h1:1J3IR7BfJ/b495gMbckBs1a2MPWju/x3Vbhpp7BWriY=
 github.com/LNOpenMetrics/lnmetrics.utils v0.0.9/go.mod h1:oAoVWZLOyx78lI3rQihZ+QZpGwlZEJvwoVXyt4vcmoA=
+github.com/LNOpenMetrics/lnmetrics.utils v0.1.0 h1:u4/2RCWuzJ0IG7+haVyoiobcvl1tgtJBbSEGIFEnpXA=
+github.com/LNOpenMetrics/lnmetrics.utils v0.1.0/go.mod h1:oAoVWZLOyx78lI3rQihZ+QZpGwlZEJvwoVXyt4vcmoA=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/agnivade/levenshtein v1.1.0/go.mod h1:veldBMzWxcCG2ZvUTKD2kJNRdCk5hVbJomOvKkmgYbo=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
