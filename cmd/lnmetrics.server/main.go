@@ -93,6 +93,7 @@ func main() {
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	fmt.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	fmt.Printf("connect to http://localhost:%s/ for GraphQL playground\n", port)
+	fmt.Printf("database root path %s\n", options["path"])
 	fmt.Printf("%s", http.ListenAndServe(":"+port, nil))
 }
