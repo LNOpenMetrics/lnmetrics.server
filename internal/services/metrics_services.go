@@ -49,6 +49,7 @@ type MetricsService struct {
 // NewMetricsService Constructor method
 func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
 	instance := &MetricsService{Storage: db, Backend: lnBackend}
+	// FIXME: load for different network
 	if err := instance.initMetricOneOutput(); err != nil {
 		log.GetInstance().Infof("Error: %s", err)
 	}
@@ -217,14 +218,14 @@ func (instance *MetricsService) Nodes() ([]*string, error) {
 
 // GetNodes Return all the node information that are pushing the data.
 func (instance *MetricsService) GetNodes(network string) ([]*model.NodeMetadata, error) {
-	if network != "bitcoin" {
+	if network != "bitcoin" && network != "testnet" {
 		return nil, fmt.Errorf("network %s unsupported", network)
 	}
 	return instance.Storage.GetNodes(network)
 }
 
 func (instance *MetricsService) GetNode(network string, nodeID string) (*model.NodeMetadata, error) {
-	if network != "bitcoin" {
+	if network != "bitcoin" && network != "testnet" {
 		return nil, fmt.Errorf("network %s unsupported", network)
 	}
 	return instance.Storage.GetNode(network, nodeID, "metric_one")
