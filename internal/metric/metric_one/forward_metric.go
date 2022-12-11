@@ -115,7 +115,7 @@ func CalculateForwardRatingByPeriodSync(storage db.MetricsDatabase, metricModel 
 			LocalFailed: 0,
 		}
 
-		err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+		err := storage.RawIterateThrough(*metricModel.Network, startID, endID, func(itemValue string) error {
 			if err := accumulateForwardsRating(&itemValue, localAcc); err != nil {
 				log.GetInstance().Errorf("Error during counting: %s", err)
 				return err

@@ -4,8 +4,9 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.14.0
-	github.com/LNOpenMetrics/lnmetrics.utils v0.0.9
+	github.com/LNOpenMetrics/lnmetrics.utils v0.1.0
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/alecthomas/kong v0.7.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/joho/godotenv v1.4.0
 	github.com/mitchellh/mapstructure v1.4.2 // indirect

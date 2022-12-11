@@ -71,7 +71,7 @@ func walkThroughUpTime(storage db.MetricsDatabase, modelMetric *model.MetricOne,
 	baseID, _ := storage.ItemID(modelMetric)
 	startID := strings.Join([]string{baseID, fmt.Sprint(startDate), "metric"}, "/")
 	endID := strings.Join([]string{baseID, fmt.Sprint(endDate + 1), "metric"}, "/")
-	err := storage.RawIterateThrough(startID, endID, func(itemValue string) error {
+	err := storage.RawIterateThrough(*modelMetric.Network, startID, endID, func(itemValue string) error {
 		if err := accumulateUpTime(itemValue, acc); err != nil {
 			log.GetInstance().Errorf("Error during counting: %s", err)
 			return err

@@ -1,4 +1,4 @@
-name: Build and test Go
+name: Auto Generate from Graphql Model
 on:
   push:
     branches:
@@ -32,3 +32,8 @@ jobs:
 
       - name: Autogeneration graphql file
         run: make gen
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: gen-artifact
+          path: graph/

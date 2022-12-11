@@ -28,13 +28,13 @@ func ComposeGetNodesQuery() string {
 	return query
 }
 
-func ComposeGetMetricOneQuery(nodeID string, startPeriod uint, endPeriod uint) string {
+func ComposeGetMetricOneQuery(network string, nodeID string, startPeriod uint, endPeriod uint) string {
 	query := `query{
-                     getMetricOne(node_id: "%s", start_period: %d, end_period: %d) {
+                     getMetricOne(network: "%s", node_id: "%s", start_period: %d, end_period: %d) {
                         node_id,
                         metric_name,
                         color
                      }
                   }`
-	return fmt.Sprintf(query, nodeID, startPeriod, endPeriod)
+	return fmt.Sprintf(query, network, nodeID, startPeriod, endPeriod)
 }
