@@ -32,14 +32,14 @@ func (instance *MockMetricsServices) GetNode(network string, nodeID string) (*mo
 }
 
 // Get the metric one of one node and add a filtering option by period
-func (instance *MockMetricsServices) GetMetricOne(nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
-	args := instance.Called(nodeID, startPeriod, endPeriod)
+func (instance *MockMetricsServices) GetMetricOne(network string, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
+	args := instance.Called(network, nodeID, startPeriod, endPeriod)
 	return args.Get(0).(*model.MetricOne), nil
 }
 
 // Get the metric one of one node and add a filtering option by period
-func (instance *MockMetricsServices) GetFullMetricOne(nodeID string) (*model.MetricOne, error) {
-	args := instance.Called(nodeID)
+func (instance *MockMetricsServices) GetFullMetricOne(network string, nodeID string) (*model.MetricOne, error) {
+	args := instance.Called(network, nodeID)
 	return args.Get(0).(*model.MetricOne), nil
 }
 
@@ -49,17 +49,12 @@ func (instance *MockMetricsServices) GetMetricOneOutput(network string, nodeID s
 
 }
 
-// all deprecated function
-func (instance *MockMetricsServices) Nodes() ([]*string, error) {
-	return make([]*string, 0), nil
-}
-
 // FIXME: implementing integration test
 func (instance *MockMetricsServices) AddNodeMetrics(nodeID string, payload *string) (*model.MetricOne, error) {
 	return nil, nil
 }
 
 // FIXME: implementing integration test
-func (instance *MockMetricsServices) GetMetricOnePaginator(nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
+func (instance *MockMetricsServices) GetMetricOnePaginator(network string, nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
 	return nil, nil
 }

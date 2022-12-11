@@ -67,9 +67,11 @@ func main() {
 	}
 
 	log.GetInstance().Info("Check if db need to be migrated")
-	if err := dbVal.Migrate(); err != nil {
-		log.GetInstance().Error(fmt.Sprintf("Error: %s", err))
-		panic(err)
+	for _, network := range []string{"bitcoin", "testnet"} {
+		if err := dbVal.Migrate(network); err != nil {
+			log.GetInstance().Error(fmt.Sprintf("Error: %s", err))
+			panic(err)
+		}
 	}
 
 	var mb int64 = 1 << 20

@@ -25,10 +25,6 @@ type IMetricsService interface {
 	// UpdateMetricOne Append other metrics collected in a range of period by the node
 	UpdateMetricOne(nodeID string, payload *string, signature string) error
 
-	// Deprecated: Use GetNode instead
-	// Return the list of node IF available on the server.
-	Nodes() ([]*string, error)
-
 	// GetNodes Return the list of nodes available on the server
 	GetNodes(network string) ([]*model.NodeMetadata, error)
 
@@ -140,16 +136,16 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 	}
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
-	if instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		return nil, fmt.Errorf("metrics Already initialized, please call get metric one API to get your last update here")
-	}
-
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
 		return nil, err
 	}
 
-	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
+	if instance.Storage.ContainsIndex(*metricModel.Network, nodeID, "metric_one") {
+		return nil, fmt.Errorf("metrics Already initialized, please call get metric one API to get your last update here")
+	}
+
+	if metricModel.Network == nil || (*metricModel.Network != "bitcoin" && *metricModel.Network != "testnet") {
 		return nil, fmt.Errorf("unsupported network, or an old client version is sending this data")
 	}
 
@@ -168,11 +164,6 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 }
 
 func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, signature string) error {
-
-	if !instance.Storage.ContainsIndex(nodeID, "metric_one") {
-		return fmt.Errorf("metrics One not initialized, please call initialize the metric")
-	}
-
 	ok, err := instance.Backend.VerifyMessage(payload, &signature, &nodeID)
 	if !ok || err != nil {
 		if !ok {
@@ -189,7 +180,11 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 		return err
 	}
 
-	if metricModel.Network == nil || *metricModel.Network != "bitcoin" {
+	if !instance.Storage.ContainsIndex(*metricModel.Network, nodeID, "metric_one") {
+		return fmt.Errorf("metrics One not initialized, please call initialize the metric")
+	}
+
+	if metricModel.Network == nil || (*metricModel.Network != "bitcoin" && *metricModel.Network != "testnet") {
 		return fmt.Errorf("unsupported network, or an old client version is sending this data")
 	}
 

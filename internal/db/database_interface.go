@@ -55,14 +55,14 @@ type MetricsDatabase interface {
 	EraseAfterCloseDatabase(network string) error
 
 	// GetVersionData Return the version of the data in the database
-	GetVersionData() (uint, error)
+	GetVersionData(network string) (uint, error)
 
 	// Migrate procedure to convert a more from aversion to another
-	Migrate() error
+	Migrate(network string) error
 
 	// ItemID From the metrics payload return the id of the node
 	ItemID(toInsert *model.MetricOne) (string, error)
 
 	// ContainsIndex Check if the node it is indexed for a specific metrics
-	ContainsIndex(nodeID string, metricName string) bool
+	ContainsIndex(network string, nodeID string, metricName string) bool
 }

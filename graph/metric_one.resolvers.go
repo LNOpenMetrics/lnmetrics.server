@@ -21,18 +21,6 @@ func (r *mutationResolver) UpdateMetricOne(ctx context.Context, nodeID string, p
 	return true, nil
 }
 
-func (r *queryResolver) Nodes(ctx context.Context) ([]string, error) {
-	nodes, err := r.MetricsService.GetNodes("bitcoin")
-	if err != nil {
-		return nil, err
-	}
-	listNodes := make([]string, 0)
-	for _, node := range nodes {
-		listNodes = append(listNodes, node.NodeID)
-	}
-	return listNodes, nil
-}
-
 func (r *queryResolver) GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error) {
 	return r.MetricsService.GetNodes(network)
 }
@@ -41,16 +29,16 @@ func (r *queryResolver) GetNode(ctx context.Context, network string, nodeID stri
 	return r.MetricsService.GetNode(network, nodeID)
 }
 
-func (r *queryResolver) GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
-	return r.MetricsService.GetMetricOne("", nodeID, startPeriod, endPeriod)
+func (r *queryResolver) GetMetricOne(ctx context.Context, network string, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
+	return r.MetricsService.GetMetricOne(network, nodeID, startPeriod, endPeriod)
 }
 
 func (r *queryResolver) GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error) {
 	return r.MetricsService.GetMetricOneOutput(network, nodeID)
 }
 
-func (r *queryResolver) MetricOne(ctx context.Context, nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
-	return r.MetricsService.GetMetricOnePaginator("", nodeID, first, last)
+func (r *queryResolver) MetricOne(ctx context.Context, network string, nodeID string, first int, last *int) (*model.MetricOneInfo, error) {
+	return r.MetricsService.GetMetricOnePaginator(network, nodeID, first, last)
 }
 
 // Mutation returns generated.MutationResolver implementation.

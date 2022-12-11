@@ -196,12 +196,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetMetricOne       func(childComplexity int, nodeID string, startPeriod int, endPeriod int) int
+		GetMetricOne       func(childComplexity int, network string, nodeID string, startPeriod int, endPeriod int) int
 		GetMetricOneResult func(childComplexity int, network string, nodeID string) int
 		GetNode            func(childComplexity int, network string, nodeID string) int
 		GetNodes           func(childComplexity int, network string) int
-		MetricOne          func(childComplexity int, nodeID string, first int, last *int) int
-		Nodes              func(childComplexity int) int
+		MetricOne          func(childComplexity int, network string, nodeID string, first int, last *int) int
 	}
 
 	Status struct {
@@ -242,12 +241,11 @@ type MutationResolver interface {
 	UpdateMetricOne(ctx context.Context, nodeID string, payload string, signature string) (bool, error)
 }
 type QueryResolver interface {
-	Nodes(ctx context.Context) ([]string, error)
 	GetNodes(ctx context.Context, network string) ([]*model.NodeMetadata, error)
 	GetNode(ctx context.Context, network string, nodeID string) (*model.NodeMetadata, error)
-	GetMetricOne(ctx context.Context, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
+	GetMetricOne(ctx context.Context, network string, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error)
 	GetMetricOneResult(ctx context.Context, network string, nodeID string) (*model.MetricOneOutput, error)
-	MetricOne(ctx context.Context, nodeID string, first int, last *int) (*model.MetricOneInfo, error)
+	MetricOne(ctx context.Context, network string, nodeID string, first int, last *int) (*model.MetricOneInfo, error)
 }
 
 type executableSchema struct {
@@ -908,7 +906,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetMetricOne(childComplexity, args["node_id"].(string), args["start_period"].(int), args["end_period"].(int)), true
+		return e.complexity.Query.GetMetricOne(childComplexity, args["network"].(string), args["node_id"].(string), args["start_period"].(int), args["end_period"].(int)), true
 
 	case "Query.getMetricOneResult":
 		if e.complexity.Query.GetMetricOneResult == nil {
@@ -956,14 +954,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MetricOne(childComplexity, args["node_id"].(string), args["first"].(int), args["last"].(*int)), true
-
-	case "Query.nodes":
-		if e.complexity.Query.Nodes == nil {
-			break
-		}
-
-		return e.complexity.Query.Nodes(childComplexity), true
+		return e.complexity.Query.MetricOne(childComplexity, args["network"].(string), args["node_id"].(string), args["first"].(int), args["last"].(*int)), true
 
 	case "Status.channels":
 		if e.complexity.Status.Channels == nil {
@@ -1388,20 +1379,17 @@ type MetricOneInfo {
 
 # Query definition
 type Query {
-  # backward compatibility with old client, for two version
-  nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
-
   # Get the list of nodes that are contributing in metric collection
   getNodes(network: String!): [NodeMetadata!]!
   # Get the node metadata if exist on the server
   getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
-  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
+  getMetricOne(network: String!, node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
   # Get the metric one result
   getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
   # Use the paginator patter to get all the metrics about a specific node!
-  metricOne(node_id: String!, first: Int!, last: Int): MetricOneInfo!
+  metricOne(network: String!, node_id: String!, first: Int!, last: Int): MetricOneInfo!
 }
 
 type Mutation {
@@ -1531,32 +1519,41 @@ func (ec *executionContext) field_Query_getMetricOne_args(ctx context.Context, r
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["node_id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+	if tmp, ok := rawArgs["network"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["node_id"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["start_period"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start_period"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+	args["network"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["start_period"] = arg1
+	args["node_id"] = arg1
 	var arg2 int
-	if tmp, ok := rawArgs["end_period"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end_period"))
+	if tmp, ok := rawArgs["start_period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start_period"))
 		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["end_period"] = arg2
+	args["start_period"] = arg2
+	var arg3 int
+	if tmp, ok := rawArgs["end_period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end_period"))
+		arg3, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["end_period"] = arg3
 	return args, nil
 }
 
@@ -1603,32 +1600,41 @@ func (ec *executionContext) field_Query_metricOne_args(ctx context.Context, rawA
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["node_id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+	if tmp, ok := rawArgs["network"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["node_id"] = arg0
-	var arg1 int
+	args["network"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["node_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("node_id"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["node_id"] = arg1
+	var arg2 int
 	if tmp, ok := rawArgs["first"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["first"] = arg1
-	var arg2 *int
+	args["first"] = arg2
+	var arg3 *int
 	if tmp, ok := rawArgs["last"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
-		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["last"] = arg2
+	args["last"] = arg3
 	return args, nil
 }
 
@@ -4787,41 +4793,6 @@ func (ec *executionContext) _PaymentsSummary_failed(ctx context.Context, field g
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Nodes(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_getNodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4931,7 +4902,7 @@ func (ec *executionContext) _Query_getMetricOne(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetMetricOne(rctx, args["node_id"].(string), args["start_period"].(int), args["end_period"].(int))
+		return ec.resolvers.Query().GetMetricOne(rctx, args["network"].(string), args["node_id"].(string), args["start_period"].(int), args["end_period"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5015,7 +4986,7 @@ func (ec *executionContext) _Query_metricOne(ctx context.Context, field graphql.
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MetricOne(rctx, args["node_id"].(string), args["first"].(int), args["last"].(*int))
+		return ec.resolvers.Query().MetricOne(rctx, args["network"].(string), args["node_id"].(string), args["first"].(int), args["last"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7952,20 +7923,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "nodes":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_nodes(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "getNodes":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9093,42 +9050,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNUpTimeOutput2ᚖgithubᚗcomᚋLNOpenMetricsᚋlnmetricsᚗserverᚋgraphᚋmodelᚐUpTimeOutput(ctx context.Context, sel ast.SelectionSet, v *model.UpTimeOutput) graphql.Marshaler {

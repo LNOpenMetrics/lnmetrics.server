@@ -109,7 +109,7 @@ func (self NoSQLDatabase) RawIterateThrough(network string, start string, end st
 
 // CreateMetricOne In the NO sql database, at list for the moment we don't need to
 // make a schema. The data are the schema it self.
-func (instance NoSQLDatabase) CreateMetricOne(options *map[string]interface{}) error {
+func (instance NoSQLDatabase) CreateMetricOne(network string, options *map[string]interface{}) error {
 	return nil
 }
 
@@ -479,7 +479,18 @@ func (instance *NoSQLDatabase) invalidateInMemIndex() error {
 // Private function to migrate the nosql data model from a view to another view
 func (instance *NoSQLDatabase) migrateFromBlobToTimestamp(network string) error {
 	log.GetInstance().Info("Get list of key in the db")
-	listNodes, err := db.GetInstance().ListOfKeys()
+	var listNodes []*string
+	var err error
+
+	switch network {
+	case "bitcoin":
+		listNodes, err = instance.btcDB.ListOfKeys()
+	case "testnet":
+		listNodes, err = instance.testBtcDB.ListOfKeys()
+	default:
+		return fmt.Errorf("db not found for the network %s", network)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -540,8 +551,13 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp(network string) error 
 			return err
 		}
 
-		if err := db.GetInstance().DeleteValue(*nodeId); err != nil {
-			return err
+		switch network {
+		case "bitcoin":
+			return instance.btcDB.DeleteValue(*nodeId)
+		case "testnet":
+			return instance.testBtcDB.DeleteValue(*nodeId)
+		default:
+			return fmt.Errorf("db not found for the network %s", network)
 		}
 
 	}

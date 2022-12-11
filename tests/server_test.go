@@ -71,8 +71,8 @@ func TestGetMetricOneByNodeID(t *testing.T) {
 		}
 
 		modelObj := model.MetricOne{Name: "mock", NodeID: "fake_id", Color: "0000"}
-		mockMetricsService.On("GetMetricOne", modelObj.NodeID, 0, 1).Return(&modelObj)
-		query := utils.ComposeGetMetricOneQuery(modelObj.NodeID, 0, 1)
+		mockMetricsService.On("GetMetricOne", "testnet", modelObj.NodeID, 0, 1).Return(&modelObj)
+		query := utils.ComposeGetMetricOneQuery("testnet", modelObj.NodeID, 0, 1)
 
 		var resp struct {
 			GetMetricOne *model.MetricOne
