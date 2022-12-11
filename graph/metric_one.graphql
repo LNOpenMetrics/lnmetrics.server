@@ -196,20 +196,17 @@ type MetricOneInfo {
 
 # Query definition
 type Query {
-  # backward compatibility with old client, for two version
-  nodes: [String!]! @goField(name: "Nodes"), @deprecated(reason: "This method give not enough details, please considered to use getNodes that return a more rich payload.")
-
   # Get the list of nodes that are contributing in metric collection
   getNodes(network: String!): [NodeMetadata!]!
   # Get the node metadata if exist on the server
   getNode(network: String!, node_id: String!): NodeMetadata!
   # Get Metric One of the node id in a period [start, end], if the end and start are -1
   # the query return all the data collected from the entire period of metrics collection.
-  getMetricOne(node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
+  getMetricOne(network: String!, node_id: String!, start_period: Int!, end_period: Int!): MetricOne!, @deprecated(reason: "Use getNode to get the metadata of the node, and get the metricOne to get the metric value")
   # Get the metric one result
   getMetricOneResult(network: String!, node_id: String!): MetricOneOutput!
   # Use the paginator patter to get all the metrics about a specific node!
-  metricOne(node_id: String!, first: Int!, last: Int): MetricOneInfo!
+  metricOne(network: String!, node_id: String!, first: Int!, last: Int): MetricOneInfo!
 }
 
 type Mutation {
