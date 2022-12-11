@@ -14,14 +14,14 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
+	"github.com/alecthomas/kong"
 
+	"github.com/LNOpenMetrics/lnmetrics.server/cmd/lnmetrics.server/args"
 	"github.com/LNOpenMetrics/lnmetrics.server/graph"
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/generated"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/backend"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 )
-
-const DefaultPort = "8080"
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -35,8 +35,11 @@ func isHttpUrl(path string) bool {
 }
 
 func main() {
-	port := DefaultPort
-	if envPort := os.Getenv("SERVER_PORT"); envPort != "" {
+	_ = kong.Parse(&args.CliArgs)
+	port := args.CliArgs.Port
+	path := args.CliArgs.DbPath
+
+	if envPort := os.Getenv("SERVER_PORT"); envPort != "" && port == "8080" {
 		port = envPort
 	}
 
@@ -44,7 +47,9 @@ func main() {
 	// to configure all the type of interface that we need
 	options := make(map[string]interface{})
 
-	if path := os.Getenv("DB_PATH"); path != "" {
+	if dbPath := os.Getenv("DB_PATH"); dbPath != "" && path == "" {
+		options["path"] = dbPath
+	} else {
 		options["path"] = path
 	}
 
