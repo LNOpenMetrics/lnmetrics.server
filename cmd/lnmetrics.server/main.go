@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 	"github.com/alecthomas/kong"
+	cron "github.com/robfig/cron/v3"
 
 	"github.com/LNOpenMetrics/lnmetrics.server/cmd/lnmetrics.server/args"
 	"github.com/LNOpenMetrics/lnmetrics.server/graph"
@@ -78,6 +79,15 @@ func main() {
 			panic(err)
 		}
 	}
+
+	// set up a timer that will call a clean up function periodically
+	c := cron.New()
+	_, _ = c.AddFunc("@daily", func() {
+		if err := dbVal.PeriodicallyCleanUp(); err != nil {
+			log.GetInstance().Infof("error: %s", err)
+		}
+	})
+	c.Start()
 
 	var mb int64 = 1 << 20
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(

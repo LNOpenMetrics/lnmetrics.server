@@ -84,6 +84,18 @@ func (self NoSQLDatabase) GetRawValue(network string, key string) ([]byte, error
 	}
 }
 
+// DeleteRawValue Get access to the raw data contained with the specified key
+func (self NoSQLDatabase) DeleteRawValue(network string, key string) error {
+	switch network {
+	case "bitcoin":
+		return self.btcDB.DeleteValue(key)
+	case "testnet":
+		return self.testBtcDB.DeleteValue(key)
+	default:
+		return fmt.Errorf("db not found for the network %s", network)
+	}
+}
+
 // PutRawValue Put a raw value with the specified key in the db
 func (self NoSQLDatabase) PutRawValue(network string, key string, value []byte) error {
 	switch network {
@@ -190,6 +202,18 @@ func (instance *NoSQLDatabase) GetNode(network string, nodeID string, metricName
 	return &modelMetadata, nil
 }
 
+func (self *NoSQLDatabase) DeleteNode(network string, metricName string, nodeID string) error {
+	metadataIndex := strings.Join([]string{nodeID, metricName, "metadata"}, "/")
+	if err := self.DeleteRawValue(network, metadataIndex); err != nil {
+		return err
+	}
+
+	if err := self.DeleteMetricOne(network, nodeID); err != nil {
+		return err
+	}
+	return self.deindexingInDB(network, nodeID)
+}
+
 // GetMetricOne Get all the metric of the node with a specified id
 func (instance NoSQLDatabase) GetMetricOne(network string, nodeID string, startPeriod int, endPeriod int) (*model.MetricOne, error) {
 
@@ -227,6 +251,11 @@ func (instance NoSQLDatabase) GetMetricOne(network string, nodeID string, startP
 	modelMetricOne.ChannelsInfo = nodeMetric.ChannelsInfo
 
 	return modelMetricOne, nil
+}
+
+func (self *NoSQLDatabase) DeleteMetricOne(network string, nodeID string) error {
+	baseKey := strings.Join([]string{nodeID, config.MetricOneInputSuffic}, "/")
+	return self.deleteNodesMetric(network, baseKey)
 }
 
 func (instance *NoSQLDatabase) GetMetricOneInfo(network string, nodeID string, first int, last int) (*model.MetricOneInfo, error) {
@@ -406,7 +435,6 @@ func (instance *NoSQLDatabase) createIndexDBIfMissin(network string) error {
 }
 
 // Adding the node GetMetricOneInfoid to the node_index.
-// TODO: We need to lock this method to avoid concurrency
 func (instance *NoSQLDatabase) indexingInDB(network string, nodeID string) error {
 	// TODO: use cache
 	// TODO: during the megrationg create the index too.
@@ -437,8 +465,44 @@ func (instance *NoSQLDatabase) indexingInDB(network string, nodeID string) error
 		}
 	}
 	instance.lock.Unlock()
-
 	return nil
+}
+
+func (self *NoSQLDatabase) deindexingInDB(network string, nodeID string) error {
+	self.lock.Lock()
+
+	indexDB, err := self.getRawIndexDB(network)
+	if err != nil {
+		return err
+	}
+	delete(indexDB, nodeID)
+
+	if err := self.setRawIndexDB(network, indexDB); err != nil {
+		return err
+	}
+	self.lock.Unlock()
+	return nil
+}
+
+func (self *NoSQLDatabase) getRawIndexDB(network string) (map[string][]uint, error) {
+	dbIndex, err := self.GetRawValue(network, "node_index")
+	if err != nil {
+		return nil, err
+	}
+
+	var dbIndexModel map[string][]uint
+	if err := json.Unmarshal(dbIndex, &dbIndexModel); err != nil {
+		return nil, err
+	}
+	return dbIndexModel, nil
+}
+
+func (self *NoSQLDatabase) setRawIndexDB(network string, idx map[string][]uint) error {
+	jsonStr, err := json.Marshal(idx)
+	if err != nil {
+		return err
+	}
+	return self.PutRawValue(network, "node_index", jsonStr)
 }
 
 // Return the list of node that are stored in the index
@@ -449,13 +513,8 @@ func (instance *NoSQLDatabase) getIndexDB(network string) ([]string, error) {
 	nodesIndex := make([]string, 0)
 	// TODO: use cache
 	// TODO: during the migration create the index too.
-	dbIndex, err := instance.GetRawValue(network, "node_index")
+	dbIndexModel, err := instance.getRawIndexDB(network)
 	if err != nil {
-		return nil, err
-	}
-
-	var dbIndexModel map[string][]uint
-	if err := json.Unmarshal(dbIndex, &dbIndexModel); err != nil {
 		return nil, err
 	}
 
@@ -693,6 +752,12 @@ func (instance *NoSQLDatabase) retreivalNodeMetric(network string, nodeKey strin
 
 }
 
+// deleteNodeMetric private function to delete a single metric given a specific timestamp
+func (self *NoSQLDatabase) deleteNodeMetric(network string, nodeKey string, timestamp uint) error {
+	metricKey := strings.Join([]string{nodeKey, fmt.Sprint(timestamp), "metric"}, "/")
+	return self.DeleteRawValue(network, metricKey)
+}
+
 // Private function that it is able to get the collection of metric in a period
 // expressed in unix time.
 func (instance *NoSQLDatabase) retrievalNodesMetric(network string, nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
@@ -759,4 +824,70 @@ func (instance *NoSQLDatabase) retrievalNodesMetric(network string, nodeKey stri
 	}
 
 	return modelMetric, nil
+}
+
+// Private function that it is able to delete the collection of metric in a period
+// expressed in unix time.
+func (self *NoSQLDatabase) deleteNodesMetric(network string, nodeKey string) error {
+	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
+	timestampJson, err := self.GetRawValue(network, timestampsKey)
+	if err != nil {
+		return err
+	}
+	var modelTimestamp []uint
+	if err := json.Unmarshal(timestampJson, &modelTimestamp); err != nil {
+		return err
+	}
+
+	for _, timestamp := range modelTimestamp {
+		if err := self.deleteNodeMetric(network, nodeKey, timestamp); err != nil {
+			log.GetInstance().Errorf("error: %s", err)
+		}
+	}
+	// delete metric index
+	return self.DeleteRawValue(network, timestampsKey)
+}
+
+func (self *NoSQLDatabase) PeriodicallyCleanUp() error {
+	// we ignore any error that occurs because the function
+	// will generate the logs if somethings bad happens.
+	_ = self.cleanBuggyData()
+	// ignore the error also for this function
+	// because there is no reason to abort the
+	// server.
+	// The function will log the error!
+	_ = self.deleteInactiveNode()
+	return nil
+}
+
+// cleanBuggyData while we develop we introduce some fancy bugs
+// that can corrupt the data that we are collecting, so
+// this procedure collect all the method to delete the buggy data.
+func (self *NoSQLDatabase) cleanBuggyData() error {
+	return nil
+}
+
+// deleteInactiveNode procedure to delete all the not active node
+// that there are on server.
+//
+// We define an inactive node a node that push the data on the server 1 month
+// ago. This is also good for privacy when the use want stop to share the data
+// these data are gone after 1 month.
+func (self *NoSQLDatabase) deleteInactiveNode() error {
+	now := time.Now().Unix()
+	lastGood := utime.AddToTimestamp(now, -1*utime.Month)
+	for _, network := range []string{"bitcoin", "testnet"} {
+		nodes, err := self.GetNodes(network)
+		if err != nil {
+			return nil
+		}
+		for _, node := range nodes {
+			if !utime.InRangeFromUnix(int64(node.LastUpdate), lastGood, 1*utime.Month) {
+				if err := self.DeleteNode(network, "metric_one", node.NodeID); err != nil {
+					log.GetInstance().Errorf("error: %s", err)
+				}
+			}
+		}
+	}
+	return nil
 }

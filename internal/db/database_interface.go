@@ -65,4 +65,11 @@ type MetricsDatabase interface {
 
 	// ContainsIndex Check if the node it is indexed for a specific metrics
 	ContainsIndex(network string, nodeID string, metricName string) bool
+
+	/// PeriodicallyCleanUp a procedure that can run periodically and
+	/// perform some clean up inside the database.
+	///
+	/// This function is very useful if some bugs is introduced
+	/// or some routine function need to be ran
+	PeriodicallyCleanUp() error
 }
