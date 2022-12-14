@@ -134,7 +134,7 @@ func CalculateUpTimeRatingChannelSync(network string, storage db.MetricsDatabase
 	channelRating.UpTimeRating.TodayTimestamp = todayValue.timestamp
 
 	channelRating.UpTimeRating.TenDaysSuccess = uint64(tenDaysValue.acc.Selected)
-	channelRating.UpTimeRating.TenDaysTotal = RenDaysOccurrence
+	channelRating.UpTimeRating.TenDaysTotal = TenDaysOccurrence
 	channelRating.UpTimeRating.TenDaysTimestamp = tenDaysValue.timestamp
 
 	channelRating.UpTimeRating.ThirtyDaysSuccess = uint64(thirtyDaysValue.acc.Selected)
@@ -161,13 +161,19 @@ func CalculateUpTimeRatingByPeriodSync(network string, storage db.MetricsDatabas
 	period time.Duration) {
 	internalAcc := accumulateUpTimeForChannel(upTime)
 
+	// there are no good information in there
+	if internalAcc.timestamp < 0 {
+		return
+	}
+
 	if utime.InRangeFromUnix(internalAcc.timestamp, actualValues.timestamp, period) {
-		internalAcc.acc.Selected += actualValues.acc.Selected
-		internalAcc.acc.Total += actualValues.acc.Total
+		actualValues.acc.Selected += internalAcc.acc.Selected
+		actualValues.acc.Total += internalAcc.acc.Total
 	} else {
 		startPeriod := utime.SubToTimestamp(internalAcc.timestamp, period)
 		startID := strings.Join([]string{itemKey, fmt.Sprint(startPeriod), "metric"}, "/")
 		endID := strings.Join([]string{itemKey, fmt.Sprint(internalAcc.timestamp + 1), "metric"}, "/")
+		// current not persistent values
 		localAcc := &accumulator{
 			Selected: internalAcc.acc.Selected,
 			Total:    internalAcc.acc.Total,
@@ -184,8 +190,8 @@ func CalculateUpTimeRatingByPeriodSync(network string, storage db.MetricsDatabas
 			log.GetInstance().Errorf("During forwards rating calculation we received %s", err)
 		}
 
-		internalAcc.acc = localAcc
-		internalAcc.timestamp = startPeriod
+		actualValues.acc = localAcc
+		actualValues.timestamp = startPeriod
 	}
 }
 
