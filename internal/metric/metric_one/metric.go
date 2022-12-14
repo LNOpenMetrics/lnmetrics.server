@@ -9,13 +9,12 @@ import (
 
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
-
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 )
 
 // days constant
 var TodayOccurrence = utils.ReturnOccurrence(24*time.Hour, 30*time.Minute)
-var RenDaysOccurrence = utils.ReturnOccurrence(10*24*time.Hour, 30*time.Minute)
+var TenDaysOccurrence = utils.ReturnOccurrence(10*24*time.Hour, 30*time.Minute)
 var ThirtyDaysOccurrence = utils.ReturnOccurrence(30*24*time.Hour, 30*time.Minute)
 var SixMonthsOccurrence = utils.ReturnOccurrence(6*30*24*time.Hour, 30*time.Minute)
 

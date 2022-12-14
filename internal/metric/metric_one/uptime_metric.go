@@ -1,11 +1,12 @@
 package metric_one
 
 import (
+	"time"
+
 	"github.com/LNOpenMetrics/lnmetrics.server/graph/model"
 	"github.com/LNOpenMetrics/lnmetrics.server/internal/db"
 	"github.com/LNOpenMetrics/lnmetrics.utils/log"
 	"github.com/LNOpenMetrics/lnmetrics.utils/utime"
-	"time"
 )
 
 // CalculateUptimeMetricOneSync Execute the uptime rating of the node
@@ -60,7 +61,7 @@ func CalculateUptimeMetricOneSync(storage db.MetricsDatabase, rawMetric *RawMetr
 		nodeUpTime.TenDaysSuccess = uint64(acc.Selected) + onlineUpdate
 		nodeUpTime.TenDaysTimestamp = firstDate
 	}
-	nodeUpTime.TenDaysTotal = RenDaysOccurrence
+	nodeUpTime.TenDaysTotal = TenDaysOccurrence
 
 	// 30 days
 	thirtyDaysStored := nodeUpTime.ThirtyDaysTimestamp
