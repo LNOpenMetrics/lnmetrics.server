@@ -1,3 +1,17 @@
+# v0.0.1-rc7
+
+## Fixed
+- bugs when we will go cu calculate the metrics ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/86c470c289f7a112553992d1ca6c7ac228a59c2a)). @vincenzopalazzo 14-12-2022
+- check only for bitcoin network ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/189f00a093ac51aedb9d56b955363b9419999bff)). @vincenzopalazzo 11-12-2022
+- command line parser bug ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/b6361c225483bb22de365f8a68012657f94ea3cd)). @vincenzopalazzo 11-12-2022
+
+## Added
+- implement a recurrent clean up for the db ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/cc320d10e1b1f51e7799fd785ff6ef27a6b52878)). @vincenzopalazzo 14-12-2022
+- add cli args parser ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/e98661fb291c790aa4fbc05f98b432c0e34b938b)). @vincenzopalazzo 11-12-2022
+- complete migration to the multiple db ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/4996f7d6b38ddc1c13199b2e83abc5d2f9ec4b00)). @vincenzopalazzo 11-12-2022
+- support different database for different network ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/fd6df5bd62ba1f9839058dc07a95416369317f2e)). @vincenzopalazzo 10-12-2022
+
+
 # v0.0.1-rc6
 
 ## Fixed
