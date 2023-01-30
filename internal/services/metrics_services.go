@@ -49,7 +49,6 @@ type MetricsService struct {
 // NewMetricsService Constructor method
 func NewMetricsService(db db.MetricsDatabase, lnBackend backend.Backend) *MetricsService {
 	instance := &MetricsService{Storage: db, Backend: lnBackend}
-	// FIXME: load for different network
 	if err := instance.initMetricOneOutput(); err != nil {
 		log.GetInstance().Infof("Error: %s", err)
 	}
@@ -118,6 +117,8 @@ func (instance *MetricsService) containsMetricOneOutput(node *model.NodeMetadata
 }
 
 func calculateMetricOneOutput(metricsServices *MetricsService, metricModel *model.MetricOne, startTime int64) {
+	bytes, _ := json.Marshal(metricModel)
+	log.GetInstance().Debugf("to input calculation %s", string(bytes))
 	if err := metric_one.CalculateMetricOneOutputSync(metricsServices.Storage, metricModel); err != nil {
 		log.GetInstance().Errorf("Calculate metric one output return an error %s", err)
 	} else {
@@ -137,6 +138,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 	}
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
+	log.GetInstance().Debugf("raw payload received: %s", *payload)
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
 		return nil, err
@@ -176,6 +178,7 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	}
 	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
 
+	log.GetInstance().Debugf("raw payload received: %s", *payload)
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
 		return err
