@@ -13,7 +13,6 @@ func CalculateMetricOneOutputFromRaw(rawMetric *RawMetricOneOutput) *model.Metri
 	result.LastUpdate = int(rawMetric.LastUpdate)
 
 	result.ForwardsRating = MappingForwardsRatingFromRaw(rawMetric.ForwardsRating)
-
 	result.UpTime = MappingUpTimeRatingFromRaw(rawMetric.UpTime)
 	result.ChannelsInfo = MappingChannelsInfoFromRaw(rawMetric.ChannelsRating)
 	return result
