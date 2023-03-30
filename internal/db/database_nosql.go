@@ -263,36 +263,26 @@ func (instance *NoSQLDatabase) GetMetricOneInfo(network string, nodeID string, f
 	// 1.1 check the period used
 	// 2. fill the metric model and return it
 	baseKey := strings.Join([]string{nodeID, "metric_one"}, "/")
-	// TODO check the bound
 	nodeMetric, err := instance.retrievalNodesMetric(network, baseKey, "metric_one", first, last)
 	if err != nil {
 		return nil, err
 	}
-	// FIXME: the paginator is fill randomly in some case
-	// because we don't know some necessary information from
-	// the db side.
 
-	// check if the array of uptime is empty because there are no more
-	// uptime or the node was added later to the lnmetrics system.
-	isInPast := false
-	nextTimestamp := int64(last)
-	if len(nodeMetric.UpTime) == 0 {
-		dbIndex, _ := instance.GetMetricOneIndex(network, nodeID)
-		if dbIndex[0] > nextTimestamp {
-			isInPast = true
-			nextTimestamp = dbIndex[0]
-		}
-	}
+	index := instance.getIndex(network, baseKey)
+	lastTimestamp := index[len(index)-1]
+	last = int(utime.AddToTimestamp(int64(last), 10*time.Minute))
+	hasNext := lastTimestamp >= uint(last)
+
 	modelMetricOne := model.MetricOneInfo{
 		UpTime:       nodeMetric.UpTime,
 		ChannelsInfo: nodeMetric.ChannelsInfo,
 		PageInfo: &model.PageInfo{
 			// The last is the database is included, so we advance by one minute
-			StartCursor: int(utime.AddToTimestamp(nextTimestamp, 1*time.Minute)),
-			// TODO: make the period to work with timestamp fixed by some config
-			EndCursor: int(utime.AddToTimestamp(nextTimestamp, 6*30*time.Minute)),
+			StartCursor: int(utime.AddToTimestamp(int64(last), 1*time.Minute)),
+			// FIXME: make the period to work with timestamp fixed by some config
+			EndCursor: int(utime.AddToTimestamp(int64(last), 6*30*time.Minute)),
 			// if we found something's we can continue!
-			HasNext: len(nodeMetric.UpTime) != 0 || isInPast,
+			HasNext: hasNext,
 		},
 	}
 	jsonStr, err := json.Marshal(modelMetricOne)
@@ -737,6 +727,8 @@ func (instance *NoSQLDatabase) extractNodeMetric(network string, itemID string, 
 }
 
 // Private function to get a single metric given a specific timestamp
+//
+//lint:ignore U1000
 func (instance *NoSQLDatabase) retreivalNodeMetric(network string, nodeKey string, timestamp uint, metricName string) (*model.NodeMetric, error) {
 	metricKey := strings.Join([]string{nodeKey, fmt.Sprint(timestamp), "metric"}, "/")
 	metricJson, err := instance.GetRawValue(network, metricKey)
@@ -758,67 +750,92 @@ func (self *NoSQLDatabase) deleteNodeMetric(network string, nodeKey string, time
 	return self.DeleteRawValue(network, metricKey)
 }
 
-// Private function that it is able to get the collection of metric in a period
-// expressed in unix time.
-func (instance *NoSQLDatabase) retrievalNodesMetric(network string, nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
+func (self *NoSQLDatabase) getIndex(network string, nodeKey string) []uint {
 	timestampsKey := strings.Join([]string{nodeKey, "index"}, "/")
-	timestampJson, err := instance.GetRawValue(network, timestampsKey)
-	log.GetInstance().Debug(fmt.Sprintf("index of timestamp: %s", timestampJson))
+	timestampJson, err := self.GetRawValue(network, timestampsKey)
 	if err != nil {
-		return nil, err
+		log.GetInstance().Errorf("%s", err)
+		return nil
 	}
 
 	var modelTimestamp []uint
 	if err := json.Unmarshal(timestampJson, &modelTimestamp); err != nil {
-		return nil, err
+		log.GetInstance().Errorf("index decoding from raw json: %s", err)
+		return nil
 	}
 
+	return modelTimestamp
+}
+
+// Private function that it is able to get the collection of metric in a period
+// expressed in unix time.
+func (instance *NoSQLDatabase) retrievalNodesMetric(network string, nodeKey string, metricName string, startPeriod int, endPeriod int) (*model.NodeMetric, error) {
+	modelTimestamp := instance.getIndex(network, nodeKey)
 	modelMetric := &model.NodeMetric{
 		Timestamp:    0,
 		UpTime:       make([]*model.Status, 0),
 		ChannelsInfo: make([]*model.StatusChannel, 0),
 	}
 
-	channelsInfoMap := make(map[string]*model.StatusChannel)
-
+	startTimestamp := uint32(0)
+	// find the first usefult timestamp
 	for _, timestamp := range modelTimestamp {
-		// TODO: adding a function inside utils package
-		// utime.IsValidUnix(now)
-		// utime.IsBetweenUnix(now, start, end)
-		if (startPeriod == -1 && endPeriod == -1) ||
-			(int(timestamp) >= startPeriod && int(timestamp) <= endPeriod) {
-			log.GetInstance().Debugf("Get metric %s for %s at time %d", metricName, nodeKey, timestamp)
-			tmpModelMetric, err := instance.retreivalNodeMetric(network, nodeKey, timestamp, metricName)
-			if err != nil {
-				return nil, err
-			}
-
-			//FIXME: It is safe? or it make sense?
-			modelMetric.Timestamp = int(timestamp)
-			modelMetric.UpTime = append(modelMetric.UpTime,
-				tmpModelMetric.UpTime...)
-
-			for _, channelInfo := range tmpModelMetric.ChannelsInfo {
-				key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "_")
-				value, found := channelsInfoMap[key]
-				if found {
-					value.NodeAlias = channelInfo.NodeAlias
-					value.Color = channelInfo.Color
-					value.Capacity = channelInfo.Capacity
-					value.Forwards = append(value.Forwards, channelInfo.Forwards...)
-					value.UpTime = append(value.UpTime, channelInfo.UpTime...)
-					value.Online = channelInfo.Online
-					value.LastUpdate = channelInfo.LastUpdate
-					value.Direction = channelInfo.Direction
-					value.Fee = channelInfo.Fee
-					value.Limits = channelInfo.Limits
-				} else {
-					channelsInfoMap[key] = channelInfo
-				}
-			}
+		if timestamp >= uint(startPeriod) {
+			startTimestamp = uint32(timestamp)
+			break
 		}
 	}
 
+	if startTimestamp == 0 {
+		return nil, fmt.Errorf("first usefult timestamp not found, ask for %d but last item is %d", startPeriod, modelTimestamp[len(modelTimestamp)-1])
+	} else {
+		startPeriod = int(startTimestamp)
+	}
+
+	start_key := strings.Join([]string{nodeKey, fmt.Sprint(startPeriod), "metric"}, "/")
+	end_key := strings.Join([]string{nodeKey, fmt.Sprint(endPeriod), "metric"}, "/")
+
+	// we should aggregate the channel in a single item and merge
+	// all the content metric information
+	channelsInfoMap := make(map[string]*model.StatusChannel)
+
+	// FIXME: the Raw Iterator need to pass a raw metrics as sequence of bytes
+	err := instance.RawIterateThrough(network, start_key, end_key, func(raw_metric string) error {
+		var tmpModelMetric model.NodeMetric
+		if err := json.Unmarshal([]byte(raw_metric), &tmpModelMetric); err != nil {
+			return err
+		}
+		modelMetric.Timestamp = tmpModelMetric.Timestamp
+		modelMetric.UpTime = append(modelMetric.UpTime,
+			tmpModelMetric.UpTime...)
+
+		for _, channelInfo := range tmpModelMetric.ChannelsInfo {
+			key := strings.Join([]string{channelInfo.ChannelID, channelInfo.Direction}, "_")
+			value, found := channelsInfoMap[key]
+			if found {
+				value.NodeAlias = channelInfo.NodeAlias
+				value.Color = channelInfo.Color
+				value.Capacity = channelInfo.Capacity
+				value.Forwards = append(value.Forwards, channelInfo.Forwards...)
+				value.UpTime = append(value.UpTime, channelInfo.UpTime...)
+				value.Online = channelInfo.Online
+				value.LastUpdate = channelInfo.LastUpdate
+				value.Direction = channelInfo.Direction
+				value.Fee = channelInfo.Fee
+				value.Limits = channelInfo.Limits
+			} else {
+				channelsInfoMap[key] = channelInfo
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// append the channel to the channelsInfo list
+	// after we aggregate it!
 	for _, channel := range channelsInfoMap {
 		modelMetric.ChannelsInfo = append(modelMetric.ChannelsInfo, channel)
 	}
