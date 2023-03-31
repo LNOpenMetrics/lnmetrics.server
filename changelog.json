@@ -1,6 +1,6 @@
 {
   "package_name": "lnmetrics.server",
-  "version": "v0.0.1-rc7",
+  "version": "v0.0.1-rc8",
   "api": {
     "name": "github",
     "repository": "LNOpenMetrics/lnmetrics.server",
