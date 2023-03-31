@@ -101,8 +101,7 @@ func (instance *MetricsService) initMetricOneOutputOnNode(node *model.NodeMetada
 			return metric_one.CalculateMetricOneOutputSync(instance.Storage, &model)
 		})
 		if err != nil {
-			log.GetInstance().Infof("Error: %s", err)
-			return
+			log.GetInstance().Errorf("Error: %s", err)
 		}
 	}
 }
@@ -135,7 +134,7 @@ func (instance *MetricsService) InitMetricOne(nodeID string, payload *string, si
 			return nil, err
 		}
 	}
-	log.GetInstance().Info(fmt.Sprintf("Node %s verify check passed with signature %s", nodeID, signature))
+	log.GetInstance().Debugf("Node %s verify check passed with signature %s", nodeID, signature)
 
 	var metricModel model.MetricOne
 	if err := json.Unmarshal([]byte(*payload), &metricModel); err != nil {
@@ -198,8 +197,7 @@ func (instance *MetricsService) UpdateMetricOne(nodeID string, payload *string, 
 	}
 
 	now := time.Now().Format(time.RFC850)
-	log.GetInstance().Info(fmt.Sprintf("Update for the node %s with new metrics lnmetric in date %s", nodeID, now))
-
+	log.GetInstance().Infof("Update for the node %s with new metrics lnmetric in date %s", nodeID, now)
 	go calculateMetricOneOutput(instance, &metricModel, time.Now().Unix())
 	return nil
 }

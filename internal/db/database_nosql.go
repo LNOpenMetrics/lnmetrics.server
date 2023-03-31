@@ -285,12 +285,6 @@ func (instance *NoSQLDatabase) GetMetricOneInfo(network string, nodeID string, f
 			HasNext: hasNext,
 		},
 	}
-	jsonStr, err := json.Marshal(modelMetricOne)
-	if err != nil {
-		log.GetInstance().Errorf("Error during debug operation %s", err)
-	} else {
-		log.GetInstance().Infof("Metric Info generated is %s", string(jsonStr))
-	}
 	return &modelMetricOne, nil
 }
 
@@ -368,7 +362,7 @@ func (instance *NoSQLDatabase) Migrate(network string) error {
 		log.GetInstance().Info("Migration process Ended with success")
 		return instance.SetVersionData(network)
 	}
-	log.GetInstance().Info(fmt.Sprintf("No db migration needed (db version = %d)", versionData))
+	log.GetInstance().Infof("No db migration needed (db version = %d)", versionData)
 	return err
 }
 
@@ -403,7 +397,7 @@ func (instance *NoSQLDatabase) ContainsIndex(network string, nodeID string, metr
 	indexID := strings.Join([]string{nodeID, metricName, "index"}, "/")
 	_, err := instance.GetRawValue(network, indexID)
 	if err != nil {
-		log.GetInstance().Debug(fmt.Sprintf("Ignoring db error: %s", err))
+		log.GetInstance().Debugf("Ignoring db error: %s", err)
 		return false
 	}
 	return true
@@ -436,14 +430,13 @@ func (instance *NoSQLDatabase) indexingInDB(network string, nodeID string) error
 	}
 	// FIXME(vincenzopalazzo): We can use the indexCache
 	var dbIndexModel map[string][]uint
-
 	if err := json.Unmarshal(dbIndex, &dbIndexModel); err != nil {
 		return err
 	}
 
 	_, found := dbIndexModel[nodeID]
 	if !found {
-		log.GetInstance().Info(fmt.Sprintf("Indexing node with id %s", nodeID))
+		log.GetInstance().Infof("Indexing node with id %s", nodeID)
 		// for now there is only the metric one
 		dbIndexModel[nodeID] = []uint{1}
 		jsonNewIndex, err := json.Marshal(dbIndexModel)
@@ -509,10 +502,10 @@ func (instance *NoSQLDatabase) getIndexDB(network string) ([]string, error) {
 	}
 
 	for key := range dbIndexModel {
-		log.GetInstance().Info(fmt.Sprintf("Key found %s", key))
+		log.GetInstance().Infof("Key found %s", key)
 		nodesIndex = append(nodesIndex, key)
 	}
-	log.GetInstance().Info(fmt.Sprintf("Index key set size %d", len(nodesIndex)))
+	log.GetInstance().Infof("Index key set size %d", len(nodesIndex))
 	return nodesIndex, nil
 }
 
@@ -556,7 +549,7 @@ func (instance *NoSQLDatabase) migrateFromBlobToTimestamp(network string) error 
 			strings.Contains(*nodeId, "data_version") {
 			continue
 		}
-		log.GetInstance().Debug(fmt.Sprintf("Migrating Node %s", *nodeId))
+		log.GetInstance().Debugf("Migrating Node %s", *nodeId)
 		if err := instance.indexingInDB(network, *nodeId); err != nil {
 			return err
 		}
@@ -653,7 +646,7 @@ func (instance *NoSQLDatabase) extractMetadata(network string, itemID string, me
 	if err := instance.PutRawValue(network, metadataID, metaJson); err != nil {
 		return err
 	}
-	log.GetInstance().Debug(fmt.Sprintf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID))
+	log.GetInstance().Debugf("Insert Node (%s) medatata with id %s", metadata.NodeID, metadataID)
 	return nil
 }
 
@@ -684,7 +677,7 @@ func (instance *NoSQLDatabase) extractNodeMetric(network string, itemID string, 
 	oldTimestamp, err := instance.GetRawValue(network, timestampIndex)
 	if err == nil {
 		if err := json.Unmarshal(oldTimestamp, &listTimestamp); err != nil {
-			log.GetInstance().Error(fmt.Sprintf("Error: %s", err))
+			log.GetInstance().Errorf("Error: %s", err)
 		}
 	}
 
@@ -715,7 +708,7 @@ func (instance *NoSQLDatabase) extractNodeMetric(network string, itemID string, 
 			return err
 		}
 
-		log.GetInstance().Info(fmt.Sprintf("Insert metric with id %s", metricKey))
+		log.GetInstance().Infof("Insert metric with id %s", metricKey)
 	}
 
 	jsonIndex, err := json.Marshal(listTimestamp)
@@ -803,6 +796,7 @@ func (instance *NoSQLDatabase) retrievalNodesMetric(network string, nodeKey stri
 	err := instance.RawIterateThrough(network, start_key, end_key, func(raw_metric string) error {
 		var tmpModelMetric model.NodeMetric
 		if err := json.Unmarshal([]byte(raw_metric), &tmpModelMetric); err != nil {
+			log.GetInstance().Errorf("json encoding error: %s", err)
 			return err
 		}
 		modelMetric.Timestamp = tmpModelMetric.Timestamp
