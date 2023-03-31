@@ -1,3 +1,10 @@
+# v0.0.1-rc8
+
+## Fixed
+- semplify the paginator check when we get the value for hasNext ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/2e90cfd6c9a7d05ee0894875b5ace656b840f6dc)). @vincenzopalazzo 30-03-2023
+- improve the paginator code ([commit](https://github.com/LNOpenMetrics/lnmetrics.server/commit/fae7dc99db70319af8d05ab8b61f0e36e384898c)). @vincenzopalazzo 30-03-2023
+
+
 # v0.0.1-rc7
 
 ## Fixed
